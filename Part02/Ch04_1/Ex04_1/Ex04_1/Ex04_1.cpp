@@ -59,6 +59,9 @@ int main() {
 	FruitBuyer buyer;
 	buyer.InitMembers(5000);
 	buyer.BuyApples(seller, 2000);
+	FruitBuyer buyer2;
+	buyer.InitMembers(5000);
+	buyer.BuyApples(seller, -2000);
 
 	cout << "과일 판매자의 현황" << endl;
 	seller.ShowSalesResult();
