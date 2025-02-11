@@ -1,5 +1,5 @@
 /*
-* Banking System Ver 0.3
+* Banking System Ver 0.4
 * 작성자: 이우식
 * 내  용: Account 클래스에 const 멤버 함수 선언
 */
