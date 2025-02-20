@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35818.85 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PassException", "PassException\PassException.vcxproj", "{BDEBD237-B0F9-4561-A6B7-98E404643FCE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BDEBD237-B0F9-4561-A6B7-98E404643FCE}.Debug|x64.ActiveCfg = Debug|x64
+		{BDEBD237-B0F9-4561-A6B7-98E404643FCE}.Debug|x64.Build.0 = Debug|x64
+		{BDEBD237-B0F9-4561-A6B7-98E404643FCE}.Debug|x86.ActiveCfg = Debug|Win32
+		{BDEBD237-B0F9-4561-A6B7-98E404643FCE}.Debug|x86.Build.0 = Debug|Win32
+		{BDEBD237-B0F9-4561-A6B7-98E404643FCE}.Release|x64.ActiveCfg = Release|x64
+		{BDEBD237-B0F9-4561-A6B7-98E404643FCE}.Release|x64.Build.0 = Release|x64
+		{BDEBD237-B0F9-4561-A6B7-98E404643FCE}.Release|x86.ActiveCfg = Release|Win32
+		{BDEBD237-B0F9-4561-A6B7-98E404643FCE}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8F08E919-B6D6-403B-8B47-0E115A0B7FB6}
+	EndGlobalSection
+EndGlobal
