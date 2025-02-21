@@ -45,7 +45,19 @@ void CMainFrame::OnPaint()
 
 void CMainFrame::OnLButtonDown(UINT nFlags, CPoint point)
 {
-	MessageBox(_T("마우스 클릭!"), _T("마우스 메시지"));
+	// MessageBox(_T("마우스 클릭!"), _T("마우스 메시지"));
+
+	/* 3.1 AfxMessageBox() 함수 */
+	// AfxMessageBox(_T("마우스 클릭!"));
+
+	/* 3.2 AfxGetApp(), AfxGetMainWnd(), AfxGetAppName() 함수 */
+	TRACE(_T("응용 프로그램 객체 주소: %p = %p\n"), AfxGetApp(), &theApp);
+	TRACE(_T("메인 윈도우 객체 주소: %p = %p\n"), AfxGetMainWnd(), this);
+	TRACE(_T("응용 프로그램 이름: %s\n"), AfxGetAppName());
+
+	/* 3.3 AfxGetInstanceHandle() 함수 */
+	// 인스턴스 핸들값은 실행 파일이 로드된 가상 메모리 주소다.
+	TRACE(_T("인스턴스 핸들: %p\n"), AfxGetInstanceHandle());
 }
 
 // 메시지 맵을 선언한다.
