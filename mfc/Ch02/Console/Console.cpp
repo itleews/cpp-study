@@ -8,6 +8,7 @@
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
+#
 
 
 // 유일한 애플리케이션 개체입니다.
@@ -33,15 +34,14 @@ int main()
         }
         else
         {
-            /*
+#if 0
             CString str;
             str.LoadStringW(IDS_APP_TITLE);
             _tprintf(_T("Hello from %s!\n"), (LPCTSTR)str);
             getchar()
-            */
-
+#endif
+#if 0
             /* 1.2 CString 객체 생성과 초기화 */
-            /*
             _tsetlocale(LC_ALL, _T("")); // 유니코드 한국어 출력에 필요
             CString str1;
 			str1 = _T("안녕하세요."); // 문자열을 직접 대입한다.
@@ -56,26 +56,23 @@ int main()
             // += 연산자를 이용하여 기존 문자열에 새로운 문자열을 덧붙인다.
             str4 += _T(" 하하하");
 			_tprintf(_T("%s\n"), (LPCTSTR)str4);
-            */
-
+#endif
+#if 0
             /* 1.4 CString::Format() 함수 */
-            /*
             CString str;
             str.Format(_T("x = %d, y = %d"), 100, 200);
             MessageBox(NULL, str, _T("CString::Format() 연습"), MB_OK);
-            */
-
+#endif
+#if 0
             /* 1.5 CString::LoadString() 함수 */
-            /*
             CString str;
             str.LoadString(IDS_APP_TITLE); // 문자열 리소스를 로드한다.
             str.Insert(0, _T("Hello from ")); // 맨 앞에 문자열을 삽입한다.
 			str.Append(_T("!")); // 맨 끝에 문자열을 덧붙인다.
 			MessageBox(NULL, str, _T("CString::LoadString() 연습"), MB_OK);
-            */
-
+#endif
+#if 0
             /* 2.1 CPoint 객체 생성과 다루기 */
-            /*
             _tsetlocale(LC_ALL, _T("")); // 유니코드 한국어 출력에 필요
             CPoint pt1(10, 20); // x, y 좌표를 생성자 인자로 전달한다.
             POINT pt = { 30, 40 };
@@ -90,10 +87,9 @@ int main()
                 _tprintf(_T("두 점의 좌표가 같습니다.\n"));
 			else
 				_tprintf(_T("두 점의 좌표가 다릅니다.\n"));
-            */
-
+#endif
+#if 0
             /* 2.2 CRect 객체 생성과 다루기 */
-            /*
             _tsetlocale(LC_ALL, _T("")); // 유니코드 한국어 출력에 필요
 			CRect rect1(0, 0, 200, 100); // 직사각형의 좌표를 생성자의 인자로 전달한다. (좌, 상, 우, 하)
             CRect rect2;
@@ -110,10 +106,9 @@ int main()
 				_tprintf(_T("점이 직사각형 내부에 있습니다.\n"));
             else
 				_tprintf(_T("점이 직사각형 외부에 있습니다.\n"));
-            */
-
+#endif
+#if 0
             /* 2.3 CSize 객체 생성과 다루기 */
-            /*
             _tsetlocale(LC_ALL, _T("")); // 유니코드 한국어 출력에 필요
             CSize size1(100, 200); // 폭과 높이를 생성자 인자로 전달한다.
             SIZE size = { 100, 200 };
@@ -123,10 +118,9 @@ int main()
 				_tprintf(_T("크기가 같습니다.\n"));
 			else
 				_tprintf(_T("크기가 다릅니다.\n"));
-            */
-
+#endif
+#if 0
             /* 3.1 CTime 객체 생성과 다루기 */
-            /*
             _tsetlocale(LC_ALL, _T("")); // 유니코드 한국어 출력에 필요
             // CTime::GetCurrentTime() 함수로 현재 시각을 구한다.
             CTime tm;
@@ -136,8 +130,8 @@ int main()
 			_tprintf(_T("%s\n"), (LPCTSTR)str);
             str.Format(_T("현재 시각은 %d시 %d분 %d초입니다."), tm.GetHour(), tm.GetMinute(), tm.GetSecond());
 			_tprintf(_T("%s\n"), (LPCTSTR)str);
-            */
-
+#endif
+#if 1
             /* 3.2 CTimeSpan 객체 생성과 다루기 */
             _tsetlocale(LC_ALL, _T("")); // 유니코드 한국어 출력에 필요
             CTime startTime = CTime::GetCurrentTime();
@@ -147,6 +141,7 @@ int main()
             CString str;
 			str.Format(_T("%d초 지남!"), elapsedTime.GetTotalSeconds());
 			_tprintf(_T("%s\n"), (LPCTSTR)str);
+#endif
         }
     }
     else
