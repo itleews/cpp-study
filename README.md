@@ -23,5 +23,5 @@ cpp-study/
 - [C++ 공식 문서](https://learn.microsoft.com/ko-kr/cpp/cpp/)
 
 ### MFC 관련자료
-- [**쉽게 배우는 MFC 윈도우 프로그래밍**](https://www.hanbit.co.kr/store/books/look.php?p_code=B3126325886)
+- [**쉽게 배우는 MFC 윈도우 프로그래밍**](https://product.kyobobook.co.kr/detail/S000001743766)
 - [MFC 공식 문서](https://learn.microsoft.com/ko-kr/cpp/mfc/)
