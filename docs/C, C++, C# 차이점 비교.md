@@ -77,6 +77,6 @@ class Program {
 ---
 
 ## 4. 결론
-- **C**는 절차 지향적이며 하드웨어와 밀접한 저수준 프로그래밍에 적합합니다.
-- **C++**는 객체 지향적이며 시스템 프로그래밍과 고급 애플리케이션 개발에 적합합니다.
-- **C#**은 고수준 언어로, 주로 Windows 애플리케이션과 웹 애플리케이션 개발에 사용됩니다. 자동 메모리 관리 및 풍부한 라이브러리와 함께 개발 효율성을 높이는 데 유리합니다.
+- <img src="https://img.shields.io/badge/C-A8B9CC?style=flat&logo=C&logoColor=white">는 절차 지향적이며 하드웨어와 밀접한 저수준 프로그래밍에 적합합니다.
+- <img src="https://img.shields.io/badge/C++-00599C?style=flat&logo=C%2B%2B&logoColor=white">는 객체 지향적이며 시스템 프로그래밍과 고급 애플리케이션 개발에 적합합니다.
+- <img src="https://img.shields.io/badge/C%23-239120?style=flat&logo=C%23&logoColor=white">은 고수준 언어로, 주로 Windows 애플리케이션과 웹 애플리케이션 개발에 사용됩니다. 자동 메모리 관리 및 풍부한 라이브러리와 함께 개발 효율성을 높이는 데 유리합니다.
