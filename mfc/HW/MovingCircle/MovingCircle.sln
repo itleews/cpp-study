@@ -1,0 +1,30 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35828.75
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MovingCircle", "MovingCircle\MovingCircle.vcxproj", "{B92C5423-41C0-B8BF-DAB5-BE0F68BE4FEE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B92C5423-41C0-B8BF-DAB5-BE0F68BE4FEE}.Debug|x64.ActiveCfg = Debug|x64
+		{B92C5423-41C0-B8BF-DAB5-BE0F68BE4FEE}.Debug|x64.Build.0 = Debug|x64
+		{B92C5423-41C0-B8BF-DAB5-BE0F68BE4FEE}.Debug|x86.ActiveCfg = Debug|Win32
+		{B92C5423-41C0-B8BF-DAB5-BE0F68BE4FEE}.Debug|x86.Build.0 = Debug|Win32
+		{B92C5423-41C0-B8BF-DAB5-BE0F68BE4FEE}.Release|x64.ActiveCfg = Release|x64
+		{B92C5423-41C0-B8BF-DAB5-BE0F68BE4FEE}.Release|x64.Build.0 = Release|x64
+		{B92C5423-41C0-B8BF-DAB5-BE0F68BE4FEE}.Release|x86.ActiveCfg = Release|Win32
+		{B92C5423-41C0-B8BF-DAB5-BE0F68BE4FEE}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D67ACF7C-0C94-4B4B-AEBA-533025207DFB}
+	EndGlobalSection
+EndGlobal
