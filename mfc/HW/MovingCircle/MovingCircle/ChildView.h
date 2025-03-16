@@ -18,12 +18,13 @@ public:
 public:
 	int m_x, m_y;      // 원의 현재 위치
 	int m_radius;      // 원의 반지름
-	int m_dx, m_dy;    // 이동 방향 (속도 포함)
+	int m_dx, m_dy;
+	CRect m_boundary;
 	CButton m_speedUp;
 	CButton m_speedDown;
-	CButton m_direction;
-	CButton m_chekcx;
-	CButton m_chekcy;
+	CButton m_checkX;
+	CButton m_checkY;
+	CButton m_changeDirection;
 
 // 작업입니다.
 public:
@@ -43,6 +44,10 @@ protected:
 public:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnDestroy();
+	afx_msg void OnChangeDirection();
+	afx_msg void OnSpeedUp();
+	afx_msg void OnSpeedDown();
 };
 
