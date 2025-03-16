@@ -16,6 +16,14 @@ public:
 
 // 특성입니다.
 public:
+	int m_x, m_y;      // 원의 현재 위치
+	int m_radius;      // 원의 반지름
+	int m_dx, m_dy;    // 이동 방향 (속도 포함)
+	CButton m_speedUp;
+	CButton m_speedDown;
+	CButton m_direction;
+	CButton m_chekcx;
+	CButton m_chekcy;
 
 // 작업입니다.
 public:
@@ -32,5 +40,9 @@ public:
 protected:
 	afx_msg void OnPaint();
 	DECLARE_MESSAGE_MAP()
+public:
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnDestroy();
 };
 
