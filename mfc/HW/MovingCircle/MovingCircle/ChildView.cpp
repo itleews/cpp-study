@@ -13,7 +13,7 @@ CChildView::CChildView()
 {
     m_x = 150;
     m_y = 150;
-    m_radius = 50;
+    m_radius = 20;
 
     m_dx = 10;
     m_dy = 10;
@@ -49,36 +49,86 @@ BOOL CChildView::PreCreateWindow(CREATESTRUCT& cs)
 
 void CChildView::OnPaint()
 {
-    CPaintDC dc(this);
+    CPaintDC dc(this); // 그리기 DC
+
+    // 메모리 DC 생성
+    CDC memDC;
+    memDC.CreateCompatibleDC(&dc);
+
+    // 클라이언트 영역 크기 가져오기
+    CRect rect;
+    GetClientRect(&rect);
+
+    // 메모리 DC에 호환 비트맵 생성
+    CBitmap bitmap;
+    bitmap.CreateCompatibleBitmap(&dc, rect.Width(), rect.Height());
+    CBitmap* pOldBitmap = memDC.SelectObject(&bitmap);
+
+    // 배경 지우기
+    memDC.FillSolidRect(&rect, RGB(255, 255, 255));
 
     // 사각형 그리기
-    dc.Rectangle(m_boundary);
+    memDC.Rectangle(m_boundary);
+
+    // 검은색 브러시 생성
+    CBrush brushBlack(RGB(0, 0, 0));
+    CBrush* pOldBrush = memDC.SelectObject(&brushBlack);
 
     // 원 그리기
-    dc.Ellipse(m_x - m_radius, m_y - m_radius, m_x + m_radius, m_y + m_radius);
+    memDC.Ellipse(m_x - m_radius, m_y - m_radius, m_x + m_radius, m_y + m_radius);
+
+    // 원래 브러시로 복원
+    memDC.SelectObject(pOldBrush);
+
+    // 메모리 DC의 내용을 화면 DC로 복사
+    dc.BitBlt(0, 0, rect.Width(), rect.Height(), &memDC, 0, 0, SRCCOPY);
+
+    // 메모리 DC 정리
+    memDC.SelectObject(pOldBitmap);
 }
+
 
 void CChildView::OnTimer(UINT_PTR nIDEvent)
 {
     if (nIDEvent == 1)
     {
+        // 이전 위치 저장
+        int old_x = m_x;
+        int old_y = m_y;
+
         // 충돌 감지 및 방향 반전
-        if (m_x + m_radius >= m_boundary.right || m_x - m_radius <= m_boundary.left) {
+        if (m_x + m_radius + m_dx >= m_boundary.right) {
             m_dx = -m_dx;
+            m_x = m_boundary.right - m_radius;
         }
-        if (m_y + m_radius >= m_boundary.bottom || m_y - m_radius <= m_boundary.top) {
+        else if (m_x - m_radius + m_dx <= m_boundary.left) {
+            m_dx = -m_dx;
+            m_x = m_boundary.left + m_radius;
+        }
+
+        if (m_y + m_radius + m_dy >= m_boundary.bottom) {
             m_dy = -m_dy;
+            m_y = m_boundary.bottom - m_radius;
+        }
+        else if (m_y - m_radius + m_dy <= m_boundary.top) {
+            m_dy = -m_dy;
+            m_y = m_boundary.top + m_radius;
         }
 
         // 위치 업데이트
         m_x += m_dx;
         m_y += m_dy;
 
-        InvalidateRect(NULL, FALSE);
+        // 이전 위치와 새로운 위치를 포함하는 영역 무효화
+        CRect oldRect(old_x - m_radius, old_y - m_radius, old_x + m_radius, old_y + m_radius);
+        CRect newRect(m_x - m_radius, m_y - m_radius, m_x + m_radius, m_y + m_radius);
+        oldRect.UnionRect(&oldRect, &newRect);
+        InvalidateRect(&oldRect, FALSE);
     }
 
     CWnd::OnTimer(nIDEvent);
 }
+
 
 void CChildView::OnSize(UINT nType, int cx, int cy)
 {
@@ -95,9 +145,10 @@ void CChildView::OnSize(UINT nType, int cx, int cy)
     {
         m_speedUp.MoveWindow(controlX, 10, 100, 40);
         m_speedDown.MoveWindow(controlX, 60, 100, 40);
-        m_changeDirection.MoveWindow(controlX, 110, 100, 40);
-        m_checkX.MoveWindow(controlX, 160, 100, 20);
-        m_checkY.MoveWindow(controlX, 190, 100, 20);
+        m_speedDisplay.MoveWindow(controlX, 110, 100, 20);
+        m_changeDirection.MoveWindow(controlX, 140, 100, 40);
+        m_checkX.MoveWindow(controlX, 190, 100, 20);
+        m_checkY.MoveWindow(controlX, 220, 100, 20);	
     }
 }
 
@@ -122,6 +173,11 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
     m_checkY.Create(_T("Y 방향"), WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
         CRect(0, 0, 100, 20), this, 105);
 
+    // 속도 표시 컨트롤 생성
+    CString str;
+    str.Format(_T("%d"), abs(m_dx));
+    m_speedDisplay.Create(str, WS_CHILD | WS_VISIBLE | SS_CENTER, CRect(0, 0, 100, 20), this, 106);
+
     return 0;
 }
 
@@ -133,22 +189,51 @@ void CChildView::OnDestroy()
 
 void CChildView::OnSpeedUp()
 {
-    if (abs(m_dx) < 50) m_dx *= 2;
-    if (abs(m_dy) < 50) m_dy *= 2;
+    int MaxSpeed = 1000;
+    int CurrentSpeed = abs(m_dx);
+    if (CurrentSpeed >= MaxSpeed) {
+        MessageBox(_T("최고 속도입니다."), _T("알림"), MB_OK | MB_ICONERROR);
+        return;
+    }
+    if (CurrentSpeed < MaxSpeed) {
+        m_dx *= 2;
+        m_dy *= 2;
+    }
+    UpdateSpeedDisplay();
 }
 
 void CChildView::OnSpeedDown()
 {
-    if (abs(m_dx) > 1) m_dx /= 2;
-    if (abs(m_dy) > 1) m_dy /= 2;
+    int MinSpeed = 1;
+    int CurrentSpeed = abs(m_dx);
+	if (CurrentSpeed <= MinSpeed) {
+		MessageBox(_T("최저 속도입니다."), _T("알림"), MB_OK | MB_ICONERROR);
+		return;
+	}
+    if (CurrentSpeed > MinSpeed) {
+        m_dx /= 2;
+        m_dy /= 2;
+    }
+    UpdateSpeedDisplay();
 }
 
 void CChildView::OnChangeDirection()
 {
+    if (m_checkX.GetCheck() == 0 && m_checkY.GetCheck() == 0) {
+        MessageBox(_T("방향을 선택하세요."), _T("알림"), MB_OK | MB_ICONWARNING);
+        return;
+    }
     if (m_checkX.GetCheck() == BST_CHECKED) {
         m_dx = -m_dx;
     }
     if (m_checkY.GetCheck() == BST_CHECKED) {
         m_dy = -m_dy;
     }
+}
+
+void CChildView::UpdateSpeedDisplay()
+{
+    CString str;
+    str.Format(_T("%d"), abs(m_dx));
+    m_speedDisplay.SetWindowText(str);
 }

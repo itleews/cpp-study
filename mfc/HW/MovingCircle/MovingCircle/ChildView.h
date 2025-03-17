@@ -25,6 +25,8 @@ public:
 	CButton m_checkX;
 	CButton m_checkY;
 	CButton m_changeDirection;
+	CStatic m_speedDisplay; // 속도 표시
+	void UpdateSpeedDisplay();
 
 // 작업입니다.
 public:
