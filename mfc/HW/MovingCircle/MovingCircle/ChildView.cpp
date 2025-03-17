@@ -85,6 +85,8 @@ void CChildView::OnPaint()
 
     // 메모리 DC 정리
     memDC.SelectObject(pOldBitmap);
+    bitmap.DeleteObject();
+    ReleaseDC(&memDC);
 }
 
 
