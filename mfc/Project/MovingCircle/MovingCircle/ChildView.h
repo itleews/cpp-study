@@ -58,32 +58,20 @@ public:
     }
 
 	void SpeedUp(int maxSpeed) {
-		if (abs(m_dx) >= maxSpeed) {
-			MessageBox(NULL, _T("최고 속도입니다."), _T("알림"), MB_OK | MB_ICONERROR);
-			return;
-		}
-		else if (abs(m_dx) < maxSpeed) {
+		if (abs(m_dx) < maxSpeed) {
 			m_dx *= 2;
 			m_dy *= 2;
 		}
 	}
 
     void SpeedDown(int minSpeed) {
-		if (abs(m_dx) <= minSpeed) {
-			MessageBox(NULL, _T("최저 속도입니다."), _T("알림"), MB_OK | MB_ICONERROR);
-			return;
-		}
-		else if (abs(m_dx) > minSpeed) {
+		if (abs(m_dx) > minSpeed) {
 			m_dx /= 2;
 			m_dy /= 2;
 		}
     }
 
 	void ChangeDirection(int checkX, int checkY) {
-		if (checkX == 0 && checkY == 0) {
-			MessageBox(NULL, _T("방향을 선택하세요."), _T("알림"), MB_OK | MB_ICONWARNING);
-			return;
-		}
 		if (checkX == BST_CHECKED) {
 			m_dx = -m_dx;
 		}
@@ -109,6 +97,7 @@ public:
    CRect m_boundary;
    CButton m_speedUp;
    CButton m_speedDown;
+   CButton m_speedRandom;
    CButton m_checkX;
    CButton m_checkY;
    CButton m_changeDirection;
@@ -139,6 +128,7 @@ public:
    afx_msg void OnChangeDirection();
    afx_msg void OnSpeedUp();
    afx_msg void OnSpeedDown();
+   afx_msg void OnSpeedRandom();
    afx_msg void OnEditChanged();
 };
 

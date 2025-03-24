@@ -41,6 +41,7 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
     ON_EN_CHANGE(200, &CChildView::OnEditChanged)
     ON_BN_CLICKED(101, &CChildView::OnSpeedUp)
     ON_BN_CLICKED(102, &CChildView::OnSpeedDown)
+    ON_BN_CLICKED(106, &CChildView::OnSpeedRandom)
     ON_BN_CLICKED(103, &CChildView::OnChangeDirection)
 END_MESSAGE_MAP()
 
@@ -119,10 +120,11 @@ void CChildView::OnSize(UINT nType, int cx, int cy)
         m_spinCtrl.MoveWindow(controlX + 70, 10, 30, 30);
         m_speedUp.MoveWindow(controlX, 50, 100, 40);
         m_speedDown.MoveWindow(controlX, 100, 100, 40);
+        m_speedRandom.MoveWindow(controlX, 150, 100, 40);
         // m_speedDisplay.MoveWindow(controlX, 110, 100, 20);
-        m_changeDirection.MoveWindow(controlX, 150, 100, 40);
-        m_checkX.MoveWindow(controlX, 200, 100, 20);
-        m_checkY.MoveWindow(controlX, 230, 100, 20);
+        m_changeDirection.MoveWindow(controlX, 200, 100, 40);
+        m_checkX.MoveWindow(controlX, 250, 100, 20);
+        m_checkY.MoveWindow(controlX, 280, 100, 20);
     }
 }
 
@@ -169,6 +171,8 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
         CRect(0, 0, 100, 40), this, 101);
     m_speedDown.Create(_T("속도 ↓"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         CRect(0, 0, 100, 40), this, 102);
+    m_speedRandom.Create(_T("랜덤 속도"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        CRect(0, 0, 100, 40), this, 106);
     m_changeDirection.Create(_T("방향 변경"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         CRect(0, 0, 100, 40), this, 103);
 
@@ -194,7 +198,6 @@ void CChildView::OnDestroy()
     CWnd::OnDestroy();
 }
 
-
 void CChildView::OnSpeedUp()
 {
     int MaxSpeed = 1000;
@@ -213,8 +216,20 @@ void CChildView::OnSpeedDown()
     // UpdateSpeedDisplay();
 }
 
+void CChildView::OnSpeedRandom() {
+    for (int i = 0; i < m_circleCount; i++) {
+        m_circles[i].m_dx = rand() % 100 + 1;
+        m_circles[i].m_dy = rand() % 100 + 1;
+    }
+    // UpdateSpeedDisplay();
+}
+
 void CChildView::OnChangeDirection()
 {
+    if (m_checkX.GetCheck() == 0 && m_checkY.GetCheck() == 0) {
+        MessageBox(_T("방향을 선택하세요."), _T("알림"), MB_OK | MB_ICONWARNING);
+        return;
+    }
 	for (int i = 0; i < m_circleCount; i++) {
 		m_circles[i].ChangeDirection(m_checkX.GetCheck(), m_checkY.GetCheck());
 	}
@@ -234,7 +249,9 @@ void CChildView::OnEditChanged()
     int editValue = _ttoi(str);  // 문자열을 정수로 변환
 
     if (editValue < 1 || editValue > 100) {
-        MessageBox(_T("유효한 값(0 ~ 100)을 입력해 주세요."), _T("경고"), MB_OK | MB_ICONERROR);
+        MessageBox(_T("유효한 값(1 ~ 100)을 입력해 주세요."), _T("경고"), MB_OK | MB_ICONERROR);
+		m_editCtrl.SetFocus();
+        return;
     }
     else if (editValue != m_circleCount) {
 		int oldCount = m_circleCount;
@@ -253,9 +270,6 @@ void CChildView::OnEditChanged()
         Invalidate(); // 다시 그리기 요청
     }
 }
-
-
-
 
 /*
 void CChildView::UpdateSpeedDisplay()
