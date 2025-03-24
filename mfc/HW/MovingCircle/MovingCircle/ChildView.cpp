@@ -4,6 +4,7 @@
 #include "framework.h"
 #include "MovingCircle.h"
 #include "ChildView.h"
+#include <cstdlib> // rand() 함수를 사용하기 위해 추가
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -11,15 +12,23 @@
 
 CChildView::CChildView()
 {
-    m_x = 150;
-    m_y = 150;
-    m_radius = 20;
-
-    m_dx = 10;
-    m_dy = 10;
+	m_circleCount = 1;
+    m_circles.resize(m_circleCount);
+    srand(time(NULL));
+    for (int i = 0; i < m_circleCount; i++) {
+        int randomX = std::rand() % 1000;
+		int randomY = std::rand() % 1000;
+		int randomSpeed = std::rand() % 10 + 1;
+        m_circles[i] = CCircle(randomX, randomY, 20, randomSpeed, randomSpeed);
+        m_circles[i].m_circleColor = RGB(rand() % 256, rand() % 256, rand() % 256);
+    }
 }
 
 CChildView::~CChildView()
+{
+}
+
+CCircle::~CCircle()
 {
 }
 
@@ -29,6 +38,7 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
     ON_WM_CREATE()
     ON_WM_SIZE()
     ON_WM_DESTROY()
+    ON_EN_CHANGE(200, &CChildView::OnEditChanged)
     ON_BN_CLICKED(101, &CChildView::OnSpeedUp)
     ON_BN_CLICKED(102, &CChildView::OnSpeedDown)
     ON_BN_CLICKED(103, &CChildView::OnChangeDirection)
@@ -70,16 +80,19 @@ void CChildView::OnPaint()
     // 사각형 그리기
     memDC.Rectangle(m_boundary);
 
-    // 검은색 브러시 생성
-    CBrush brushBlack(RGB(0, 0, 0));
-    CBrush* pOldBrush = memDC.SelectObject(&brushBlack);
-
     // 원 그리기
-    memDC.Ellipse(m_x - m_radius, m_y - m_radius, m_x + m_radius, m_y + m_radius);
+    for (int i = 0; i < m_circleCount; i++) {
+        // 브러시 생성
+        CBrush brush(m_circles[i].m_circleColor);
+        CBrush* pOldBrush = memDC.SelectObject(&brush);
 
-    // 원래 브러시로 복원
-    memDC.SelectObject(pOldBrush);
+        memDC.Ellipse(m_circles[i].m_x - m_circles[i].m_radius, m_circles[i].m_y - m_circles[i].m_radius,
+            m_circles[i].m_x + m_circles[i].m_radius, m_circles[i].m_y + m_circles[i].m_radius);
 
+        // 원래 브러시로 복원
+        memDC.SelectObject(pOldBrush);
+    }
+    
     // 메모리 DC의 내용을 화면 DC로 복사
     dc.BitBlt(0, 0, rect.Width(), rect.Height(), &memDC, 0, 0, SRCCOPY);
 
@@ -88,49 +101,6 @@ void CChildView::OnPaint()
     bitmap.DeleteObject();
     ReleaseDC(&memDC);
 }
-
-
-void CChildView::OnTimer(UINT_PTR nIDEvent)
-{
-    if (nIDEvent == 1)
-    {
-        // 이전 위치 저장
-        int old_x = m_x;
-        int old_y = m_y;
-
-        // 충돌 감지 및 방향 반전
-        if (m_x + m_radius + m_dx >= m_boundary.right) {
-            m_dx = -m_dx;
-            m_x = m_boundary.right - m_radius;
-        }
-        else if (m_x - m_radius + m_dx <= m_boundary.left) {
-            m_dx = -m_dx;
-            m_x = m_boundary.left + m_radius;
-        }
-
-        if (m_y + m_radius + m_dy >= m_boundary.bottom) {
-            m_dy = -m_dy;
-            m_y = m_boundary.bottom - m_radius;
-        }
-        else if (m_y - m_radius + m_dy <= m_boundary.top) {
-            m_dy = -m_dy;
-            m_y = m_boundary.top + m_radius;
-        }
-
-        // 위치 업데이트
-        m_x += m_dx;
-        m_y += m_dy;
-
-        // 이전 위치와 새로운 위치를 포함하는 영역 무효화
-        CRect oldRect(old_x - m_radius, old_y - m_radius, old_x + m_radius, old_y + m_radius);
-        CRect newRect(m_x - m_radius, m_y - m_radius, m_x + m_radius, m_y + m_radius);
-        oldRect.UnionRect(&oldRect, &newRect);
-        InvalidateRect(&oldRect, FALSE);
-    }
-
-    CWnd::OnTimer(nIDEvent);
-}
-
 
 void CChildView::OnSize(UINT nType, int cx, int cy)
 {
@@ -145,13 +115,34 @@ void CChildView::OnSize(UINT nType, int cx, int cy)
 
     if (m_speedUp.m_hWnd)
     {
-        m_speedUp.MoveWindow(controlX, 10, 100, 40);
-        m_speedDown.MoveWindow(controlX, 60, 100, 40);
-        m_speedDisplay.MoveWindow(controlX, 110, 100, 20);
-        m_changeDirection.MoveWindow(controlX, 140, 100, 40);
-        m_checkX.MoveWindow(controlX, 190, 100, 20);
-        m_checkY.MoveWindow(controlX, 220, 100, 20);	
+		m_editCtrl.MoveWindow(controlX, 10, 70, 30);
+        m_spinCtrl.MoveWindow(controlX + 70, 10, 30, 30);
+        m_speedUp.MoveWindow(controlX, 50, 100, 40);
+        m_speedDown.MoveWindow(controlX, 100, 100, 40);
+        // m_speedDisplay.MoveWindow(controlX, 110, 100, 20);
+        m_changeDirection.MoveWindow(controlX, 150, 100, 40);
+        m_checkX.MoveWindow(controlX, 200, 100, 20);
+        m_checkY.MoveWindow(controlX, 230, 100, 20);
     }
+}
+
+void CChildView::OnTimer(UINT_PTR nIDEvent)
+{
+    if (nIDEvent == 1)
+    {
+        // 이전 위치 저장
+        for (int i = 0; i < m_circleCount; i++) {
+            int old_x = m_circles[i].m_x;
+            int old_y = m_circles[i].m_y;
+
+            // Move 메서드에 CWnd* (this)를 넘겨서 무효화 처리
+            if (this != nullptr) {
+                m_circles[i].Move(m_boundary, this);  // this는 CChildView 객체
+            }
+        }
+    }
+
+    CWnd::OnTimer(nIDEvent);
 }
 
 int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
@@ -160,6 +151,18 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
         return -1;
 
     SetTimer(1, 20, NULL);
+
+    // 스핀 컨트롤과 에디트 컨트롤 생성
+    m_editCtrl.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER,
+        CRect(0, 0, 100, 30), this, 200);
+
+    m_spinCtrl.Create(WS_CHILD | WS_VISIBLE | UDS_ALIGNRIGHT | UDS_SETBUDDYINT,
+        CRect(0, 0, 100, 30), this, 201);
+
+    // 스핀 버튼을 에디트 컨트롤과 연동
+    m_spinCtrl.SetBuddy(&m_editCtrl);
+    m_spinCtrl.SetRange(1, 100); // 범위 설정
+    m_spinCtrl.SetPos(m_circleCount); // 기본값
 
     // 버튼 컨트롤 생성
     m_speedUp.Create(_T("속도 ↑"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
@@ -176,9 +179,11 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
         CRect(0, 0, 100, 20), this, 105);
 
     // 속도 표시 컨트롤 생성
+    /*
     CString str;
     str.Format(_T("%d"), abs(m_dx));
     m_speedDisplay.Create(str, WS_CHILD | WS_VISIBLE | SS_CENTER, CRect(0, 0, 100, 20), this, 106);
+    */
 
     return 0;
 }
@@ -189,53 +194,74 @@ void CChildView::OnDestroy()
     CWnd::OnDestroy();
 }
 
+
 void CChildView::OnSpeedUp()
 {
     int MaxSpeed = 1000;
-    int CurrentSpeed = abs(m_dx);
-    if (CurrentSpeed >= MaxSpeed) {
-        MessageBox(_T("최고 속도입니다."), _T("알림"), MB_OK | MB_ICONERROR);
-        return;
+    for (int i = 0; i < m_circleCount; i++) {
+        m_circles[i].SpeedUp(MaxSpeed);
     }
-    if (CurrentSpeed < MaxSpeed) {
-        m_dx *= 2;
-        m_dy *= 2;
-    }
-    UpdateSpeedDisplay();
+    // UpdateSpeedDisplay();
 }
 
 void CChildView::OnSpeedDown()
 {
     int MinSpeed = 1;
-    int CurrentSpeed = abs(m_dx);
-	if (CurrentSpeed <= MinSpeed) {
-		MessageBox(_T("최저 속도입니다."), _T("알림"), MB_OK | MB_ICONERROR);
-		return;
-	}
-    if (CurrentSpeed > MinSpeed) {
-        m_dx /= 2;
-        m_dy /= 2;
+    for (int i = 0; i < m_circleCount; i++) {
+        m_circles[i].SpeedDown(MinSpeed);
     }
-    UpdateSpeedDisplay();
+    // UpdateSpeedDisplay();
 }
 
 void CChildView::OnChangeDirection()
 {
-    if (m_checkX.GetCheck() == 0 && m_checkY.GetCheck() == 0) {
-        MessageBox(_T("방향을 선택하세요."), _T("알림"), MB_OK | MB_ICONWARNING);
+	for (int i = 0; i < m_circleCount; i++) {
+		m_circles[i].ChangeDirection(m_checkX.GetCheck(), m_checkY.GetCheck());
+	}
+}
+
+void CChildView::OnEditChanged()
+{
+    // 에디트 컨트롤의 값을 가져오기
+    CString str;
+    m_editCtrl.GetWindowText(str);
+
+    // 값이 비어있는 경우 아무것도 하지 않음
+    if (str.IsEmpty()) {
         return;
     }
-    if (m_checkX.GetCheck() == BST_CHECKED) {
-        m_dx = -m_dx;
+
+    int editValue = _ttoi(str);  // 문자열을 정수로 변환
+
+    if (editValue < 1 || editValue > 100) {
+        MessageBox(_T("유효한 값(0 ~ 100)을 입력해 주세요."), _T("경고"), MB_OK | MB_ICONERROR);
     }
-    if (m_checkY.GetCheck() == BST_CHECKED) {
-        m_dy = -m_dy;
+    else if (editValue != m_circleCount) {
+		int oldCount = m_circleCount;
+        m_circleCount = editValue;
+        m_circles.resize(m_circleCount);  // 벡터 크기 변경
+
+        // 새 원 추가
+        for (int i = oldCount; i < m_circleCount; i++) {
+            int randomX = std::rand() % 1000;
+            int randomY = std::rand() % 1000;
+            int randomSpeed = std::rand() % 10 + 1;
+            m_circles[i] = CCircle(randomX, randomY, 20, randomSpeed, randomSpeed);
+            m_circles[i].m_circleColor = RGB(rand() % 256, rand() % 256, rand() % 256);
+        }
+
+        Invalidate(); // 다시 그리기 요청
     }
 }
 
+
+
+
+/*
 void CChildView::UpdateSpeedDisplay()
 {
     CString str;
     str.Format(_T("%d"), abs(m_dx));
     m_speedDisplay.SetWindowText(str);
 }
+*/
