@@ -145,7 +145,7 @@ void CChildView::OnTimer(UINT_PTR nIDEvent) {
 		for (auto& ball : m_gameManager.balls) {
 			if (!ball.Update(m_boundary, this)) {
 				m_gameManager.EndGame(this);
-				AfxMessageBox(_T("Game Over!"));
+				MessageBoxA(GetSafeHwnd(), "공이 떨어졌습니다...", "패배", MB_OK | MB_ICONERROR);
 
 				if (AfxMessageBox(_T("게임을 다시 시작하시겠습니까?"), MB_YESNO | MB_ICONQUESTION) == IDYES) {
 					Invalidate(FALSE);

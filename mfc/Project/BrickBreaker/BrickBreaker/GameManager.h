@@ -6,6 +6,8 @@
 
 class GameManager {
 public:
+    int brickCount;
+
     std::vector<Ball> balls;
     std::vector<Paddle> paddles;
     std::vector<Brick> bricks;

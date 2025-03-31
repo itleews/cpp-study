@@ -9,7 +9,7 @@ void GameManager::StartGame(CRect boundary, CWnd* pWnd) {
 
     // 게임 영역의 중앙 계산  
     int centerX = boundary.left + (boundary.Width() / 2);
-
+    
     // 패들 배치 (화면 중앙 아래에 배치)  
     int paddleWidth = 100;
     int paddleHeight = 20;
@@ -18,13 +18,13 @@ void GameManager::StartGame(CRect boundary, CWnd* pWnd) {
 
     paddles.push_back(Paddle(paddleX, paddleY, paddleWidth, paddleHeight, 0, 0));
 
-    // 🎾 공을 패들 바로 위에 배치  
+    // 공을 패들 바로 위에 배치  
     int ballRadius = 20;
     int ballX = centerX;
     int ballY = paddleY - ballRadius;  // 패들의 위쪽에 공 배치  
 
-    balls.push_back(Ball(ballX, ballY, ballRadius, 10, -10));  // 속도 (10, -10)  
-
+    balls.push_back(Ball(ballX, ballY, ballRadius, 10, -10));  // 속도 (10, -10)
+    
     // 벽돌 배치  
     int rows = 10;
     int cols = 20;
@@ -32,7 +32,8 @@ void GameManager::StartGame(CRect boundary, CWnd* pWnd) {
     int brickHeight = (boundary.Height() / 3) / rows;
     int startX = 100; // 시작 x 좌표  
     int startY = 50; // 시작 y 좌표  
-    int gap = 5; // 벽돌 간의 간격  
+    int gap = 5; // 벽돌 간의 간격
+    brickCount = rows * cols;
 
     for (int row = 0; row < rows; ++row) {
         for (int col = 0; col < cols; ++col) {
@@ -74,8 +75,7 @@ void GameManager::DrawGame(CDC* pDC) {
 }  
 
 void GameManager::HandleCollisions(CWnd* pWnd) {
-   int brickCount = bricks.size();  
-   // 공과 벽돌, 공과 패들 충돌 체크  
+   // 공과 벽돌, 공과 패들 충돌 체크
    for (auto& ball : balls) {  
        for (auto& brick : bricks) {  
            if (!brick.isBroken &&  
@@ -84,8 +84,10 @@ void GameManager::HandleCollisions(CWnd* pWnd) {
                ball.m_y + ball.m_radius >= brick.y &&  
                ball.m_y - ball.m_radius <= brick.y + brick.height) {  
 
-               brick.Break();  
-               brickCount -= 1;  
+               
+               brick.Break();
+               if (brick.isBroken)
+                   --brickCount;
 
                // 공이 벽돌의 어느 방향에서 왔는지 판단하여 반사  
                float overlapLeft = (ball.m_x + ball.m_radius) - brick.x;  
@@ -100,9 +102,9 @@ void GameManager::HandleCollisions(CWnd* pWnd) {
                    ball.m_dy = -ball.m_dy; // 상하 반사  
                }  
 
-               if (brickCount == 0) {  
+               if (brickCount == 0) {
                    EndGame(pWnd);  
-                   AfxMessageBox(_T("You Win!"));  
+                   MessageBox(pWnd->GetSafeHwnd(), _T("축하합니다! 벽돌이 모두 깨졌습니다!"), _T("승리!"), MB_ICONASTERISK);
                    if (AfxMessageBox(_T("게임을 다시 시작하시겠습니까?"), MB_YESNO | MB_ICONQUESTION) == IDYES) {
                        CChildView* pChildView = static_cast<CChildView*>(pWnd);
                        ResetGame(pChildView->m_boundary, pWnd);
