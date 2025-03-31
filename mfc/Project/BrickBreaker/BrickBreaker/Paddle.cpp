@@ -13,7 +13,7 @@ bool Paddle::Update(CRect boundary, CWnd* pWnd) {
     dx = 20;  // 패들의 이동 속도
     dy = 20;
 
-    int halfHeight = boundary.Height() / 2;  // 화면의 절반 높이
+    int HeightLimit = boundary.Height() - boundary.Height() / 5;  // 높이 제한
 
     if (movingLeft && boundary.left < x - dx) {
         x -= dx;
@@ -21,7 +21,7 @@ bool Paddle::Update(CRect boundary, CWnd* pWnd) {
     else if (movingRight && boundary.right > x + width + dx) {
         x += dx;
     }
-    if (movingUp && y - dy > halfHeight) {  // 화면의 절반 이상 올라가지 않도록 제한
+    if (movingUp && y - dy > HeightLimit) {
         y -= dy;
     }
     else if (movingDown && boundary.bottom > y + height + dy) {
@@ -29,7 +29,7 @@ bool Paddle::Update(CRect boundary, CWnd* pWnd) {
     }
 
     if (pWnd != nullptr) {
-        pWnd->InvalidateRect(&oldRect, FALSE);  // 확장된 영역을 무효화
+        pWnd->InvalidateRect(&oldRect, FALSE);
     }
 
     return TRUE;

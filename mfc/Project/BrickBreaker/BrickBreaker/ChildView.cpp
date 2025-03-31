@@ -117,7 +117,8 @@ void CChildView::OnTimer(UINT_PTR nIDEvent) {
 			if (!ball.Update(m_boundary, this)) {
 				m_gameManager.EndGame();
 				KillTimer(1); // 타이머 중지
-				// 게임을 다시 시작할지 묻는 메시지 박스 표시
+				AfxMessageBox(_T("Game Over!"));
+
 				if (AfxMessageBox(_T("게임을 다시 시작하시겠습니까?"), MB_YESNO | MB_ICONQUESTION) == IDYES) {
 					Invalidate(FALSE);
 					m_gameManager.ResetGame(m_boundary, this);
@@ -160,10 +161,7 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 void CChildView::OnDestroy()
 {
-	if (m_gameManager.AreAllBricksBroken()) {
-		AfxMessageBox(_T("모든 벽돌을 깼습니다!"));
-		KillTimer(1);
-	}
+	KillTimer(1); // 타이머 중지
 	CWnd::OnDestroy();
 }
 

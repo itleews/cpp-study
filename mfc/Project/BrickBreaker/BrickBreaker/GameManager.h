@@ -15,5 +15,4 @@ public:
     void HandleCollisions();
     void EndGame();
     void ResetGame(const CRect& boundary, CWnd* pWnd);
-    bool AreAllBricksBroken();
 };

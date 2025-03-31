@@ -19,11 +19,11 @@ void GameManager::StartGame(CRect boundary, CWnd* pWnd) {
     paddles.push_back(Paddle(centerX - paddleWidth / 2, boundary.bottom - paddleHeight - 10, paddleWidth, paddleHeight, 0, 0));
 
     // 벽돌 배치
-    int brickWidth = 50;
-    int brickHeight = 25;
-    int rows = 20;
-    int cols = 48; // 화면 너비에 맞게 적절히 설정
-    int startX = 45; // 시작 x 좌표
+    int brickWidth = 100;
+    int brickHeight = 50;
+    int rows = 1;
+    int cols = 1; // 화면 너비에 맞게 적절히 설정
+    int startX = 200; // 시작 x 좌표
     int startY = 45; // 시작 y 좌표
     int gap = 5; // 벽돌 간의 간격
 
@@ -41,21 +41,11 @@ void GameManager::EndGame() {
 	balls.clear();
 	paddles.clear();
 	bricks.clear();
-    AfxMessageBox(_T("Game Over!"));
 }
 
 void GameManager::ResetGame(const CRect& boundary, CWnd* pWnd) {
     // 게임 상태 초기화
     StartGame(boundary, pWnd);
-}
-
-bool GameManager::AreAllBricksBroken() {
-    for (const auto& brick : bricks) {
-        if (!brick.isBroken) {
-            return false;
-        }
-    }
-    return true;
 }
 
 void GameManager::DrawGame(CDC* pDC) {
@@ -74,6 +64,7 @@ void GameManager::DrawGame(CDC* pDC) {
 }
 
 void GameManager::HandleCollisions() {
+	int brickCount = bricks.size();
     // 공과 벽돌, 공과 패들 충돌 체크
     for (auto& ball : balls) {
         for (auto& brick : bricks) {
@@ -84,6 +75,7 @@ void GameManager::HandleCollisions() {
                 ball.m_y - ball.m_radius <= brick.y + brick.height) {
 
                 brick.Break();
+				brickCount -= 1;
 
                 // 공이 벽돌의 어느 방향에서 왔는지 판단하여 반사
                 float overlapLeft = (ball.m_x + ball.m_radius) - brick.x;
@@ -97,6 +89,17 @@ void GameManager::HandleCollisions() {
                 else {
                     ball.m_dy = -ball.m_dy; // 상하 반사
                 }
+
+				if (brickCount == 0) {
+                    EndGame();
+					AfxMessageBox(_T("You Win!"));
+					if (AfxMessageBox(_T("게임을 다시 시작하시겠습니까?"), MB_YESNO | MB_ICONQUESTION) == IDYES) {
+						ResetGame(CRect(0, 0, 800, 600), nullptr);
+					}
+					else {
+						PostQuitMessage(0); // 프로그램 종료
+					}
+				}
             }
         }
 
