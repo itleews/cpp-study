@@ -20,6 +20,8 @@ public:
 public:
 	GameManager m_gameManager;
 	CRect m_boundary;
+	ULONGLONG m_startTick;
+	bool m_isRunning;
 
 // 작업입니다.
 public:

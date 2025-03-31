@@ -12,7 +12,7 @@ public:
 
     void StartGame(CRect boundary, CWnd* pWnd);
     void DrawGame(CDC* pDC);
-    void HandleCollisions();
-    void EndGame();
+    void HandleCollisions(CWnd* pWnd);
+    void EndGame(CWnd* pWnd);
     void ResetGame(const CRect& boundary, CWnd* pWnd);
 };

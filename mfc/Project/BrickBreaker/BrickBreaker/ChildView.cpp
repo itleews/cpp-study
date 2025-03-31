@@ -16,6 +16,7 @@
 // CChildView
 
 CChildView::CChildView()
+	: m_isRunning(false)
 {
 	m_boundary.SetRect(0, 0, 1600, 1000);  // 기본값으로 초기화
 	m_gameManager.StartGame(m_boundary, this);
@@ -80,6 +81,30 @@ void CChildView::OnPaint()
     // 게임 상태 업데이트 및 화면 그리기
 	m_gameManager.DrawGame(&memDC);
 
+	// 스톱워치 그리기
+	if (m_isRunning) {
+		ULONGLONG elapsedMillis = GetTickCount64() - m_startTick;
+		int hours = (elapsedMillis / (1000 * 60 * 60)) % 24;
+		int minutes = (elapsedMillis / (1000 * 60)) % 60;
+		int seconds = (elapsedMillis / 1000) % 60;
+		int milliseconds = elapsedMillis % 1000;
+
+		// 큰 폰트 설정
+		LOGFONT logFont = { 0 };
+		logFont.lfHeight = 48; // 폰트 크기 설정
+		_tcscpy_s(logFont.lfFaceName, _T("Arial")); // 폰트 이름 설정
+		CFont font;
+		font.CreateFontIndirect(&logFont);
+		CFont* pOldFont = memDC.SelectObject(&font);
+
+		CString strTime;
+		strTime.Format(_T("%02d:%02d.%03d"), minutes, seconds, milliseconds);
+		memDC.TextOutW(rect.right - 190, 10, strTime);
+
+		// 폰트 정리
+		memDC.SelectObject(pOldFont);
+	}
+
 	// 메모리 DC의 내용을 화면 DC로 복사
 	dc.BitBlt(0, 0, rect.Width(), rect.Height(), &memDC, 0, 0, SRCCOPY);
 
@@ -113,10 +138,14 @@ void CChildView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags) {
 
 void CChildView::OnTimer(UINT_PTR nIDEvent) {
 	if (nIDEvent == 1) {
+		if (m_isRunning) {
+			// m_startTick = GetTickCount64();
+			Invalidate(FALSE);
+		}
+
 		for (auto& ball : m_gameManager.balls) {
 			if (!ball.Update(m_boundary, this)) {
-				m_gameManager.EndGame();
-				KillTimer(1); // 타이머 중지
+				m_gameManager.EndGame(this);
 				AfxMessageBox(_T("Game Over!"));
 
 				if (AfxMessageBox(_T("게임을 다시 시작하시겠습니까?"), MB_YESNO | MB_ICONQUESTION) == IDYES) {
@@ -136,7 +165,7 @@ void CChildView::OnTimer(UINT_PTR nIDEvent) {
 		for (auto& brick : m_gameManager.bricks) {
 			brick.Update(m_boundary, this);
 		}
-		m_gameManager.HandleCollisions();
+		m_gameManager.HandleCollisions(this);
 	}
 	CWnd::OnTimer(nIDEvent);
 }
@@ -150,6 +179,8 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (AfxMessageBox(_T("게임을 시작하시겠습니까?"), MB_YESNO | MB_ICONQUESTION) == IDYES) {
 		Invalidate(FALSE);
 		SetTimer(1, 16, nullptr);
+		m_startTick = GetTickCount64();
+		m_isRunning = true;
 	}
 	else {
 		PostQuitMessage(0); // 프로그램 종료
