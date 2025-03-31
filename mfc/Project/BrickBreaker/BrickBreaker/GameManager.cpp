@@ -4,49 +4,55 @@
 #include <atltypes.h> // CRect 포함  
 #include "ChildView.h"
 
-void GameManager::StartGame(CRect boundary, CWnd* pWnd) {  
-   // 게임 초기화 (공, 패들, 벽돌 배치 등)  
+void GameManager::StartGame(CRect boundary, CWnd* pWnd) {
+    // 게임 초기화 (공, 패들, 벽돌 배치 등)  
 
-   // 게임 영역의 중앙 계산  
-   int centerX = boundary.left + (boundary.Width() / 2);  
-   int centerY = boundary.top + (boundary.Height() / 2) + 200;  
+    // 게임 영역의 중앙 계산  
+    int centerX = boundary.left + (boundary.Width() / 2);
 
-   // 🎾 공을 화면 중앙에 배치  
-   balls.push_back(Ball(centerX, centerY, 20, 10, -10)); // 반지름 20, 속도 (10, -10)  
+    // 패들 배치 (화면 중앙 아래에 배치)  
+    int paddleWidth = 100;
+    int paddleHeight = 20;
+    int paddleX = centerX - paddleWidth / 2;
+    int paddleY = boundary.bottom - paddleHeight - 10;
 
-   // 패들 배치 (화면 중앙 아래에 배치)  
-   int paddleWidth = 100;  // 패들 너비  
-   int paddleHeight = 20;  // 패들 높이  
-   paddles.push_back(Paddle(centerX - paddleWidth / 2, boundary.bottom - paddleHeight - 10, paddleWidth, paddleHeight, 0, 0));  
+    paddles.push_back(Paddle(paddleX, paddleY, paddleWidth, paddleHeight, 0, 0));
 
-   // 벽돌 배치  
-   int brickWidth = 100;  
-   int brickHeight = 50;  
-   int rows = 1;  
-   int cols = 1; // 화면 너비에 맞게 적절히 설정  
-   int startX = 200; // 시작 x 좌표  
-   int startY = 45; // 시작 y 좌표  
-   int gap = 5; // 벽돌 간의 간격  
+    // 🎾 공을 패들 바로 위에 배치  
+    int ballRadius = 20;
+    int ballX = centerX;
+    int ballY = paddleY - ballRadius;  // 패들의 위쪽에 공 배치  
 
-   for (int row = 0; row < rows; ++row) {  
-       for (int col = 0; col < cols; ++col) {  
-           int x = startX + col * (brickWidth + gap);  
-           int y = startY + row * (brickHeight + gap);  
-           bricks.push_back(Brick(x, y, brickWidth, brickHeight));  
-       }  
-   }  
-}  
+    balls.push_back(Ball(ballX, ballY, ballRadius, 10, -10));  // 속도 (10, -10)  
+
+    // 벽돌 배치  
+    int rows = 10;
+    int cols = 20;
+    int brickWidth = (boundary.Width() - 200) / cols;
+    int brickHeight = (boundary.Height() / 3) / rows;
+    int startX = 100; // 시작 x 좌표  
+    int startY = 50; // 시작 y 좌표  
+    int gap = 5; // 벽돌 간의 간격  
+
+    for (int row = 0; row < rows; ++row) {
+        for (int col = 0; col < cols; ++col) {
+            int x = startX + col * (brickWidth + gap);
+            int y = startY + row * (brickHeight + gap);
+            bricks.push_back(Brick(x, y, brickWidth, brickHeight));
+        }
+    }
+}
 
 void GameManager::EndGame(CWnd* pWnd) {  
    // 게임 종료  
    KillTimer(pWnd->GetSafeHwnd(), 1);
-   balls.clear();  
-   paddles.clear();  
-   bricks.clear();  
 }  
 
 void GameManager::ResetGame(const CRect& boundary, CWnd* pWnd) {  
-   // 게임 상태 초기화  
+   // 게임 상태 초기화
+   balls.clear();
+   paddles.clear();
+   bricks.clear();
    StartGame(boundary, pWnd);
    CChildView* pChildView = static_cast<CChildView*>(pWnd);
    pChildView->m_startTick = GetTickCount64();
@@ -97,9 +103,10 @@ void GameManager::HandleCollisions(CWnd* pWnd) {
                if (brickCount == 0) {  
                    EndGame(pWnd);  
                    AfxMessageBox(_T("You Win!"));  
-                   if (AfxMessageBox(_T("게임을 다시 시작하시겠습니까?"), MB_YESNO | MB_ICONQUESTION) == IDYES) {  
-                       ResetGame(CRect(0, 0, 800, 600), pWnd);
-        SetTimer(pWnd->GetSafeHwnd(), 1, 16, nullptr);
+                   if (AfxMessageBox(_T("게임을 다시 시작하시겠습니까?"), MB_YESNO | MB_ICONQUESTION) == IDYES) {
+                       CChildView* pChildView = static_cast<CChildView*>(pWnd);
+                       ResetGame(pChildView->m_boundary, pWnd);
+                       SetTimer(pWnd->GetSafeHwnd(), 1, 16, nullptr);
                    }  
                    else {  
                        PostQuitMessage(0); // 프로그램 종료  

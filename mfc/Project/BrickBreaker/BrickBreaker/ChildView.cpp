@@ -18,8 +18,8 @@
 CChildView::CChildView()
 	: m_isRunning(false)
 {
-	m_boundary.SetRect(0, 0, 1600, 1000);  // 기본값으로 초기화
-	m_gameManager.StartGame(m_boundary, this);
+	m_startTick = 0;
+	m_boundary.SetRect(0, 0, 100, 100);
 }
 
 CChildView::~CChildView()
@@ -139,7 +139,6 @@ void CChildView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags) {
 void CChildView::OnTimer(UINT_PTR nIDEvent) {
 	if (nIDEvent == 1) {
 		if (m_isRunning) {
-			// m_startTick = GetTickCount64();
 			Invalidate(FALSE);
 		}
 
@@ -199,5 +198,10 @@ void CChildView::OnDestroy()
 void CChildView::OnSize(UINT nType, int cx, int cy)
 {
 	CWnd::OnSize(nType, cx, cy);
-	m_boundary.SetRect(10, 10, cx - 200, cy - 10);
+
+	if (cx > 0 && cy > 0)
+	{
+		m_boundary.SetRect(10, 10, cx - 200, cy - 10);
+		m_gameManager.ResetGame(m_boundary, this);
+	}
 }
