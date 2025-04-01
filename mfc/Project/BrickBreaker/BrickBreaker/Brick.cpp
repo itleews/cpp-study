@@ -27,7 +27,7 @@ void Brick::Break() {
 
         // »ö»ó ¹à±â Á¶Àý (³²Àº hitCount¿¡ µû¶ó Á¡Á¡ ¹à¾ÆÁü)
         if (hitCount > 0) {
-            int r, g, b;
+            int r = 0, g = 0, b = 0;
             switch (hitCount) {
             case 0:
                 break;

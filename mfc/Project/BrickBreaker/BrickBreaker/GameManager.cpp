@@ -46,7 +46,7 @@ void GameManager::StartGame(CRect boundary, CWnd* pWnd) {
 
            // 랜덤 내구도 (1~3)  
            int hitCount = (rand() % 3) + 1;
-           int r, g, b;
+           int r = 0, g = 0, b = 0;
            switch (hitCount) {
            case 1:
                r = 255;
