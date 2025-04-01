@@ -1,25 +1,52 @@
+// Brick.cpp
 #include "pch.h"
 #include "Brick.h"
+#include <afxwin.h>
 
 void Brick::Draw(CDC* pDC) {
     if (!isBroken) {
-        CBrush brush(RGB(0, 255, 0));  // 초록색으로 벽돌 그리기
+        CBrush brush(color);
         pDC->SelectObject(&brush);
-        pDC->Rectangle(x - width / 2, y - height / 2, x + width / 2, y + height / 2);
+        pDC->Rectangle(x, y, x + width, y + height);
     }
 }
 
 bool Brick::Update(CRect boundary, CWnd* pWnd) {
-    CRect oldRect(x - width / 2, y - height / 2, x + width / 2, y + height / 2);
+    CRect oldRect(x, y, x + width, y + height);
 
-    // pWnd가 nullptr인지 확인한 후 무효화
     if (pWnd != nullptr) {
-        pWnd->InvalidateRect(&oldRect, FALSE);  // CWnd를 통해 무효화 요청
+        pWnd->InvalidateRect(&oldRect, FALSE);
     }
 
-	return TRUE;
+    return TRUE;
 }
 
 void Brick::Break() {
-    isBroken = true;
+    if (hitCount > 0) {
+        hitCount--;  // 내구도 감소
+
+        // 색상 밝기 조절 (남은 hitCount에 따라 점점 밝아짐)
+        if (hitCount > 0) {
+            int r, g, b;
+            switch (hitCount) {
+            case 0:
+                break;
+            case 1:
+                r = 255;
+                g = 99;
+                b = 71;
+                break;
+            case 2:
+                r = 255;
+                g = 0;
+                b = 0;
+                break;
+            }
+
+            color = RGB(r, g, b); // 색상 업데이트
+        }
+        else if (hitCount == 0) {
+            isBroken = true;  // 벽돌이 완전히 부서짐
+        }
+    }
 }

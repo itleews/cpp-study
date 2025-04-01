@@ -68,9 +68,6 @@
     <ClCompile Include="Ball.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="GameObject.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="Paddle.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>

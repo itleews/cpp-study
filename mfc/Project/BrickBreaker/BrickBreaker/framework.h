@@ -15,7 +15,7 @@
 #include <afxext.h>         // MFC 확장입니다.
 
 
-
+#pragma comment(linker, "/entry:WinMainCRTStartup /subsystem:console")
 
 
 #ifndef _AFX_NO_OLE_SUPPORT

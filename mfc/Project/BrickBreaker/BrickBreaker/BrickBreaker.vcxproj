@@ -202,7 +202,6 @@
     <ClCompile Include="BrickBreaker.cpp" />
     <ClCompile Include="ChildView.cpp" />
     <ClCompile Include="GameManager.cpp" />
-    <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="Paddle.cpp" />
     <ClCompile Include="pch.cpp">
