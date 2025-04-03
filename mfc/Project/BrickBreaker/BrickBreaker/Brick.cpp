@@ -29,17 +29,11 @@ void Brick::Break() {
         if (hitCount > 0) {
             int r = 0, g = 0, b = 0;
             switch (hitCount) {
-            case 0:
-                break;
             case 1:
-                r = 255;
-                g = 99;
-                b = 71;
+                r = 255; g = 99; b = 71;
                 break;
             case 2:
-                r = 255;
-                g = 0;
-                b = 0;
+                r = 255; g = 0; b = 0;
                 break;
             }
 
