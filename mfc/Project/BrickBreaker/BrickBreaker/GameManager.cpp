@@ -7,11 +7,11 @@
 #include <ctime>    // time()
 
 void GameManager::StartGame(CRect boundary, CWnd* pWnd) {
-    // 게임 초기화 (공, 패들, 벽돌 배치 등)
-   
+    ballCount = 3;
+    
     // 게임 영역의 중앙 계산
     int centerX = boundary.left + (boundary.Width() / 2);
-   
+
     // 패들 배치 (화면 중앙 아래에 배치)
     int paddleWidth = 100;
     int paddleHeight = 20;
@@ -19,13 +19,16 @@ void GameManager::StartGame(CRect boundary, CWnd* pWnd) {
     int paddleY = boundary.bottom - paddleHeight - 10;
 
     paddles.push_back(Paddle(paddleX, paddleY, paddleWidth, paddleHeight, 0, 0));
-   
-    // 공을 패들 바로 위에 배치
-    int ballRadius = 20;
-    int ballX = centerX;
-    int ballY = paddleY - ballRadius;  // 패들의 위쪽에 공 배치
 
-    balls.push_back(Ball(ballX, ballY, ballRadius, 10, -10));  // 속도 (10, -10)
+    int ballRadius = 20;
+
+	for (int i = 0; i < ballCount; i++) {
+		// 공을 패들 위에 배치
+		int ballX = centerX + (i * (ballRadius * 2 + 5));  // 공 간격 조정
+		int ballY = paddleY - ballRadius;  // 패들의 위쪽에 공 배치
+		// 공 생성 및 추가
+		balls.push_back(Ball(i, ballX, ballY, ballRadius, 10, -10));  // 속도 (10, -10)
+	}
 
     int rows = 10;
     int cols = 20;
@@ -92,7 +95,14 @@ void GameManager::DrawGame(CDC* pDC) {
             brick.Draw(pDC);  
         }  
     }  
-}  
+}
+
+void GameManager::DestroyBall(Ball* ball) {
+    auto it = std::remove_if(balls.begin(), balls.end(), [ball](const Ball& b) {
+        return b == *ball; // 값 비교
+        });
+    balls.erase(it, balls.end());
+}
 
 void GameManager::HandleCollisions(CWnd* pWnd) {
     CChildView* pChildView = static_cast<CChildView*>(pWnd);
@@ -119,10 +129,10 @@ void GameManager::HandleCollisions(CWnd* pWnd) {
                 float overlapBottom = (brick.y + brick.height) - (ball.m_y - ball.m_radius);
 
                 if (min(overlapLeft, overlapRight) < min(overlapTop, overlapBottom)) {  
-                    ball.m_dx = -ball.m_dx; // 좌우 반사  
+                    ball.m_dx = -ball.m_dx; // 좌우 반사
                 }  
                 else {  
-                    ball.m_dy = -ball.m_dy; // 상하 반사  
+                    ball.m_dy = -ball.m_dy; // 상하 반사
                 }  
 
                 if (brickCount == 0) {
@@ -153,9 +163,9 @@ void GameManager::HandleCollisions(CWnd* pWnd) {
                 float overlapBottom = (paddle.y + paddle.height) - (ball.m_y - ball.m_radius);  
 
                 if (min(overlapLeft, overlapRight) < min(overlapTop, overlapBottom)) {  
-                    ball.m_dx = -ball.m_dx; // 좌우 반사  
+                    ball.m_dx = -ball.m_dx; // 좌우 반사
                 }  
-                else {  
+                else {
                     ball.m_dy = -ball.m_dy; // 상하 반사  
                 }
 

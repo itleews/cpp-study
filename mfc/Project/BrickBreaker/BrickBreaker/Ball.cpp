@@ -49,4 +49,5 @@ bool Ball::Update(CRect boundary, CWnd* pWnd) {
     if (pWnd != nullptr) {
         pWnd->InvalidateRect(&oldRect, FALSE);  // CWnd를 통해 무효화 요청
     }
+    return true;
 }

@@ -7,6 +7,7 @@
 class GameManager {
 public:
     int brickCount;
+    int ballCount;
 
     std::vector<Ball> balls;
     std::vector<Paddle> paddles;
@@ -17,4 +18,5 @@ public:
     void HandleCollisions(CWnd* pWnd);
     void EndGame(CWnd* pWnd);
     void ResetGame(const CRect& boundary, CWnd* pWnd);
+    void DestroyBall(Ball* ball);
 };

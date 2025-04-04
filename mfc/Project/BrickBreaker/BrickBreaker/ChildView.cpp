@@ -142,18 +142,24 @@ void CChildView::OnTimer(UINT_PTR nIDEvent) {
 
 		for (auto& ball : m_gameManager.balls) {
 			if (!ball.Update(m_boundary, this)) {
-				m_gameManager.EndGame(this);
-				MessageBoxA(GetSafeHwnd(), "공이 떨어졌습니다...", "패배", MB_OK | MB_ICONERROR);
-
-				if (AfxMessageBox(_T("게임을 다시 시작하시겠습니까?"), MB_YESNO | MB_ICONQUESTION) == IDYES) {
-					Invalidate(FALSE);
-					m_gameManager.ResetGame(m_boundary, this);
-					SetTimer(1, 16, nullptr);
+				if (m_gameManager.balls.size() > 1) {
+					m_gameManager.DestroyBall(&ball);
 				}
 				else {
-					PostQuitMessage(0); // 프로그램 종료
+					m_gameManager.DestroyBall(&ball);
+					m_gameManager.EndGame(this);
+					MessageBoxA(GetSafeHwnd(), "공이 떨어졌습니다...", "패배", MB_OK | MB_ICONERROR);
+
+					if (AfxMessageBox(_T("게임을 다시 시작하시겠습니까?"), MB_YESNO | MB_ICONQUESTION) == IDYES) {
+						Invalidate(FALSE);
+						m_gameManager.ResetGame(m_boundary, this);
+						SetTimer(1, 16, nullptr);
+					}
+					else {
+						PostQuitMessage(0); // 프로그램 종료
+					}
+					return; // 더 이상 업데이트하지 않음
 				}
-				return; // 더 이상 업데이트하지 않음
 			}
 		}
 		for (auto& paddle : m_gameManager.paddles) {

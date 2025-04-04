@@ -12,8 +12,8 @@ void Paddle::Draw(CDC* pDC) {
 bool Paddle::Update(CRect boundary, CWnd* pWnd) {
     CRect oldRect(x - dx, y - dy, x + width + dx, y + height + dy);  // 이전 위치 확장
 
-    dx = 20;  // 패들의 이동 속도
-    dy = 20;
+    dx = 30;  // 패들의 이동 속도
+    dy = 30;
 
     int HeightLimit = boundary.Height() - boundary.Height() / 5;  // 높이 제한
 
