@@ -22,6 +22,7 @@ public:
 	CRect m_boundary;
 	ULONGLONG m_startTick;
 	bool m_isRunning;
+	CButton m_startButton;
 
 // 작업입니다.
 public:
@@ -42,8 +43,10 @@ protected:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	DECLARE_MESSAGE_MAP()
 public:
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnDestroy();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnStartButton();
 };
 
