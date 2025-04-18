@@ -54,21 +54,33 @@ void CChildView::OnPaint()
 {
 	CPaintDC dc(this);
 
-	// 모터 영역을 고정 크기로 설정
-	CRect motorDrawArea(0, 0, 601, 601);
-	dc.FillSolidRect(motorDrawArea, RGB(240, 240, 240));
+	// 현재 클라이언트 영역 가져오기
+	CRect clientRect;
+	GetClientRect(&clientRect);
 
-	// 모터 도형 그리기 (0,0 ~ 600,600 영역 안에서만)
+	// 전체 영역을 모터 영역으로 사용
+	dc.FillSolidRect(clientRect, RGB(240, 240, 240));
+
+	// 모터 도형 그리기 (클라이언트 영역 안에서만)
 	for (auto axis : m_motorManager.axisList) {
-		if (motorDrawArea.PtInRect(axis->strPos) && motorDrawArea.PtInRect(axis->endPos)) {
-			dc.Rectangle(axis->strPos.x, axis->strPos.y - 5,
-				axis->endPos.x, axis->endPos.y + 5);
+		if (clientRect.PtInRect(axis->strPos) && clientRect.PtInRect(axis->endPos)) {
+			if (axis->strPos.x == axis->endPos.x) { // 수직 축
+				dc.MoveTo(axis->strPos.x, axis->strPos.y);
+				dc.LineTo(axis->endPos.x, axis->endPos.y);
+			}
+			else if (axis->strPos.y == axis->endPos.y) { // 수평 축
+				dc.MoveTo(axis->strPos.x, axis->strPos.y);
+				dc.LineTo(axis->endPos.x, axis->endPos.y);
+			}
+			dc.Rectangle(axis->strPos.x + 5, axis->strPos.y - 25,
+				axis->strPos.x + 55, axis->strPos.y + 25);
 			CString str;
 			str.Format(_T("ID:%d"), axis->m_id);
 			dc.TextOutW(axis->strPos.x, axis->strPos.y - 30, str);
 		}
 	}
 }
+
 
 int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
@@ -130,30 +142,33 @@ void CChildView::OnSize(UINT nType, int cx, int cy)
 	const int sectionGap = 20;
 	const int btnHeight = 30;
 	const int btnGap = 10;
-	const int editWidth = 50;
-	const int editHeight = 20;
+	const int editWidth = 100;
+	const int editHeight = 25;
 
-	int motorAreaWidth = 601;
-	int motorAreaHeight = 601;
+	// 오른쪽 고정 영역 너비
+	const int rightWidth = 600;
 
-	// 왼쪽 고정 영역 크기
+	// 왼쪽 영역은 cx에서 오른쪽 너비+여백 제외한 나머지
+	int motorAreaWidth = cx - rightWidth - 2 * margin;
+	int motorAreaHeight = cy - 2 * margin; // 필요시
+
+	// 오른쪽 시작 x 좌표
 	int rightX = motorAreaWidth + margin;
-	int rightWidth = cx - rightX - margin;
 
 	// 리스트 컨트롤 (오른쪽 상단)
 	int listHeight = cy / 3;
 	m_motorListCtrl.SetWindowPos(nullptr, rightX, margin, rightWidth, listHeight, SWP_NOZORDER);
 
 	// 📌 위치 입력 영역
-	int labelTop = listHeight + 5;
-	int inputTopX = labelTop + 20;
-	int inputTopY = inputTopX + 30;
+	int labelTop = listHeight + sectionGap;
+	int inputTopX = labelTop + 30;
+	int inputTopY = inputTopX + 35;
 
 	// 라벨
-	m_labelStart.SetWindowPos(nullptr, rightX + 20, labelTop, 30, 20, SWP_NOZORDER);
-	m_labelEnd.SetWindowPos(nullptr, rightX + 120, labelTop, 30, 20, SWP_NOZORDER);
-	m_labelX.SetWindowPos(nullptr, rightX, inputTopX, 20, 20, SWP_NOZORDER);
-	m_labelY.SetWindowPos(nullptr, rightX, inputTopY, 20, 20, SWP_NOZORDER);
+	m_labelStart.SetWindowPos(nullptr, rightX + 20, labelTop, 40, 25, SWP_NOZORDER);
+	m_labelEnd.SetWindowPos(nullptr, rightX + 120, labelTop, 40, 25, SWP_NOZORDER);
+	m_labelX.SetWindowPos(nullptr, rightX, inputTopX, 25, 20, SWP_NOZORDER);
+	m_labelY.SetWindowPos(nullptr, rightX, inputTopY, 25, 20, SWP_NOZORDER);
 
 	// 입력창
 	m_startXEdit.SetWindowPos(nullptr, rightX + 30, inputTopX, editWidth, editHeight, SWP_NOZORDER);
@@ -182,6 +197,7 @@ void CChildView::OnSize(UINT nType, int cx, int cy)
 	m_motorControlStatic.SetWindowPos(nullptr, rightX, controlTop, rightWidth, controlHeight, SWP_NOZORDER);
 }
 
+
 void CChildView::OnAddMotor()
 {
 	BOOL isXSelected = m_radioXAxis.GetCheck() == BST_CHECKED;
@@ -203,12 +219,6 @@ void CChildView::OnAddMotor()
 	else {
 		endX = startX; // Y축: 수직이므로 X 고정
 	}
-
-	// 위치 제한
-	startX = max(0, min(600, startX));
-	startY = max(0, min(600, startY));
-	endX = max(0, min(600, endX));
-	endY = max(0, min(600, endY));
 
 	m_motorManager.AddAxis(CPoint(startX, startY), CPoint(endX, endY));
 
