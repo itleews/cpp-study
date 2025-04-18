@@ -5,7 +5,6 @@
 #include "pch.h"
 #include "framework.h"
 #include "MotorControl.h"
-#include "MotorListView.h"
 
 #include "MainFrm.h"
 
@@ -46,25 +45,25 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CFrameWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 
-	//// 프레임의 클라이언트 영역을 차지하는 뷰를 만듭니다.
-	//if (!m_wndView.Create(nullptr, nullptr, AFX_WS_DEFAULT_VIEW, CRect(0, 0, 0, 0), this, AFX_IDW_PANE_FIRST, nullptr))
-	//{
-	//	TRACE0("뷰 창을 만들지 못했습니다.\n");
-	//	return -1;
-	//}
+	// 프레임의 클라이언트 영역을 차지하는 뷰를 만듭니다.
+	if (!m_wndView.Create(nullptr, nullptr, AFX_WS_DEFAULT_VIEW, CRect(0, 0, 0, 0), this, AFX_IDW_PANE_FIRST, nullptr))
+	{
+		TRACE0("뷰 창을 만들지 못했습니다.\n");
+		return -1;
+	}
 
-	//if (!m_wndToolBar.CreateEx(this, TBSTYLE_FLAT, WS_CHILD | WS_VISIBLE | CBRS_TOP | CBRS_GRIPPER | CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC) ||
-	//	!m_wndToolBar.LoadToolBar(IDR_MAINFRAME))
-	//{
-	//	TRACE0("도구 모음을 만들지 못했습니다.\n");
-	//	return -1;      // 만들지 못했습니다.
-	//}
+	if (!m_wndToolBar.CreateEx(this, TBSTYLE_FLAT, WS_CHILD | WS_VISIBLE | CBRS_TOP | CBRS_GRIPPER | CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC) ||
+		!m_wndToolBar.LoadToolBar(IDR_MAINFRAME))
+	{
+		TRACE0("도구 모음을 만들지 못했습니다.\n");
+		return -1;      // 만들지 못했습니다.
+	}
 
-	//if (!m_wndStatusBar.Create(this))
-	//{
-	//	TRACE0("상태 표시줄을 만들지 못했습니다.\n");
-	//	return -1;      // 만들지 못했습니다.
-	//}
+	if (!m_wndStatusBar.Create(this))
+	{
+		TRACE0("상태 표시줄을 만들지 못했습니다.\n");
+		return -1;      // 만들지 못했습니다.
+	}
 	m_wndStatusBar.SetIndicators(indicators, sizeof(indicators)/sizeof(UINT));
 
 	// TODO: 도구 모음을 도킹할 수 없게 하려면 이 세 줄을 삭제하십시오.
@@ -83,8 +82,10 @@ BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 	// TODO: CREATESTRUCT cs를 수정하여 여기에서
 	//  Window 클래스 또는 스타일을 수정합니다.
 
-	cs.dwExStyle &= ~WS_EX_CLIENTEDGE;
-	cs.lpszClass = AfxRegisterWndClass(0);
+	// 기본 창 크기를 직접 설정
+	cs.cx = 1200;  // 너비
+	cs.cy = 750;  // 높이
+
 	return TRUE;
 }
 
@@ -107,35 +108,17 @@ void CMainFrame::Dump(CDumpContext& dc) const
 
 void CMainFrame::OnSetFocus(CWnd* /*pOldWnd*/)
 {
-	// splitter의 왼쪽 첫 번째 pane (ChildView)에 포커스
-	CWnd* pWnd = m_wndSplitter.GetPane(0, 0);
-	if (pWnd) pWnd->SetFocus();
+	// 뷰 창으로 포커스를 이동합니다.
+	m_wndView.SetFocus();
 }
 
 BOOL CMainFrame::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo)
 {
-	// 왼쪽 뷰에서 먼저 명령 처리 시도
-	CWnd* pWnd = m_wndSplitter.GetPane(0, 0);
-	if (pWnd && pWnd->OnCmdMsg(nID, nCode, pExtra, pHandlerInfo))
+	// 뷰에서 첫째 크랙이 해당 명령에 나타나도록 합니다.
+	if (m_wndView.OnCmdMsg(nID, nCode, pExtra, pHandlerInfo))
 		return TRUE;
 
-	// 기본 처리
+	// 그렇지 않으면 기본 처리합니다.
 	return CFrameWnd::OnCmdMsg(nID, nCode, pExtra, pHandlerInfo);
 }
 
-BOOL CMainFrame::OnCreateClient(LPCREATESTRUCT /*lpcs*/, CCreateContext* pContext)
-{
-	// 1행 2열 분할 창 만들기
-	if (!m_wndSplitter.CreateStatic(this, 1, 2))
-		return FALSE;
-
-	// 왼쪽: 도면 뷰 (ChildView)
-	if (!m_wndSplitter.CreateView(0, 0, RUNTIME_CLASS(CChildView), CSize(700, 0), pContext))
-		return FALSE;
-
-	// 오른쪽: 모터 리스트 뷰 (CFormView 기반)
-	if (!m_wndSplitter.CreateView(0, 1, RUNTIME_CLASS(CMotorListView), CSize(300, 0), pContext))
-		return FALSE;
-
-	return TRUE; // ✅ 모든 뷰가 성공적으로 생성되었을 때만 TRUE 반환
-}

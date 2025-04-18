@@ -23,7 +23,6 @@ public:
 public:
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 	virtual BOOL OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo);
-	virtual BOOL OnCreateClient(LPCREATESTRUCT, CCreateContext* pContext);
 
 // 구현입니다.
 public:
@@ -36,7 +35,7 @@ public:
 protected:  // 컨트롤 모음이 포함된 멤버입니다.
 	CToolBar          m_wndToolBar;
 	CStatusBar        m_wndStatusBar;
-	CSplitterWnd m_wndSplitter;
+	CChildView    m_wndView;
 
 // 생성된 메시지 맵 함수
 protected:

@@ -5,9 +5,6 @@
 #define IDD_ABOUTBOX                    100
 #define IDR_MAINFRAME                   128
 #define IDR_MotorControlTYPE            130
-#define IDD_MOTOR_LIST_FORM             310
-#define IDC_LIST3                       1003
-#define IDC_MOTOR_LIST                  1003
 
 // Next default values for new objects
 // 

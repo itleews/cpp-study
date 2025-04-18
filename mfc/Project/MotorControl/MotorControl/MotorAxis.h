@@ -4,10 +4,11 @@
 
 class MotorAxis {
 public:
-    int id;
-    CPoint position;
+    int m_id;
+    CPoint strPos;
+    CPoint endPos;
     std::vector<MotorAxis*> children;
 
-    MotorAxis(int _id, CPoint _pos);
-    void MoveTo(CPoint dest);
+    MotorAxis(int id, CPoint str, CPoint end);
+    /*void MoveTo(CPoint dest);*/
 };

@@ -4,7 +4,7 @@ enum { IDD = IDD_MOTOR_LIST_FORM };
 
 class CMotorListView : public CFormView
 {
-protected:
+public:
 	CMotorListView();           // 동적 생성 전용
 	DECLARE_DYNCREATE(CMotorListView)
 
@@ -14,7 +14,7 @@ public:
 #endif
 
 	// 멤버 변수
-protected:
+public:
 	CListCtrl m_motorList; // 모터 리스트 컨트롤
 
 	// 함수
@@ -23,7 +23,7 @@ public:
 	virtual void OnInitialUpdate(); // 처음 한 번만 호출됨
 
 	// 구현
-protected:
+public:
 	virtual ~CMotorListView();
 	DECLARE_MESSAGE_MAP()
 };
