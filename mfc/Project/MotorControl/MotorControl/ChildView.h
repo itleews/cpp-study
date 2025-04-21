@@ -22,13 +22,18 @@ public:
 	CButton m_saveMotorButton;
 	CButton m_loadMotorButton;
 	CButton m_motorControlStatic;
+	CButton m_groupInput, m_groupButtons;
 	CEdit m_startXEdit, m_startYEdit, m_endXEdit, m_endYEdit; // 시작 위치 입력
+	CEdit m_width, m_height;
 	CStatic m_labelStart, m_labelEnd;
-	CStatic m_labelX, m_labelY;
+	CStatic m_labelSize, m_labelAxis;
 	CButton m_radioXAxis, m_radioYAxis;
+    CRect m_baseRect = CRect(0, 0, 600, 600);  // 기준 모터의 영역
+	CRect m_drawArea; // 그리기 영역
 
 // 작업입니다.
 public:
+	BOOL m_hasBaseRect = FALSE; // 기준 모터가 설정되었는지 여부
 
 // 재정의입니다.
 	protected:
@@ -47,6 +52,10 @@ protected:
 	afx_msg void OnRemoveMotor();
 	afx_msg void OnSaveMotor();
 	afx_msg void OnLoadMotor();
+	afx_msg void OnBnClickedRadioXAxis();
+	afx_msg void OnBnClickedRadioYAxis();
+	afx_msg void OnChangeStartX();
+	afx_msg void OnChangeStartY();
 	DECLARE_MESSAGE_MAP()
 
 private:
