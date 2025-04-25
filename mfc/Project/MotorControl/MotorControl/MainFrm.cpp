@@ -24,9 +24,10 @@ END_MESSAGE_MAP()
 static UINT indicators[] =
 {
 	ID_SEPARATOR,           // 상태 줄 표시기
-	ID_INDICATOR_CAPS,
-	ID_INDICATOR_NUM,
-	ID_INDICATOR_SCRL,
+	//ID_INDICATOR_CAPS,
+	//ID_INDICATOR_NUM,
+	//ID_INDICATOR_SCRL,
+	ID_INDICATOR_MOUSEPOS,   // 마우스 위치 표시용 항목
 };
 
 // CMainFrame 생성/소멸
@@ -65,6 +66,12 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		return -1;      // 만들지 못했습니다.
 	}
 	m_wndStatusBar.SetIndicators(indicators, sizeof(indicators)/sizeof(UINT));
+
+	// 각 패널 크기 조정
+    int paneWidths[] = { 150, 500 }; // 각 패널의 너비 설정
+    for (int i = 0; i < sizeof(paneWidths) / sizeof(paneWidths[0]); ++i) {
+       m_wndStatusBar.SetPaneInfo(i, m_wndStatusBar.GetItemID(i), SBPS_NORMAL, paneWidths[i]);
+    }
 
 	// TODO: 도구 모음을 도킹할 수 없게 하려면 이 세 줄을 삭제하십시오.
 	m_wndToolBar.EnableDocking(CBRS_ALIGN_ANY);

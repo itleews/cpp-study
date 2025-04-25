@@ -6,15 +6,11 @@ class MotorAxis {
 public:
     int m_id;
     bool isX;
-
-    // ³í¸® ÁÂÇ¥ (0.0 ~ 1.0)
-    double strXRatio, strYRatio;
-    double endXRatio, endYRatio;
-    double motorXRatio, motorYRatio;
+	CPoint strPos, endPos, motorPos;
     CSize motorSize;
 
     std::vector<MotorAxis*> children;
 
-    MotorAxis(int id, bool isXDirection, double sX, double sY, double eX, double eY, double mX, double mY, CSize size);
+    MotorAxis(int id, bool isXDirection, CPoint str, CPoint end, CPoint motor, CSize size);
     /*void MoveTo(CPoint dest);*/
 };

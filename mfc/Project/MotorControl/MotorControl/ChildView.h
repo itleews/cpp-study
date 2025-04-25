@@ -5,6 +5,7 @@
 
 #pragma once
 #include "MotorManager.h"
+#include "MotorUI.h"
 
 // CChildView 창
 
@@ -17,23 +18,34 @@ public:
 // 특성입니다.
 public:
 	MotorManager m_motorManager;
-	CButton m_addMotorButton;
-	CButton m_removeMotorButton;
-	CButton m_saveMotorButton;
-	CButton m_loadMotorButton;
-	CButton m_motorControlStatic;
-	CButton m_groupInput, m_groupButtons;
-	CEdit m_startXEdit, m_startYEdit, m_endXEdit, m_endYEdit; // 시작 위치 입력
-	CEdit m_width, m_height;
-	CStatic m_labelStart, m_labelEnd;
-	CStatic m_labelSize, m_labelAxis;
-	CButton m_radioXAxis, m_radioYAxis;
-    CRect m_baseRect = CRect(0, 0, 600, 600);  // 기준 모터의 영역
+	MotorUI m_motorUI;
+    // CRect m_baseRect = CRect(0, 0, 600, 600);  // 기준 모터의 영역
 	CRect m_drawArea; // 그리기 영역
+	double m_zoomFactor = 1.0;
+	CPoint m_mousePos;
+	CPoint m_lastMousePos;
+	CPoint m_panOffset{ 0, 0 };
+	bool m_isPanning = false;
+	// 논리 좌표계 범위
+	CRect m_logicalBounds = CRect(0, 0, 1000, 1000);
 
 // 작업입니다.
 public:
-	BOOL m_hasBaseRect = FALSE; // 기준 모터가 설정되었는지 여부
+	CPoint LogicalToScreen(CPoint logical)
+	{
+		// X와 Y의 위치를 논리 좌표계에서 화면 좌표계로 변환
+		int screenX = (int)((logical.x - m_logicalBounds.left) * m_zoomFactor + m_panOffset.x);
+		int screenY = (int)((logical.y - m_logicalBounds.top) * m_zoomFactor + m_panOffset.y);
+		return CPoint(screenX, screenY);
+	}
+
+	// 화면 좌표 → 논리 좌표 변환
+	CPoint ScreenToLogical(CPoint screen)
+	{
+		int logicalX = (int)((screen.x - m_panOffset.x) / m_zoomFactor + m_logicalBounds.left);
+		int logicalY = (int)((screen.y - m_panOffset.y) / m_zoomFactor + m_logicalBounds.top);
+		return CPoint(logicalX, logicalY);
+	}
 
 // 재정의입니다.
 	protected:
@@ -42,6 +54,7 @@ public:
 // 구현입니다.
 public:
 	virtual ~CChildView();
+	void DrawGrid(CDC* pDC);
 
 	// 생성된 메시지 맵 함수
 protected:
@@ -56,6 +69,10 @@ protected:
 	afx_msg void OnBnClickedRadioYAxis();
 	afx_msg void OnChangeStartX();
 	afx_msg void OnChangeStartY();
+	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
+	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
+	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 	DECLARE_MESSAGE_MAP()
 
 private:

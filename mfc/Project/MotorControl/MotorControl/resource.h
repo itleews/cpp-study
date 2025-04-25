@@ -5,6 +5,7 @@
 #define IDD_ABOUTBOX                    100
 #define IDR_MAINFRAME                   128
 #define IDR_MotorControlTYPE            130
+#define ID_INDICATOR_MOUSEPOS  2000  // 적절한 ID 값 지정
 
 // Next default values for new objects
 // 

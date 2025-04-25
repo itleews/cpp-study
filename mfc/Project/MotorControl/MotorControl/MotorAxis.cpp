@@ -2,11 +2,9 @@
 #include "MotorAxis.h"
 
 MotorAxis::MotorAxis(int id, bool isXDirection,
-	double sX, double sY, double eX, double eY, double mX, double mY, CSize size)
+	CPoint str, CPoint end, CPoint motor, CSize size)
 	: m_id(id), isX(isXDirection),
-	strXRatio(sX), strYRatio(sY),
-	endXRatio(eX), endYRatio(eY),
-	motorXRatio(mX), motorYRatio(mY),
+	strPos(str), endPos(end), motorPos(motor),
 	motorSize(size) {
 }
 
