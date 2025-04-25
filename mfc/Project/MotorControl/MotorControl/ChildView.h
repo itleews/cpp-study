@@ -19,14 +19,12 @@ public:
 public:
 	MotorManager m_motorManager;
 	MotorUI m_motorUI;
-    // CRect m_baseRect = CRect(0, 0, 600, 600);  // 기준 모터의 영역
 	CRect m_drawArea; // 그리기 영역
-	double m_zoomFactor = 1.0;
+	double m_zoomFactor = 10.0;
 	CPoint m_mousePos;
 	CPoint m_lastMousePos;
 	CPoint m_panOffset{ 0, 0 };
 	bool m_isPanning = false;
-	// 논리 좌표계 범위
 	CRect m_logicalBounds = CRect(0, 0, 1000, 1000);
 
 // 작업입니다.

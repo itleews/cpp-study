@@ -92,17 +92,13 @@ void CChildView::OnPaint()
 		// 화면 좌표로 변환
 		CPoint screenStart = LogicalToScreen(axis->strPos);
 		CPoint screenEnd = LogicalToScreen(axis->endPos);
-		CPoint screenMotor = LogicalToScreen(axis->motorPos);
+		CPoint screenMotorStart = LogicalToScreen(axis->motorPos - axis->motorSize);
+		CPoint screenMotorEnd = LogicalToScreen(axis->motorPos + axis->motorSize);
 
 		memDC.MoveTo(screenStart.x, screenStart.y);
 		memDC.LineTo(screenEnd.x, screenEnd.y);
 
-		CRect motorRect(
-			screenMotor.x - axis->motorSize.cx / 2,
-			screenMotor.y - axis->motorSize.cy / 2,
-			screenMotor.x + axis->motorSize.cx / 2,
-			screenMotor.y + axis->motorSize.cy / 2
-		);
+		CRect motorRect(screenMotorStart.x, screenMotorStart.y, screenMotorEnd.x, screenMotorEnd.y);
 		memDC.FillSolidRect(motorRect, RGB(255, 255, 255));
 		memDC.FrameRect(motorRect, &CBrush(RGB(0, 0, 0)));
 
@@ -194,15 +190,6 @@ void CChildView::OnAddMotor()
 	CRect curRect(startX, startY, endX, endY);
 	curRect.NormalizeRect();  // 좌상단-우하단 정렬
 
-	// 크기가 늘어나면 m_baseRect를 갱신
-	/*if (curRect.Width() > m_baseRect.Width() || curRect.Height() > m_baseRect.Height()) {
-		CRect prevBaseRect = m_baseRect;
-
-		m_baseRect.SetRect(0, 0, max(curRect.Width() + 10, m_baseRect.Width() + 10), max(curRect.Height() + 10, m_baseRect.Height() + 10));
-		CRect newBaseRect = m_baseRect;
-		m_motorManager.UpdateAllMotorRatios(prevBaseRect, newBaseRect);
-	}*/
-
 	if (curRect.Width() > m_logicalBounds.Width() || curRect.Height() > m_logicalBounds.Height()) {
 		m_logicalBounds.SetRect(0, 0, max(curRect.Width() + 10, m_logicalBounds.Width() + 10), max(curRect.Height() + 10, m_logicalBounds.Height() + 10));
 	}
@@ -216,7 +203,7 @@ void CChildView::OnAddMotor()
 		CPoint(startX, startY),
 		CPoint(endX, endY),
 		CPoint(motorX, motorY),
-		CSize(width, height)
+		CSize(width / 2, height / 2)
 	);
 
 	// 리스트 컨트롤에 표시
@@ -323,9 +310,6 @@ BOOL CChildView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 		m_zoomFactor *= (1.0 + zoomStep);  // 확대
 	else
 		m_zoomFactor *= (1.0 - zoomStep);  // 축소
-
-	// 줌 제한
-	m_zoomFactor = max(0.1, min(m_zoomFactor, 5.0));
 
 	InvalidateRect(m_drawArea, FALSE); // 해당 영역만 갱신
 	return TRUE;

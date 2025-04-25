@@ -31,10 +31,10 @@ void MotorUI::CreateUI(CWnd* pParent)
     m_endYEdit.SetWindowTextW(_T("100"));
 
     m_width.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, CRect(0, 0, 0, 0), pParent, 2005);
-    m_width.SetWindowTextW(_T("50"));
+    m_width.SetWindowTextW(_T("10"));
 
     m_height.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, CRect(0, 0, 0, 0), pParent, 2006);
-    m_height.SetWindowTextW(_T("50"));
+    m_height.SetWindowTextW(_T("10"));
 
     // 라디오 버튼 생성
     m_radioXAxis.Create(_T("X축"), WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, CRect(0, 0, 0, 0), pParent, 3002);
