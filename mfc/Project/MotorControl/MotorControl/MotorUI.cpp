@@ -26,16 +26,16 @@ void MotorUI::CreateUI(CWnd* pParent)
     m_startYEdit.SetWindowTextW(_T("100"));
 
     m_endXEdit.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, CRect(0, 0, 0, 0), pParent, 2003);
-    m_endXEdit.SetWindowTextW(_T("100"));
+    m_endXEdit.SetWindowTextW(_T("1000"));
 
     m_endYEdit.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, CRect(0, 0, 0, 0), pParent, 2004);
     m_endYEdit.SetWindowTextW(_T("100"));
 
     m_width.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, CRect(0, 0, 0, 0), pParent, 2005);
-    m_width.SetWindowTextW(_T("10"));
+    m_width.SetWindowTextW(_T("100"));
 
     m_height.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, CRect(0, 0, 0, 0), pParent, 2006);
-    m_height.SetWindowTextW(_T("10"));
+    m_height.SetWindowTextW(_T("100"));
 
     // 라디오 버튼 생성
     m_radioXAxis.Create(_T("X축"), WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, CRect(0, 0, 0, 0), pParent, 3002);
@@ -135,4 +135,50 @@ void MotorUI::SetPositionUI(CRect& drawArea, int cx, int cy)
 	int controlTop = buttonGroupY + buttonGroupHeight + sectionGap;
 	int controlHeight = cy - controlTop - margin;
 	m_groupControl.SetWindowPos(nullptr, rightX, controlTop, rightWidth, controlHeight, SWP_NOZORDER);
+}
+
+void MotorUI::DisplayMotorTree(CListCtrl& listCtrl, const std::vector<Motor*>& rootMotors)
+{
+	listCtrl.DeleteAllItems(); // 기존 내용 비우기
+
+	int itemIndex = 0;
+	// 모든 최상위 모터에 대해 처리
+	for (Motor* root : rootMotors)
+	{
+		DisplayMotorRecursive(listCtrl, root, 0, itemIndex);
+	}
+}
+
+void MotorUI::DisplayMotorRecursive(CListCtrl& listCtrl, Motor* node, int depth, int& itemIndex)
+{
+	if (!node) return;
+
+	CString displayMotorID;
+
+	// depth만큼 들여쓰기 추가
+	for (int i = 0; i < depth; ++i)
+		displayMotorID += _T("    "); // 스페이스 4개
+
+	CString idStr;
+	idStr.Format(_T("%d"), node->m_id);
+	displayMotorID += idStr;
+
+	CString typeStr, strPosStr, endPosStr, motorPosStr;
+	typeStr = node->isX ? _T("X") : _T("Y");
+	strPosStr.Format(_T("(%d, %d)"), node->strPos.x, node->strPos.y);
+	endPosStr.Format(_T("(%d, %d)"), node->endPos.x, node->endPos.y);
+	motorPosStr.Format(_T("(%d, %d)"), node->motorPos.x, node->motorPos.y);
+	listCtrl.InsertItem(itemIndex, displayMotorID);
+	listCtrl.SetItemText(itemIndex, 1, typeStr);
+	listCtrl.SetItemText(itemIndex, 2, strPosStr);
+	listCtrl.SetItemText(itemIndex, 3, endPosStr);
+	listCtrl.SetItemText(itemIndex, 4, motorPosStr);
+
+	++itemIndex;
+
+	// 자식들도 재귀적으로 추가
+	for (Motor* child : node->children)
+	{
+		DisplayMotorRecursive(listCtrl, child, depth + 1, itemIndex);
+	}
 }

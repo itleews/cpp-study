@@ -1,5 +1,6 @@
 #pragma once
 #include <afxwin.h>
+#include "MotorManager.h"
 
 class MotorUI {
 public:
@@ -14,4 +15,6 @@ public:
     // UI 생성 함수
     void CreateUI(CWnd* pParent);
     void SetPositionUI(CRect& drawArea, int cx, int cy);
+    void DisplayMotorTree(CListCtrl& listCtrl, const std::vector<Motor*>& rootMotors);
+    void DisplayMotorRecursive(CListCtrl& listCtrl, Motor* node, int depth, int& itemIndex);
 };

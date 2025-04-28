@@ -53,7 +53,9 @@ public:
 public:
 	virtual ~CChildView();
 	void DrawGrid(CDC* pDC);
-	void DrawSubMotor(int mainId, CDC* pDC);
+	void DrawSubMotor(Motor* parentMotor, CDC* pDC);
+	Motor* GetSelectedMotor(int selectedIndex);
+	Motor* FindMotorByID(Motor* node, int selectedID);
 
 	// 생성된 메시지 맵 함수
 protected:

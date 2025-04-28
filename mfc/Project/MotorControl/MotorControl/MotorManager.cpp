@@ -1,37 +1,32 @@
-#include "pch.h"
+ï»¿#include "pch.h"
 #include "MotorManager.h"
 #include "ChildView.h"
 
 Motor* MotorManager::AddMotor(
+    Motor* parentMotor,
     bool isXDirection,
-	CPoint strPos, CPoint endPos, CPoint motorPos,
+    CPoint strPos, CPoint endPos, CPoint motorPos,
     CSize motorSize)
 {
     Motor* newMotor = new Motor(
         nextId++, isXDirection,
-		strPos, endPos, motorPos,
+        strPos, endPos, motorPos,
         motorSize);
 
-    motorList.push_back(newMotor);
+    if (parentMotor)
+    {
+        parentMotor->children.push_back(newMotor); // â­ ë¶€ëª¨ì— ì—°ê²°
+    }
+    else
+    {
+        rootMotors.push_back(newMotor); // â­ ìµœìƒìœ„ Motor ë¦¬ìŠ¤íŠ¸ì— ì¶”ê°€
+    }
+
     return newMotor;
 }
 
-Motor* MotorManager::AddSubMotor(int mainId, CPoint strPos, CPoint endPos, CPoint motorPos, CSize motorSize) {
-	Motor* mainMotor = FindAxis(mainId);
-    int subId = mainMotor->subMotors.size();
-	if (mainMotor) {
-		Motor* newSubMotor = new Motor(
-			subId, mainMotor->isX,
-			strPos, endPos, motorPos,
-			motorSize);
-		mainMotor->subMotors.push_back(newSubMotor);
-		return newSubMotor;
-	}
-	return nullptr;
-}
-
 Motor* MotorManager::FindAxis(int id) {
-	for (auto motor : motorList) {
+	for (auto motor : rootMotors) {
 		if (motor->m_id == id) {
 			return motor;
 		}
@@ -47,59 +42,122 @@ Motor* MotorManager::FindAxis(int id) {
 //}
 
 void MotorManager::SaveMotorData() {
-    // ÆÄÀÏ ÀúÀå ´ÙÀÌ¾ó·Î±× ¶ç¿ì±â
+    // íŒŒì¼ ì €ì¥ ë‹¤ì´ì–¼ë¡œê·¸ ë„ìš°ê¸°
     CFileDialog fileDialog(FALSE, _T("csv"), NULL, OFN_OVERWRITEPROMPT, _T("CSV Files (*.csv)|*.csv|All Files (*.*)|*.*||"));
 
     if (fileDialog.DoModal() == IDOK) {
         CString filePath = fileDialog.GetPathName();
 
-        // ¼±ÅÃÇÑ °æ·Î·Î ÆÄÀÏ ÀúÀå
-        std::ofstream file(CT2A(filePath.GetString()));  // CStringÀ» char*·Î º¯È¯
+        // ì„ íƒí•œ ê²½ë¡œë¡œ íŒŒì¼ ì €ì¥
+        std::ofstream file(CT2A(filePath.GetString()));  // CStringì„ char*ë¡œ ë³€í™˜
 
         if (!file.is_open()) {
-            AfxMessageBox(_T("ÆÄÀÏÀ» ÀúÀåÇÒ ¼ö ¾ø½À´Ï´Ù."));
+            AfxMessageBox(_T("íŒŒì¼ì„ ì €ì¥í•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤."));
             return;
         }
-        // Çì´õ ÀÛ¼º
-        file << "ID,Ãà ¹æÇâ,½ÃÀÛ X,½ÃÀÛ Y,³¡ X,³¡ Y,¸ğÅÍ X, ¸ğÅÍ Y, ¸ğÅÍ W, ¸ğÅÍ H, ÇÏÀ§ ¸ğÅÍ\n";
 
-        // ¸ğÅÍ ¸®½ºÆ® ÀúÀå
-        for (auto motor : motorList) {
-            std::ostringstream oss;
-            oss << motor->m_id << ","
-                << (motor->isX ? "X" : "Y") << ","
-                << motor->strPos.x << ","
-                << motor->strPos.y << ","
-                << motor->endPos.x << ","
-                << motor->endPos.y << ","
-                << motor->motorPos.x << ","
-                << motor->motorPos.y << ","
-                << motor->motorSize.cx << ","
-                << motor->motorSize.cy;
+        // í—¤ë” ì‘ì„±
+        file << "ID,ì¶• ë°©í–¥,ì‹œì‘ X,ì‹œì‘ Y,ë X,ë Y,ëª¨í„° X, ëª¨í„° Y, ëª¨í„° W, ëª¨í„° H, í•˜ìœ„ ëª¨í„°\n";
 
-            file << oss.str() << "\n";
+        // ëª¨í„° ë¦¬ìŠ¤íŠ¸ ì €ì¥ (ì¬ê·€ì ìœ¼ë¡œ ëª¨ë“  ëª¨í„° ì €ì¥)
+        for (auto motor : rootMotors) {
+            SaveMotorRecursive(file, motor);
         }
 
         file.close();
 
-        AfxMessageBox(_T("¸ğÅÍ ÀúÀåÀÌ ¿Ï·áµÇ¾ú½À´Ï´Ù."));
-	}
+        AfxMessageBox(_T("ëª¨í„° ì €ì¥ì´ ì™„ë£Œë˜ì—ˆìŠµë‹ˆë‹¤."));
+    }
     else {
-        AfxMessageBox(_T("ÆÄÀÏ ÀúÀåÀÌ Ãë¼ÒµÇ¾ú½À´Ï´Ù."));
+        AfxMessageBox(_T("íŒŒì¼ ì €ì¥ì´ ì·¨ì†Œë˜ì—ˆìŠµë‹ˆë‹¤."));
     }
 }
 
-// CSV ÆÄÀÏÀ» ÀĞ°í Motor °´Ã¼·Î º¯È¯ÇÏ´Â ÇÔ¼ö
+// ì¬ê·€ì ìœ¼ë¡œ ëª¨í„°ì™€ í•˜ìœ„ ëª¨í„° ì €ì¥
+void MotorManager::SaveMotorRecursive(std::ofstream& file, Motor* motor) {
+    std::ostringstream oss;
+    oss << motor->m_id << ","
+        << (motor->isX ? "X" : "Y") << ","
+        << motor->strPos.x << ","
+        << motor->strPos.y << ","
+        << motor->endPos.x << ","
+        << motor->endPos.y << ","
+        << motor->motorPos.x << ","
+        << motor->motorPos.y << ","
+        << motor->motorSize.cx << ","
+        << motor->motorSize.cy;
+
+    // í•˜ìœ„ ëª¨í„°ê°€ ìˆìœ¼ë©´ í•˜ìœ„ ëª¨í„°ì˜ ì •ë³´ë¥¼ ì´ì–´ì„œ ì €ì¥
+    if (!motor->children.empty()) {
+        for (auto child : motor->children) {
+            SaveMotorRecursive(file, child);
+        }
+    }
+
+    file << oss.str() << "\n";
+}
+
+
+// ë¶ˆëŸ¬ì˜¤ê¸° ê¸°ëŠ¥ (CSV í˜•ì‹ìœ¼ë¡œ ë¶ˆëŸ¬ì˜¤ê¸°)
+void MotorManager::LoadMotorData() {
+    // íŒŒì¼ ì—´ê¸° ë‹¤ì´ì–¼ë¡œê·¸ ë„ìš°ê¸°
+    CFileDialog fileDialog(TRUE, _T("csv"), NULL, OFN_FILEMUSTEXIST, _T("CSV Files (*.csv)|*.csv|All Files (*.*)|*.*||"));
+
+    if (fileDialog.DoModal() == IDOK) {
+        rootMotors.clear();  // ê¸°ì¡´ ëª¨í„° ë¦¬ìŠ¤íŠ¸ ì´ˆê¸°í™”
+        CString filePath = fileDialog.GetPathName();
+
+        // ì„ íƒí•œ íŒŒì¼ ì—´ê¸°
+        std::ifstream file(CT2A(filePath.GetString())); // CStringì„ char*ë¡œ ë³€í™˜
+
+        if (!file.is_open()) {
+            AfxMessageBox(_T("íŒŒì¼ì„ ì—´ ìˆ˜ ì—†ìŠµë‹ˆë‹¤."));
+            return;
+        }
+
+        std::string line;
+        Motor* currentParentMotor = nullptr;
+
+        // ì²« ë²ˆì§¸ ì¤„ì€ í—¤ë”ì´ë¯€ë¡œ ê±´ë„ˆë›°ê¸°
+        std::getline(file, line);
+
+        // ê° ì¤„ì— ëŒ€í•´ íŒŒì‹±
+        while (std::getline(file, line)) {
+            Motor* newMotor = ParseMotor(line);  // CSV í•œ ì¤„ì„ Motor ê°ì²´ë¡œ ë³€í™˜
+
+            // ìƒˆë¡œ ì½ì€ ëª¨í„°ì˜ ë¶€ëª¨ê°€ ì´ë¯¸ ì¡´ì¬í•œë‹¤ë©´ ìì‹ìœ¼ë¡œ ì¶”ê°€
+            if (currentParentMotor) {
+                currentParentMotor->children.push_back(newMotor);
+            }
+            else {
+                // ë¶€ëª¨ê°€ ì—†ìœ¼ë©´ ìµœìƒìœ„ ëª¨í„°ë¡œ ê°„ì£¼í•˜ê³  ë¦¬ìŠ¤íŠ¸ì— ì¶”ê°€
+                rootMotors.push_back(newMotor);
+            }
+
+            // í˜„ì¬ ëª¨í„°ê°€ í•˜ìœ„ ëª¨í„°ë¥¼ ê°€ì§ˆ ê²½ìš° ë¶€ëª¨ë¥¼ ê°±ì‹ 
+            if (!newMotor->children.empty()) {
+                currentParentMotor = newMotor;
+            }
+            else {
+                currentParentMotor = nullptr;
+            }
+        }
+
+        file.close();
+    }
+}
+
+// CSV íŒŒì¼ì—ì„œ ëª¨í„° íŒŒì‹±
 Motor* MotorManager::ParseMotor(const std::string& line) {
     std::istringstream iss(line);
     std::string token;
 
-    // CSV¿¡¼­ °¢ ÇÊµå¸¦ ÃßÃâ
+    // CSVì—ì„œ ê° í•„ë“œë¥¼ ì¶”ì¶œ
     std::getline(iss, token, ',');  // ID
     int id = std::stoi(token);
 
     std::getline(iss, token, ',');  // isX
-    bool isX = token == "1";  // "1"ÀÌ¸é true, "0"ÀÌ¸é false
+    bool isX = token == "1";  // "1"ì´ë©´ true, "0"ì´ë©´ false
 
     std::getline(iss, token, ',');  // strPos.x
     int strPosX = std::stoi(token);
@@ -125,7 +183,7 @@ Motor* MotorManager::ParseMotor(const std::string& line) {
     std::getline(iss, token, ',');  // motorSize.cy
     int motorSizeY = std::stoi(token);
 
-    // Motor °´Ã¼ »ı¼º
+    // Motor ê°ì²´ ìƒì„±
     Motor* motor = new Motor(id, isX ? _T("X") : _T("Y"),
         CPoint(strPosX, strPosY),
         CPoint(endPosX, endPosY),
@@ -133,35 +191,4 @@ Motor* MotorManager::ParseMotor(const std::string& line) {
         CSize(motorSizeX, motorSizeY));
 
     return motor;
-}
-
-// ºÒ·¯¿À±â ±â´É (CSV Çü½ÄÀ¸·Î ºÒ·¯¿À±â)
-void MotorManager::LoadMotorData() {
-    // ÆÄÀÏ ¿­±â ´ÙÀÌ¾ó·Î±× ¶ç¿ì±â
-    CFileDialog fileDialog(TRUE, _T("csv"), NULL, OFN_FILEMUSTEXIST, _T("CSV Files (*.csv)|*.csv|All Files (*.*)|*.*||"));
-
-    if (fileDialog.DoModal() == IDOK) {
-		motorList.clear();  // ±âÁ¸ ¸ğÅÍ ¸®½ºÆ® ÃÊ±âÈ­
-        CString filePath = fileDialog.GetPathName();
-
-        // ¼±ÅÃÇÑ ÆÄÀÏ ¿­±â
-        std::ifstream file(CT2A(filePath.GetString())); // CStringÀ» char*·Î º¯È¯
-
-        if (!file.is_open()) {
-            AfxMessageBox(_T("ÆÄÀÏÀ» ¿­ ¼ö ¾ø½À´Ï´Ù."));
-            return;
-        }
-
-        std::string line;
-
-        // Ã¹ ¹øÂ° ÁÙÀº Çì´õÀÌ¹Ç·Î °Ç³Ê¶Ù±â
-        std::getline(file, line);
-
-        // °¢ ÁÙ¿¡ ´ëÇØ ÆÄ½Ì
-        while (std::getline(file, line)) {
-            motorList.push_back(ParseMotor(line));  // CSV ÇÑ ÁÙÀ» Motor °´Ã¼·Î º¯È¯
-        }
-
-        file.close();
-    }
 }
