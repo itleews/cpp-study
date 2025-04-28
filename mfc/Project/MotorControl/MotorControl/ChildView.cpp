@@ -29,6 +29,7 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 	ON_WM_CREATE()
 	ON_WM_SIZE()
 	ON_BN_CLICKED(1001, &CChildView::OnAddMotor) // 축 추가 버튼 클릭
+	ON_BN_CLICKED(1005, &CChildView::OnAddSubMotor) // 축 추가 버튼 클릭
 	ON_BN_CLICKED(1002, &CChildView::OnRemoveMotor) // 축 삭제 버튼 클릭
 	ON_BN_CLICKED(1003, &CChildView::OnSaveMotor) // 모터 저장 버튼 클릭
 	ON_BN_CLICKED(1004, &CChildView::OnLoadMotor) // 모터 불러오기 버튼 클릭
@@ -109,6 +110,8 @@ void CChildView::OnPaint()
 		CString str;
 		str.Format(_T("ID:%d"), axis->m_id);
 		memDC.TextOutW(screenStart.x, screenStart.y - 30, str);
+
+		DrawSubMotor(axis->m_id, &memDC);
 	}
 
 	// 최종 결과를 실제 DC에 복사
@@ -182,28 +185,28 @@ void CChildView::OnAddMotor()
 	m_motorUI.m_endYEdit.GetWindowTextW(ey);
 	m_motorUI.m_width.GetWindowTextW(w);
 	m_motorUI.m_height.GetWindowTextW(h);
+	
+	CPoint start(_ttoi(sx), _ttoi(sy));
+	CPoint end(_ttoi(ex), _ttoi(ey));
+	CSize motor(_ttoi(w), _ttoi(h));
 
-	int startX = _ttoi(sx), startY = _ttoi(sy);
-	int endX = _ttoi(ex), endY = _ttoi(ey);
-	int width = _ttoi(w), height = _ttoi(h);
-
-	CRect curRect(startX, startY, endX, endY);
+	CRect curRect(start.x, start.y, end.x, end.y);
 	curRect.NormalizeRect();  // 좌상단-우하단 정렬
 
 	if (curRect.Width() > m_logicalBounds.Width() || curRect.Height() > m_logicalBounds.Height()) {
 		m_logicalBounds.SetRect(0, 0, max(curRect.Width() + 10, m_logicalBounds.Width() + 10), max(curRect.Height() + 10, m_logicalBounds.Height() + 10));
 	}
 	
-	int motorX = isXSelected ? (endX - startX) / 2 + startX : endX;
-	int motorY = isXSelected ? startY : (endY - startY) / 2 + startY;
+	int motorX = isXSelected ? (end.x - start.x) / 2 + start.x : end.x;
+	int motorY = isXSelected ? start.y : (end.y - start.y) / 2 + start.y;
 
 	// 변경된 AddAxis 호출
 	m_motorManager.AddMotor(
 		isXSelected,
-		CPoint(startX, startY),
-		CPoint(endX, endY),
+		CPoint(start.x, start.y),
+		CPoint(end.x, end.y),
 		CPoint(motorX, motorY),
-		CSize(width / 2, height / 2)
+		CSize(motor.cx / 2, motor.cy / 2)
 	);
 
 	// 리스트 컨트롤에 표시
@@ -213,8 +216,9 @@ void CChildView::OnAddMotor()
        idStr.Format(_T("%d"), m_motorManager.motorList.back()->m_id);
     }
 	typeStr = isXSelected ? _T("X") : _T("Y");
-	strPosStr.Format(_T("(%d, %d)"), startX, startY);
-	endPosStr.Format(_T("(%d, %d)"), endX, endY);
+	strPosStr.Format(_T("(%d, %d)"), start.x, start.y
+);
+	endPosStr.Format(_T("(%d, %d)"), end.x, end.y);
 	motorPosStr.Format(_T("(%d, %d)"), motorX, motorY);
 
 	m_motorUI.m_motorListCtrl.InsertItem(index, idStr);
@@ -225,6 +229,104 @@ void CChildView::OnAddMotor()
 
 	// 다시 그리기
 	Invalidate();
+}
+
+// 하위 모터 추가
+void CChildView::OnAddSubMotor()
+{
+	// 선택된 항목 인덱스를 가져옴
+	int selectedIndex = m_motorUI.m_motorListCtrl.GetNextItem(-1, LVNI_SELECTED);
+	if (selectedIndex != -1)
+	{
+		int mainId = m_motorManager.motorList[selectedIndex]->m_id;
+		BOOL isXSelected = m_motorUI.m_radioXAxis.GetCheck() == BST_CHECKED;
+		// 위치 텍스트 읽기
+		CString sx, sy, ex, ey, w, h;
+		m_motorUI.m_startXEdit.GetWindowTextW(sx);
+		m_motorUI.m_startYEdit.GetWindowTextW(sy);
+		m_motorUI.m_endXEdit.GetWindowTextW(ex);
+		m_motorUI.m_endYEdit.GetWindowTextW(ey);
+		m_motorUI.m_width.GetWindowTextW(w);
+		m_motorUI.m_height.GetWindowTextW(h);
+
+		CPoint start(_ttoi(sx), _ttoi(sy));
+		CPoint end(_ttoi(ex), _ttoi(ey));
+		CSize motor(_ttoi(w), _ttoi(h));
+
+		// 하위 모터는 상위 모터의 시작점과 끝점 사이의 위치에 있어야 함
+		CPoint motorStart = m_motorManager.motorList[selectedIndex]->motorPos - m_motorManager.motorList[selectedIndex]->motorSize;
+		CPoint motorEnd = m_motorManager.motorList[selectedIndex]->motorPos + m_motorManager.motorList[selectedIndex]->motorSize;
+
+		if (start.x < motorStart.x || start.y < motorStart.y ||
+			end.x > motorEnd.x || end.y > motorEnd.y)
+		{
+			AfxMessageBox(_T("하위 모터는 상위 모터의 영역 내에 있어야 합니다."));
+			return;
+		}
+
+		int motorX = isXSelected ? (end.x - start.x) / 2 + start.x : end.x;
+		int motorY = isXSelected ? start.y : (end.y - start.y) / 2 + start.y;
+		// 하위 모터 추가
+		m_motorManager.AddSubMotor(
+			mainId,
+			CPoint(start.x, start.y),
+			CPoint(end.x, end.y),
+			CPoint(motorX, motorY),
+			CSize(motor.cx / 2, motor.cy / 2)
+		);
+
+		// 리스트 컨트롤에 표시
+		int index = m_motorUI.m_motorListCtrl.GetItemCount();
+		CString idStr, typeStr, strPosStr, endPosStr, motorPosStr;
+		if (!m_motorManager.motorList.empty()) {
+			idStr.Format(_T("%d - %d"), mainId, m_motorManager.motorList.back()->m_id);
+		}
+		typeStr = isXSelected ? _T("X") : _T("Y");
+		strPosStr.Format(_T("(%d, %d)"), start.x, start.y);
+		endPosStr.Format(_T("(%d, %d)"), end.x, end.y);
+		motorPosStr.Format(_T("(%d, %d)"), motorX, motorY);
+		m_motorUI.m_motorListCtrl.InsertItem(index, idStr);
+		m_motorUI.m_motorListCtrl.SetItemText(index, 1, typeStr);
+		m_motorUI.m_motorListCtrl.SetItemText(index, 2, strPosStr);
+		m_motorUI.m_motorListCtrl.SetItemText(index, 3, endPosStr);
+		m_motorUI.m_motorListCtrl.SetItemText(index, 4, motorPosStr);
+
+		// 다시 그리기
+		Invalidate();
+	}
+	else
+	{
+		AfxMessageBox(_T("하위 모터를 추가할 항목을 선택하세요!"));
+	}
+}
+
+void CChildView::DrawSubMotor(int mainId, CDC* pDC) {
+	Motor* mainMotor = m_motorManager.FindAxis(mainId);
+	if (!mainMotor) return;
+	if (mainMotor->subMotors.empty()) return;
+
+	for (auto subMotor : mainMotor->subMotors) {
+		// 화면 좌표로 변환
+		CPoint screenStart = LogicalToScreen(subMotor->strPos);
+		CPoint screenEnd = LogicalToScreen(subMotor->endPos);
+		CPoint screenMotorStart = LogicalToScreen(subMotor->motorPos - subMotor->motorSize);
+		CPoint screenMotorEnd = LogicalToScreen(subMotor->motorPos + subMotor->motorSize);
+
+		pDC->MoveTo(screenStart.x, screenStart.y);
+		pDC->LineTo(screenEnd.x, screenEnd.y);
+
+		CRect motorRect(screenMotorStart.x, screenMotorStart.y, screenMotorEnd.x, screenMotorEnd.y);
+		pDC->FillSolidRect(motorRect, RGB(255, 255, 255));
+		pDC->FrameRect(motorRect, &CBrush(RGB(0, 0, 0)));
+
+		pDC->SetBkMode(TRANSPARENT);
+		pDC->SetTextColor(RGB(0, 0, 0));
+		pDC->SetTextAlign(TA_CENTER | TA_BASELINE);
+
+		CString str;
+		str.Format(_T("ID:%d"), subMotor->m_id);
+		pDC->TextOutW(screenStart.x, screenStart.y - 30, str);
+	}
 }
 
 void CChildView::OnRemoveMotor()
@@ -263,6 +365,8 @@ void CChildView::OnSaveMotor()
 void CChildView::OnLoadMotor()
 {
 	m_motorManager.LoadMotorData();
+	// 리스트 컨트롤 초기화
+	m_motorUI.m_motorListCtrl.DeleteAllItems();
 
 	// 모터 리스트에 있는 모든 모터를 리스트 컨트롤에 추가
 	for (auto motor : m_motorManager.motorList)

@@ -51,6 +51,7 @@ void MotorUI::CreateUI(CWnd* pParent)
 
     // 모터 관리 버튼 생성
     m_addMotorButton.Create(_T("추가"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), pParent, 1001);
+	m_addSubMotorButton.Create(_T("하위 추가"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), pParent, 1005);
     m_removeMotorButton.Create(_T("삭제"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), pParent, 1002);
     m_saveMotorButton.Create(_T("저장"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), pParent, 1003);
     m_loadMotorButton.Create(_T("불러오기"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), pParent, 1004);
@@ -120,7 +121,8 @@ void MotorUI::SetPositionUI(CRect& drawArea, int cx, int cy)
 
 	int buttonY = buttonGroupY + 20;
 	m_addMotorButton.SetWindowPos(nullptr, inputStartX + groupPadding, buttonY, halfWidth, btnHeight, SWP_NOZORDER);
-	m_removeMotorButton.SetWindowPos(nullptr, inputStartX + groupPadding + halfWidth + colGap, buttonY, halfWidth, btnHeight, SWP_NOZORDER);
+	m_addSubMotorButton.SetWindowPos(nullptr, inputStartX + groupPadding + halfWidth + colGap, buttonY, halfWidth, btnHeight, SWP_NOZORDER);
+	// m_removeMotorButton.SetWindowPos(nullptr, inputStartX + groupPadding + halfWidth + colGap, buttonY, halfWidth, btnHeight, SWP_NOZORDER);
 
 	int buttonY2 = buttonY + btnHeight + rowGap;
 	m_saveMotorButton.SetWindowPos(nullptr, inputStartX + groupPadding, buttonY2, halfWidth, btnHeight, SWP_NOZORDER);

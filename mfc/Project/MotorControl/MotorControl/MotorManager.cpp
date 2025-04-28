@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "MotorManager.h"
-
+#include "ChildView.h"
 
 Motor* MotorManager::AddMotor(
     bool isXDirection,
@@ -16,6 +16,28 @@ Motor* MotorManager::AddMotor(
     return newMotor;
 }
 
+Motor* MotorManager::AddSubMotor(int mainId, CPoint strPos, CPoint endPos, CPoint motorPos, CSize motorSize) {
+	Motor* mainMotor = FindAxis(mainId);
+    int subId = mainMotor->subMotors.size();
+	if (mainMotor) {
+		Motor* newSubMotor = new Motor(
+			subId, mainMotor->isX,
+			strPos, endPos, motorPos,
+			motorSize);
+		mainMotor->subMotors.push_back(newSubMotor);
+		return newSubMotor;
+	}
+	return nullptr;
+}
+
+Motor* MotorManager::FindAxis(int id) {
+	for (auto motor : motorList) {
+		if (motor->m_id == id) {
+			return motor;
+		}
+	}
+	return nullptr;
+}
 
 //void MotorManager::MoveAxis(int id, CPoint dest) {
 //	MotorAxis* axis = FindAxis(id);
@@ -119,6 +141,7 @@ void MotorManager::LoadMotorData() {
     CFileDialog fileDialog(TRUE, _T("csv"), NULL, OFN_FILEMUSTEXIST, _T("CSV Files (*.csv)|*.csv|All Files (*.*)|*.*||"));
 
     if (fileDialog.DoModal() == IDOK) {
+		motorList.clear();  // 기존 모터 리스트 초기화
         CString filePath = fileDialog.GetPathName();
 
         // 선택한 파일 열기

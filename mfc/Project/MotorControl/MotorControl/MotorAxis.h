@@ -10,8 +10,6 @@ public:
     CSize motorSize;
 	std::vector<Motor*> subMotors; // 하위 모터 리스트
 
-    std::vector<Motor*> children;
-
     Motor(int id, bool isXDirection, CPoint str, CPoint end, CPoint motor, CSize size);
     /*void MoveTo(CPoint dest);*/
 };

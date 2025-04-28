@@ -15,6 +15,9 @@ public:
 		bool isXDirection,
 		CPoint strPos, CPoint endPos, CPoint motorPos,
 		CSize motorSize);
+
+	Motor* FindAxis(int id);
+	Motor* AddSubMotor(int mainId, CPoint strPos, CPoint endPos, CPoint motorPos, CSize motorSize);
 	//void MoveAxis(int id, CPoint dest);
 	Motor* ParseMotor(const std::string& line);
 	void SaveMotorData();

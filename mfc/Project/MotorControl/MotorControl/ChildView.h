@@ -53,6 +53,7 @@ public:
 public:
 	virtual ~CChildView();
 	void DrawGrid(CDC* pDC);
+	void DrawSubMotor(int mainId, CDC* pDC);
 
 	// 생성된 메시지 맵 함수
 protected:
@@ -60,6 +61,7 @@ protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnAddMotor();
+	afx_msg void OnAddSubMotor();
 	afx_msg void OnRemoveMotor();
 	afx_msg void OnSaveMotor();
 	afx_msg void OnLoadMotor();
