@@ -20,7 +20,7 @@ public:
 	MotorManager m_motorManager;
 	MotorUI m_motorUI;
 	CRect m_drawArea; // 그리기 영역
-	double m_zoomFactor = 10.0;
+	double m_zoomFactor = 2.5;
 	CPoint m_mousePos;
 	CPoint m_lastMousePos;
 	CPoint m_panOffset{ 0, 0 };
@@ -63,7 +63,6 @@ protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnAddMotor();
-	afx_msg void OnAddSubMotor();
 	afx_msg void OnRemoveMotor();
 	afx_msg void OnSaveMotor();
 	afx_msg void OnLoadMotor();
@@ -75,6 +74,7 @@ protected:
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
+	afx_msg void OnListCtrlItemClick(NMHDR* pNMHDR, LRESULT* pResult);
 	DECLARE_MESSAGE_MAP()
 
 private:

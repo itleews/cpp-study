@@ -29,7 +29,6 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 	ON_WM_CREATE()
 	ON_WM_SIZE()
 	ON_BN_CLICKED(1001, &CChildView::OnAddMotor) // 축 추가 버튼 클릭
-	ON_BN_CLICKED(1005, &CChildView::OnAddSubMotor) // 축 추가 버튼 클릭
 	ON_BN_CLICKED(1002, &CChildView::OnRemoveMotor) // 축 삭제 버튼 클릭
 	ON_BN_CLICKED(1003, &CChildView::OnSaveMotor) // 모터 저장 버튼 클릭
 	ON_BN_CLICKED(1004, &CChildView::OnLoadMotor) // 모터 불러오기 버튼 클릭
@@ -41,6 +40,7 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 	ON_WM_MOUSEMOVE()
 	ON_WM_LBUTTONDOWN()
 	ON_WM_LBUTTONUP()
+	ON_NOTIFY(LVN_ITEMACTIVATE, 1, &CChildView::OnListCtrlItemClick)
 END_MESSAGE_MAP()
 
 
@@ -174,8 +174,6 @@ void CChildView::DrawGrid(CDC* pDC)
 
 void CChildView::OnAddMotor()
 {
-	BOOL isXSelected = m_motorUI.m_radioXAxis.GetCheck() == BST_CHECKED;
-
 	// 위치 텍스트 읽기
 	CString sx, sy, ex, ey, w, h;
 	m_motorUI.m_startXEdit.GetWindowTextW(sx);
@@ -184,7 +182,7 @@ void CChildView::OnAddMotor()
 	m_motorUI.m_endYEdit.GetWindowTextW(ey);
 	m_motorUI.m_width.GetWindowTextW(w);
 	m_motorUI.m_height.GetWindowTextW(h);
-	
+
 	CPoint start(_ttoi(sx), _ttoi(sy));
 	CPoint end(_ttoi(ex), _ttoi(ey));
 	CSize motor(_ttoi(w), _ttoi(h));
@@ -195,93 +193,63 @@ void CChildView::OnAddMotor()
 	if (curRect.Width() > m_logicalBounds.Width() || curRect.Height() > m_logicalBounds.Height()) {
 		m_logicalBounds.SetRect(0, 0, max(curRect.Width() + 10, m_logicalBounds.Width() + 10), max(curRect.Height() + 10, m_logicalBounds.Height() + 10));
 	}
-	
-	int motorX = isXSelected ? (end.x - start.x) / 2 + start.x : end.x;
-	int motorY = isXSelected ? start.y : (end.y - start.y) / 2 + start.y;
 
+	int motorX = m_motorUI.m_radioXAxis.GetCheck() == BST_CHECKED ? (end.x - start.x) / 2 + start.x : end.x;
+	int motorY = m_motorUI.m_radioXAxis.GetCheck() == BST_CHECKED ? start.y : (end.y - start.y) / 2 + start.y;
+
+	// 체크박스 상태에 따라 하위 모터 추가 여부 결정
+	BOOL bChecked = m_motorUI.m_subMotorCheck.GetCheck();
+	Motor* parentMotor = nullptr;
+
+	if (bChecked == BST_CHECKED) {
+		// 하위 모터를 추가하려면 부모 모터를 선택해야 함
+		int selectedIndex = m_motorUI.m_motorListCtrl.GetNextItem(-1, LVNI_SELECTED);
+		if (selectedIndex != -1) {
+			CString motorID = m_motorUI.m_motorListCtrl.GetItemText(selectedIndex, 0);
+			int motorIdInt = _ttoi(motorID);
+			parentMotor = GetSelectedMotor(motorIdInt);
+
+			if (!parentMotor) {
+				AfxMessageBox(_T("모터를 선택하세요!"));
+				return;
+			}
+
+			// 하위 모터는 부모 모터의 영역 내에 있어야 함
+			CPoint motorStart = parentMotor->motorPos - parentMotor->motorSize;
+			CPoint motorEnd = parentMotor->motorPos + parentMotor->motorSize;
+
+			// 하위 모터가 부모 모터의 영역 내에 있어야 함을 체크
+			if (start.x < motorStart.x || start.y < motorStart.y ||
+				end.x > motorEnd.x || end.y > motorEnd.y) {
+				AfxMessageBox(_T("하위 모터는 상위 모터의 영역 내에 있어야 합니다."));
+				return;
+			}
+
+			motorY = m_motorUI.m_radioXAxis.GetCheck() == BST_CHECKED ? start.y : (end.y - start.y) / 2 + end.y;
+		}
+		else {
+			AfxMessageBox(_T("하위 모터를 추가할 항목을 선택하세요!"));
+			return;
+		}
+	}
+
+	// 모터 추가
 	m_motorManager.AddMotor(
-		nullptr, // 부모 모터 없음
-		isXSelected,
+		parentMotor, // 부모 모터 (없으면 nullptr)
+		m_motorUI.m_radioXAxis.GetCheck() == BST_CHECKED,
 		CPoint(start.x, start.y),
 		CPoint(end.x, end.y),
 		CPoint(motorX, motorY),
 		CSize(motor.cx / 2, motor.cy / 2)
 	);
 
-	// 리스트 컨트롤에 모터 트리를 표시
+	// 리스트 컨트롤에 모터 트리 표시
 	m_motorUI.DisplayMotorTree(m_motorUI.m_motorListCtrl, m_motorManager.rootMotors);
 
 	// 다시 그리기
 	Invalidate();
 }
 
-void CChildView::OnAddSubMotor()
-{
-	// 선택된 항목 인덱스를 가져옴
-	int selectedIndex = m_motorUI.m_motorListCtrl.GetNextItem(-1, LVNI_SELECTED);
-	if (selectedIndex != -1)
-	{
-		CString motorID = m_motorUI.m_motorListCtrl.GetItemText(selectedIndex, 0);
-		int motorIdInt = _ttoi(motorID);
-		// 선택된 모터를 부모로 설정 (재귀적으로 부모를 찾아서 처리)
-		Motor* parentMotor = GetSelectedMotor(motorIdInt);
-
-		if (!parentMotor)
-		{
-			AfxMessageBox(_T("모터를 선택하세요!"));
-			return;
-		}
-
-		BOOL isXSelected = m_motorUI.m_radioXAxis.GetCheck() == BST_CHECKED;
-
-		// 위치 텍스트 읽기
-		CString sx, sy, ex, ey, w, h;
-		m_motorUI.m_startXEdit.GetWindowTextW(sx);
-		m_motorUI.m_startYEdit.GetWindowTextW(sy);
-		m_motorUI.m_endXEdit.GetWindowTextW(ex);
-		m_motorUI.m_endYEdit.GetWindowTextW(ey);
-		m_motorUI.m_width.GetWindowTextW(w);
-		m_motorUI.m_height.GetWindowTextW(h);
-
-		CPoint start(_ttoi(sx), _ttoi(sy));
-		CPoint end(_ttoi(ex), _ttoi(ey));
-		CSize motor(_ttoi(w), _ttoi(h));
-
-		// 하위 모터는 상위 모터의 시작점과 끝점 사이의 위치에 있어야 함
-		CPoint motorStart = parentMotor->motorPos - parentMotor->motorSize;
-		CPoint motorEnd = parentMotor->motorPos + parentMotor->motorSize;
-
-		if (start.x < motorStart.x || start.y < motorStart.y ||
-			end.x > motorEnd.x || end.y > motorEnd.y)
-		{
-			AfxMessageBox(_T("하위 모터는 상위 모터의 영역 내에 있어야 합니다."));
-			return;
-		}
-
-		int motorX = isXSelected ? (end.x - start.x) / 2 + start.x : end.x;
-		int motorY = isXSelected ? start.y : (end.y - start.y) / 2 + end.y;
-
-		// 하위 모터 추가
-		m_motorManager.AddMotor(
-			parentMotor, // 부모를 첫 번째 인자로 넘김
-			isXSelected,
-			CPoint(start.x, start.y),
-			CPoint(end.x, end.y),
-			CPoint(motorX, motorY),
-			CSize(motor.cx / 2, motor.cy / 2)
-		);
-
-		// 부모 모터가 포함된 트리 구조로 리스트에 표시
-		m_motorUI.DisplayMotorTree(m_motorUI.m_motorListCtrl, m_motorManager.rootMotors);
-
-		// 다시 그리기
-		Invalidate();
-	}
-	else
-	{
-		AfxMessageBox(_T("하위 모터를 추가할 항목을 선택하세요!"));
-	}
-}
 
 Motor* CChildView::GetSelectedMotor(int selectedIndex)
 {
@@ -522,4 +490,16 @@ void CChildView::OnLButtonUp(UINT nFlags, CPoint point)
 	}
 
 	CWnd::OnLButtonUp(nFlags, point);
+}
+
+void CChildView::OnListCtrlItemClick(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	NMLISTVIEW* pNMLV = (NMLISTVIEW*)pNMHDR;
+	int nSelectedIndex = pNMLV->iItem; // 선택된 항목 인덱스
+
+	// 항목 선택 상태를 유지하고 포커스를 벗어날 때도 선택을 표시
+	m_motorListCtrl.SetItemState(nSelectedIndex, LVIS_SELECTED, LVIS_SELECTED);
+	m_motorListCtrl.SetSelectionMark(nSelectedIndex);
+
+	*pResult = 0;
 }
