@@ -87,7 +87,7 @@ void CChildView::OnPaint()
 	DrawGrid(&memDC); // 그리드 그리기
 
 	// 도형 그리기
-	for (auto axis : m_motorManager.axisList)
+	for (auto axis : m_motorManager.motorList)
 	{
 		// 화면 좌표로 변환
 		CPoint screenStart = LogicalToScreen(axis->strPos);
@@ -198,7 +198,7 @@ void CChildView::OnAddMotor()
 	int motorY = isXSelected ? startY : (endY - startY) / 2 + startY;
 
 	// 변경된 AddAxis 호출
-	m_motorManager.AddAxis(
+	m_motorManager.AddMotor(
 		isXSelected,
 		CPoint(startX, startY),
 		CPoint(endX, endY),
@@ -209,8 +209,8 @@ void CChildView::OnAddMotor()
 	// 리스트 컨트롤에 표시
 	int index = m_motorUI.m_motorListCtrl.GetItemCount();
 	CString idStr, typeStr, strPosStr, endPosStr, motorPosStr;
-    if (!m_motorManager.axisList.empty()) {
-       idStr.Format(_T("%d"), m_motorManager.axisList.back()->m_id);
+    if (!m_motorManager.motorList.empty()) {
+       idStr.Format(_T("%d"), m_motorManager.motorList.back()->m_id);
     }
 	typeStr = isXSelected ? _T("X") : _T("Y");
 	strPosStr.Format(_T("(%d, %d)"), startX, startY);
@@ -238,11 +238,11 @@ void CChildView::OnRemoveMotor()
 		m_motorUI.m_motorListCtrl.DeleteItem(selectedIndex);
 
 		// axisList에서도 해당 ID에 해당하는 축 제거
-		if (selectedIndex >= 0 && selectedIndex < m_motorManager.axisList.size())
+		if (selectedIndex >= 0 && selectedIndex < m_motorManager.motorList.size())
 		{
 			// 메모리 해제 후 제거
-			delete m_motorManager.axisList[selectedIndex];
-			m_motorManager.axisList.erase(m_motorManager.axisList.begin() + selectedIndex);
+			delete m_motorManager.motorList[selectedIndex];
+			m_motorManager.motorList.erase(m_motorManager.motorList.begin() + selectedIndex);
 		}
 
 		// 다시 그리기
@@ -254,15 +254,34 @@ void CChildView::OnRemoveMotor()
 	}
 }
 
-
+// 모터 저장 기능
 void CChildView::OnSaveMotor()
 {
-	AfxMessageBox(_T("모터 저장 기능 실행 (파일 저장 로직 구현 예정)"));
+	m_motorManager.SaveMotorData();
 }
 
 void CChildView::OnLoadMotor()
 {
-	AfxMessageBox(_T("모터 불러오기 기능 실행 (파일 로딩 로직 구현 예정)"));
+	m_motorManager.LoadMotorData();
+
+	// 모터 리스트에 있는 모든 모터를 리스트 컨트롤에 추가
+	for (auto motor : m_motorManager.motorList)
+	{
+		int index = m_motorUI.m_motorListCtrl.GetItemCount();
+		CString idStr, typeStr, strPosStr, endPosStr, motorPosStr;
+		idStr.Format(_T("%d"), motor->m_id);
+		typeStr = motor->isX ? _T("X") : _T("Y");
+		strPosStr.Format(_T("(%d, %d)"), motor->strPos.x, motor->strPos.y);
+		endPosStr.Format(_T("(%d, %d)"), motor->endPos.x, motor->endPos.y);
+		motorPosStr.Format(_T("(%d, %d)"), motor->motorPos.x, motor->motorPos.y);
+		m_motorUI.m_motorListCtrl.InsertItem(index, idStr);
+		m_motorUI.m_motorListCtrl.SetItemText(index, 1, typeStr);
+		m_motorUI.m_motorListCtrl.SetItemText(index, 2, strPosStr);
+		m_motorUI.m_motorListCtrl.SetItemText(index, 3, endPosStr);
+		m_motorUI.m_motorListCtrl.SetItemText(index, 4, motorPosStr);
+	}
+
+	Invalidate();
 }
 
 void CChildView::OnBnClickedRadioXAxis()

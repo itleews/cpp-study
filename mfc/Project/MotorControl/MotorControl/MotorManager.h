@@ -2,18 +2,21 @@
 
 #include "MotorAxis.h"
 #include <vector>
+#include <fstream>
+#include <sstream>
 
 class MotorManager {
 public:
-	std::vector<MotorAxis*> axisList;
+	std::vector<Motor*> motorList;
 
 	int nextId = 1;
 	
-	MotorAxis* AddAxis(
+	Motor* AddMotor(
 		bool isXDirection,
 		CPoint strPos, CPoint endPos, CPoint motorPos,
 		CSize motorSize);
 	//void MoveAxis(int id, CPoint dest);
-	MotorAxis* FindAxis(int id);
-	/*void UpdateAllMotorRatios(CRect prevBaseRect, CRect newBaseRect);*/
+	Motor* ParseMotor(const std::string& line);
+	void SaveMotorData();
+	void LoadMotorData();
 };

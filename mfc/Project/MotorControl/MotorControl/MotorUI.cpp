@@ -16,6 +16,7 @@ void MotorUI::CreateUI(CWnd* pParent)
     // 그룹박스 생성
     m_groupInput.Create(_T("위치 및 크기 설정"), WS_CHILD | WS_VISIBLE | BS_GROUPBOX, CRect(0, 0, 0, 0), pParent, 3000);
     m_groupButtons.Create(_T("모터 관리"), WS_CHILD | WS_VISIBLE | BS_GROUPBOX, CRect(0, 0, 0, 0), pParent, 3001);
+	m_groupControl.Create(_T("모터 조작부"), WS_CHILD | WS_VISIBLE | BS_GROUPBOX, CRect(0, 0, 0, 0), pParent, 3002);
 
     // 입력 필드 생성
     m_startXEdit.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, CRect(0, 0, 0, 0), pParent, 2001);
@@ -53,9 +54,6 @@ void MotorUI::CreateUI(CWnd* pParent)
     m_removeMotorButton.Create(_T("삭제"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), pParent, 1002);
     m_saveMotorButton.Create(_T("저장"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), pParent, 1003);
     m_loadMotorButton.Create(_T("불러오기"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), pParent, 1004);
-
-    // 모터 조작부 라벨 생성
-    m_motorControlStatic.Create(_T("모터 조작부"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), pParent, 1005);
 }
 
 void MotorUI::SetPositionUI(CRect& drawArea, int cx, int cy)
@@ -91,7 +89,7 @@ void MotorUI::SetPositionUI(CRect& drawArea, int cx, int cy)
 	const int fieldHeight = 25;
 	const int groupPadding = 10;
 
-	int halfWidth = (inputGroupWidth - groupPadding * 2 - colGap) / 2;
+	int halfWidth = (inputGroupWidth - groupPadding * 2 - colGap) / 2 - 10;
 
 	// 2. 입력 그룹박스
 	int row1Y = inputStartY + groupPadding + 15;
@@ -115,7 +113,7 @@ void MotorUI::SetPositionUI(CRect& drawArea, int cx, int cy)
 	m_radioYAxis.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap + 70, row4Y, 60, fieldHeight, SWP_NOZORDER);
 
 	int inputGroupHeight = (row4Y + fieldHeight + groupPadding) - inputStartY;
-	m_groupInput.SetWindowPos(nullptr, inputStartX, inputStartY, inputGroupWidth, inputGroupHeight, SWP_NOZORDER);
+	m_groupInput.SetWindowPos(nullptr, rightX, inputStartY, rightWidth, inputGroupHeight, SWP_NOZORDER);
 
 	// 3. 버튼 그룹박스
 	int buttonGroupY = inputStartY + inputGroupHeight + sectionGap;
@@ -129,10 +127,10 @@ void MotorUI::SetPositionUI(CRect& drawArea, int cx, int cy)
 	m_loadMotorButton.SetWindowPos(nullptr, inputStartX + groupPadding + halfWidth + colGap, buttonY2, halfWidth, btnHeight, SWP_NOZORDER);
 
 	int buttonGroupHeight = (buttonY2 + btnHeight + groupPadding) - buttonGroupY;
-	m_groupButtons.SetWindowPos(nullptr, inputStartX, buttonGroupY, inputGroupWidth, buttonGroupHeight, SWP_NOZORDER);
+	m_groupButtons.SetWindowPos(nullptr, rightX, buttonGroupY, rightWidth, buttonGroupHeight, SWP_NOZORDER);
 
 	// 4. 조작부
 	int controlTop = buttonGroupY + buttonGroupHeight + sectionGap;
 	int controlHeight = cy - controlTop - margin;
-	m_motorControlStatic.SetWindowPos(nullptr, rightX, controlTop, rightWidth, controlHeight, SWP_NOZORDER);
+	m_groupControl.SetWindowPos(nullptr, rightX, controlTop, rightWidth, controlHeight, SWP_NOZORDER);
 }
