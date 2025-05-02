@@ -17,7 +17,7 @@ public:
 		CPoint strPos, CPoint endPos, CPoint motorPos,
 		CSize motorSize);
 
-	Motor* FindAxis(int id);
+	//Motor* FindAxis(int id);
 	//void MoveAxis(int id, CPoint dest);
 	Motor* ParseMotor(const std::string& line);
 	void SaveMotorData();

@@ -6,6 +6,7 @@
 #include "framework.h"
 #include "MotorControl.h"
 #include "ChildView.h"
+#include <algorithm>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -34,13 +35,12 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 	ON_BN_CLICKED(1004, &CChildView::OnLoadMotor) // 모터 불러오기 버튼 클릭
 	ON_EN_CHANGE(2001, &CChildView::OnChangeStartX)  // m_startXEdit
 	ON_EN_CHANGE(2002, &CChildView::OnChangeStartY)  // m_startYEdit
-	ON_BN_CLICKED(3002, &CChildView::OnBnClickedRadioXAxis) // X축 라디오 버튼 클릭
-	ON_BN_CLICKED(3003, &CChildView::OnBnClickedRadioYAxis) // Y축 라디오 버튼 클릭
+	ON_BN_CLICKED(3003, &CChildView::OnBnClickedRadioXAxis) // X축 라디오 버튼 클릭
+	ON_BN_CLICKED(3004, &CChildView::OnBnClickedRadioYAxis) // Y축 라디오 버튼 클릭
 	ON_WM_MOUSEWHEEL()
 	ON_WM_MOUSEMOVE()
 	ON_WM_LBUTTONDOWN()
 	ON_WM_LBUTTONUP()
-	ON_NOTIFY(LVN_ITEMACTIVATE, 1, &CChildView::OnListCtrlItemClick)
 END_MESSAGE_MAP()
 
 
@@ -81,6 +81,7 @@ void CChildView::OnPaint()
 	memDC.FrameRect(m_drawArea, &CBrush(RGB(0, 0, 0)));
 	CRect rightRect(m_drawArea.right, clientRect.top, clientRect.right, clientRect.bottom);
 	memDC.FillSolidRect(rightRect, RGB(240, 240, 240));
+	m_motorUI.m_motorControlPanel.Draw(&memDC);
 
 	// 왼쪽 클리핑 설정
 	memDC.IntersectClipRect(m_drawArea);
@@ -224,8 +225,6 @@ void CChildView::OnAddMotor()
 				AfxMessageBox(_T("하위 모터는 상위 모터의 영역 내에 있어야 합니다."));
 				return;
 			}
-
-			motorY = m_motorUI.m_radioXAxis.GetCheck() == BST_CHECKED ? start.y : (end.y - start.y) / 2 + end.y;
 		}
 		else {
 			AfxMessageBox(_T("하위 모터를 추가할 항목을 선택하세요!"));
@@ -316,47 +315,67 @@ void CChildView::DrawSubMotor(Motor* parentMotor, CDC* pDC)
 
 void CChildView::OnRemoveMotor()
 {
-	// 선택된 항목 인덱스를 가져옴
-	int selectedIndex = m_motorUI.m_motorListCtrl.GetNextItem(-1, LVNI_SELECTED);
+	std::vector<int> selectedIndices;
 
-	if (selectedIndex != -1)
+	// 다중 선택된 인덱스 수집
+	int index = -1;
+	while ((index = m_motorUI.m_motorListCtrl.GetNextItem(index, LVNI_SELECTED)) != -1)
 	{
-		// 선택된 Motor 객체 가져오기
-		Motor* motorToDelete = m_motorManager.rootMotors[selectedIndex];
-
-		// 부모 Motor로부터 이 Motor 제거
-		if (motorToDelete->parentMotor != nullptr)
-		{
-			auto& siblings = motorToDelete->parentMotor->subMotors;
-			// 부모 모터의 하위 모터 목록에서 삭제 (std::vector에서 삭제)
-			auto it = std::find(siblings.begin(), siblings.end(), motorToDelete);
-			if (it != siblings.end()) {
-				siblings.erase(it);  // 원소를 삭제
-			}
-		}
-
-		// motorList에서 Motor 삭제 (std::vector에서 삭제하는 방법)
-		auto it = std::find(m_motorManager.rootMotors.begin(), m_motorManager.rootMotors.end(), motorToDelete);
-		if (it != m_motorManager.rootMotors.end()) {
-			m_motorManager.rootMotors.erase(it);  // 원소를 삭제
-		}
-
-		// 메모리 해제
-		delete motorToDelete;
-
-		// 리스트 컨트롤에서 삭제
-		m_motorUI.m_motorListCtrl.DeleteItem(selectedIndex);
-
-		// 다시 그리기
-		Invalidate();
+		selectedIndices.push_back(index);
 	}
-	else
+
+	if (selectedIndices.empty())
 	{
 		AfxMessageBox(_T("삭제할 모터를 선택하세요!"));
+		return;
 	}
+
+	// 삭제할 Motor 포인터 저장
+	std::vector<Motor*> motorsToDelete;
+
+	for (int selectedIndex : selectedIndices)
+	{
+		CString motorIDStr = m_motorUI.m_motorListCtrl.GetItemText(selectedIndex, 0);
+		int motorIdInt = _ttoi(motorIDStr);
+
+		Motor* motorToDelete = GetSelectedMotor(motorIdInt);
+		if (motorToDelete)
+		{
+			motorsToDelete.push_back(motorToDelete);
+		}
+	}
+
+	// 삭제 처리
+	for (Motor* motorToDelete : motorsToDelete)
+	{
+		if (motorToDelete->parentMotor)
+		{
+			auto& siblings = motorToDelete->parentMotor->subMotors;
+			auto it = std::find(siblings.begin(), siblings.end(), motorToDelete);
+			if (it != siblings.end())
+				siblings.erase(it);
+		}
+		else
+		{
+			auto& roots = m_motorManager.rootMotors;
+			auto it = std::find(roots.begin(), roots.end(), motorToDelete);
+			if (it != roots.end())
+				roots.erase(it);
+		}
+
+		delete motorToDelete;
+	}
+
+	// 인덱스 역순으로 리스트에서 삭제 (index shift 방지)
+	std::sort(selectedIndices.rbegin(), selectedIndices.rend());
+	for (int selectedIndex : selectedIndices)
+	{
+		m_motorUI.m_motorListCtrl.DeleteItem(selectedIndex);
+	}
+
+	// 다시 그리기
+	Invalidate();
 }
-
-
 
 
 // 모터 저장 기능
@@ -490,16 +509,4 @@ void CChildView::OnLButtonUp(UINT nFlags, CPoint point)
 	}
 
 	CWnd::OnLButtonUp(nFlags, point);
-}
-
-void CChildView::OnListCtrlItemClick(NMHDR* pNMHDR, LRESULT* pResult)
-{
-	NMLISTVIEW* pNMLV = (NMLISTVIEW*)pNMHDR;
-	int nSelectedIndex = pNMLV->iItem; // 선택된 항목 인덱스
-
-	// 항목 선택 상태를 유지하고 포커스를 벗어날 때도 선택을 표시
-	m_motorListCtrl.SetItemState(nSelectedIndex, LVIS_SELECTED, LVIS_SELECTED);
-	m_motorListCtrl.SetSelectionMark(nSelectedIndex);
-
-	*pResult = 0;
 }

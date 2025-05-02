@@ -1,8 +1,9 @@
 #pragma once
 #include <afxwin.h>
 #include "MotorManager.h"
+#include "MotorControlPanel.h"
 
-class MotorUI {
+class MotorUI : public CWnd {
 public:
     // UI 컨트롤 선언
     CListCtrl m_motorListCtrl;
@@ -11,6 +12,7 @@ public:
     CEdit m_startXEdit, m_startYEdit, m_endXEdit, m_endYEdit, m_width, m_height;
     CButton m_radioXAxis, m_radioYAxis;
     CStatic m_labelStart, m_labelEnd, m_labelSize, m_labelAxis;
+    MotorControlPanel m_motorControlPanel;
 
     // UI 생성 함수
     void CreateUI(CWnd* pParent);

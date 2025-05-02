@@ -25,14 +25,14 @@ Motor* MotorManager::AddMotor(
     return newMotor;
 }
 
-Motor* MotorManager::FindAxis(int id) {
-	for (auto motor : rootMotors) {
-		if (motor->m_id == id) {
-			return motor;
-		}
-	}
-	return nullptr;
-}
+//Motor* MotorManager::FindAxis(int id) {
+//	for (auto motor : rootMotors) {
+//		if (motor->m_id == id) {
+//			return motor;
+//		}
+//	}
+//	return nullptr;
+//}
 
 //void MotorManager::MoveAxis(int id, CPoint dest) {
 //	MotorAxis* axis = FindAxis(id);

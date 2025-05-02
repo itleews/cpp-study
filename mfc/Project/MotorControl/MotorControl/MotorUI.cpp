@@ -6,7 +6,7 @@ void MotorUI::CreateUI(CWnd* pParent)
 {
     // 리스트 컨트롤 생성
     m_motorListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT, CRect(0, 0, 0, 0), pParent, 1);
-    m_motorListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
+    m_motorListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_INFOTIP | LVS_EX_DOUBLEBUFFER);
     m_motorListCtrl.InsertColumn(0, _T("모터 ID"), LVCFMT_LEFT, 100);
     m_motorListCtrl.InsertColumn(1, _T("기준 축"), LVCFMT_LEFT, 100);
     m_motorListCtrl.InsertColumn(2, _T("시작 위치"), LVCFMT_LEFT, 100);
@@ -41,8 +41,8 @@ void MotorUI::CreateUI(CWnd* pParent)
 	m_subMotorCheck.SetCheck(BST_UNCHECKED);
 
     // 라디오 버튼 생성
-    m_radioXAxis.Create(_T("X축"), WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, CRect(0, 0, 0, 0), pParent, 3002);
-    m_radioYAxis.Create(_T("Y축"), WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, CRect(0, 0, 0, 0), pParent, 3003);
+    m_radioXAxis.Create(_T("X축"), WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, CRect(0, 0, 0, 0), pParent, 3003);
+    m_radioYAxis.Create(_T("Y축"), WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, CRect(0, 0, 0, 0), pParent, 3004);
     m_radioXAxis.SetCheck(TRUE);  // 기본으로 X축 선택
     m_endYEdit.EnableWindow(FALSE);  // Y축 비활성화
 
@@ -57,6 +57,8 @@ void MotorUI::CreateUI(CWnd* pParent)
     m_removeMotorButton.Create(_T("삭제"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), pParent, 1002);
     m_saveMotorButton.Create(_T("저장"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), pParent, 1003);
     m_loadMotorButton.Create(_T("불러오기"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), pParent, 1004);
+
+	m_motorControlPanel.Create(pParent, CRect(0, 0, 0, 0));
 }
 
 void MotorUI::SetPositionUI(CRect& drawArea, int cx, int cy)
@@ -136,6 +138,11 @@ void MotorUI::SetPositionUI(CRect& drawArea, int cx, int cy)
 	// 4. 조작부
 	int controlTop = buttonGroupY + buttonGroupHeight + sectionGap;
 	int controlHeight = cy - controlTop - margin;
+	CRect controlRect(rightX, controlTop, rightX + rightWidth, controlTop + controlHeight);
+
+	m_motorControlPanel.SetWindowPos(&CWnd::wndTop, controlRect.left, controlRect.top, controlRect.Width(), controlRect.Height(), SWP_SHOWWINDOW);
+	m_motorControlPanel.UpdateLayout(controlRect);
+
 	m_groupControl.SetWindowPos(nullptr, rightX, controlTop, rightWidth, controlHeight, SWP_NOZORDER);
 }
 

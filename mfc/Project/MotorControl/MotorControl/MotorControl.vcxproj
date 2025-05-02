@@ -188,6 +188,7 @@
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="MotorAxis.h" />
     <ClInclude Include="MotorControl.h" />
+    <ClInclude Include="MotorControlPanel.h" />
     <ClInclude Include="MotorManager.h" />
     <ClInclude Include="MotorUI.h" />
     <ClInclude Include="pch.h" />
@@ -199,6 +200,7 @@
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="MotorAxis.cpp" />
     <ClCompile Include="MotorControl.cpp" />
+    <ClCompile Include="MotorControlPanel.cpp" />
     <ClCompile Include="MotorManager.cpp" />
     <ClCompile Include="MotorUI.cpp" />
     <ClCompile Include="pch.cpp">
