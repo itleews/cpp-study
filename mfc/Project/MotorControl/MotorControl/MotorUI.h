@@ -12,11 +12,14 @@ public:
     CEdit m_startXEdit, m_startYEdit, m_endXEdit, m_endYEdit, m_width, m_height;
     CButton m_radioXAxis, m_radioYAxis;
     CStatic m_labelStart, m_labelEnd, m_labelSize, m_labelAxis;
-    MotorControlPanel m_motorControlPanel;
+	MotorControlPanel m_motorControlPanel;
 
-    // UI 积己 窃荐
-    void CreateUI(CWnd* pParent);
-    void SetPositionUI(CRect& drawArea, int cx, int cy);
     void DisplayMotorTree(CListCtrl& listCtrl, const std::vector<Motor*>& rootMotors);
     void DisplayMotorRecursive(CListCtrl& listCtrl, Motor* node, int depth, int& itemIndex);
+
+protected:
+    // UI 积己 窃荐
+    DECLARE_MESSAGE_MAP()
+    afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
 };

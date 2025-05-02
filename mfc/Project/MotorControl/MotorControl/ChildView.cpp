@@ -127,21 +127,41 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 
-	m_motorUI.CreateUI(this);
-	m_motorUI.m_motorControlPanel.CreatePanel(this);
+	if (!m_motorUI.Create(NULL, _T("Motor UI"), WS_CHILD | WS_VISIBLE | WS_BORDER,
+		CRect(0, 0, 10, 10), this, 1001))
+	{
+		AfxMessageBox(_T("MotorUI 생성 실패"));
+	}
+
+	if (!m_motorControlPanel.Create(NULL, _T("Motor Panel"), WS_CHILD | WS_VISIBLE | WS_BORDER,
+		CRect(0, 0, 10, 10), this, 1002))
+	{
+		AfxMessageBox(_T("MotorControlPanel 생성 실패"));
+	}
+
 
 	return 0;
 }
+
 
 void CChildView::OnSize(UINT nType, int cx, int cy)
 {
 	CWnd::OnSize(nType, cx, cy);
 
-	// 전체 창의 왼쪽 80% 영역을 도형 그리는 공간으로 사용
+	// 전체 창의 왼쪽 80% 영역은 도형 영역
 	m_drawArea.SetRect(10, 10, (int)(cx * 0.8) - 20, cy - 10);
 
-	m_motorUI.SetPositionUI(m_drawArea, cx, cy);
+	if (::IsWindow(m_motorControlPanel.GetSafeHwnd()))
+	{
+		m_motorControlPanel.MoveWindow(0, 0, cx, cy);
+	}
+
+	if (::IsWindow(m_motorUI.GetSafeHwnd()))
+	{
+		m_motorUI.MoveWindow(0, 0, cx, cy);
+	}
 }
+
 
 void CChildView::DrawGrid(CDC* pDC)
 {

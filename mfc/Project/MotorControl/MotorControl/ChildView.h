@@ -19,6 +19,7 @@ public:
 public:
 	MotorManager m_motorManager;
 	MotorUI m_motorUI;
+	MotorControlPanel m_motorControlPanel;
 	CRect m_drawArea; // 그리기 영역
 	double m_zoomFactor = 2.5;
 	CPoint m_mousePos;
@@ -46,7 +47,7 @@ public:
 	}
 
 // 재정의입니다.
-	protected:
+protected:
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 
 // 구현입니다.

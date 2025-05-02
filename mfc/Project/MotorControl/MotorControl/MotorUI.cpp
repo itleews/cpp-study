@@ -2,10 +2,18 @@
 #include "MotorUI.h"
 #include "ChildView.h"
 
-void MotorUI::CreateUI(CWnd* pParent)
+BEGIN_MESSAGE_MAP(MotorUI, CWnd)
+	ON_WM_CREATE()
+	ON_WM_SIZE()
+END_MESSAGE_MAP()
+
+int MotorUI::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
+	if (CWnd::OnCreate(lpCreateStruct) == -1)
+		return -1;
+
     // 리스트 컨트롤 생성
-    m_motorListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT, CRect(0, 0, 0, 0), pParent, 1);
+    m_motorListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT, CRect(0, 0, 0, 0), this, 1);
     m_motorListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_INFOTIP | LVS_EX_DOUBLEBUFFER);
     m_motorListCtrl.InsertColumn(0, _T("모터 ID"), LVCFMT_LEFT, 100);
     m_motorListCtrl.InsertColumn(1, _T("기준 축"), LVCFMT_LEFT, 100);
@@ -14,53 +22,59 @@ void MotorUI::CreateUI(CWnd* pParent)
     m_motorListCtrl.InsertColumn(4, _T("현재 위치"), LVCFMT_LEFT, 100);
 
     // 그룹박스 생성
-    m_groupInput.Create(_T("위치 및 크기 설정"), WS_CHILD | WS_VISIBLE | BS_GROUPBOX, CRect(0, 0, 0, 0), pParent, 3000);
-    m_groupButtons.Create(_T("모터 관리"), WS_CHILD | WS_VISIBLE | BS_GROUPBOX, CRect(0, 0, 0, 0), pParent, 3001);
-	m_groupControl.Create(_T("모터 조작부"), WS_CHILD | WS_VISIBLE | BS_GROUPBOX, CRect(0, 0, 0, 0), pParent, 3002);
+    m_groupInput.Create(_T("위치 및 크기 설정"), WS_CHILD | WS_VISIBLE | BS_GROUPBOX, CRect(0, 0, 0, 0), this, 3000);
+    m_groupButtons.Create(_T("모터 관리"), WS_CHILD | WS_VISIBLE | BS_GROUPBOX, CRect(0, 0, 0, 0), this, 3001);
+	m_groupControl.Create(_T("모터 조작부"), WS_CHILD | WS_VISIBLE | BS_GROUPBOX, CRect(0, 0, 0, 0), this, 3002);
 
     // 입력 필드 생성
-    m_startXEdit.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, CRect(0, 0, 0, 0), pParent, 2001);
+    m_startXEdit.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, CRect(0, 0, 0, 0), this, 2001);
     m_startXEdit.SetWindowTextW(_T("0"));
 
-    m_startYEdit.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, CRect(0, 0, 0, 0), pParent, 2002);
+    m_startYEdit.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, CRect(0, 0, 0, 0), this, 2002);
     m_startYEdit.SetWindowTextW(_T("100"));
 
-    m_endXEdit.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, CRect(0, 0, 0, 0), pParent, 2003);
+    m_endXEdit.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, CRect(0, 0, 0, 0), this, 2003);
     m_endXEdit.SetWindowTextW(_T("1000"));
 
-    m_endYEdit.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, CRect(0, 0, 0, 0), pParent, 2004);
+    m_endYEdit.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, CRect(0, 0, 0, 0), this, 2004);
     m_endYEdit.SetWindowTextW(_T("100"));
 
-    m_width.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, CRect(0, 0, 0, 0), pParent, 2005);
+    m_width.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, CRect(0, 0, 0, 0), this, 2005);
     m_width.SetWindowTextW(_T("100"));
 
-    m_height.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, CRect(0, 0, 0, 0), pParent, 2006);
+    m_height.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, CRect(0, 0, 0, 0), this, 2006);
     m_height.SetWindowTextW(_T("100"));
 
-	m_subMotorCheck.Create(_T("하위 모터로 추가"), WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, CRect(0, 0, 0, 0), pParent, 2007);
+	m_subMotorCheck.Create(_T("하위 모터로 추가"), WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, CRect(0, 0, 0, 0), this, 2007);
 	m_subMotorCheck.SetCheck(BST_UNCHECKED);
 
     // 라디오 버튼 생성
-    m_radioXAxis.Create(_T("X축"), WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, CRect(0, 0, 0, 0), pParent, 3003);
-    m_radioYAxis.Create(_T("Y축"), WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, CRect(0, 0, 0, 0), pParent, 3004);
+    m_radioXAxis.Create(_T("X축"), WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, CRect(0, 0, 0, 0), this, 3003);
+    m_radioYAxis.Create(_T("Y축"), WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, CRect(0, 0, 0, 0), this, 3004);
     m_radioXAxis.SetCheck(TRUE);  // 기본으로 X축 선택
     m_endYEdit.EnableWindow(FALSE);  // Y축 비활성화
 
     // 라벨 생성
-    m_labelStart.Create(_T("시작 위치(x, y)"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), pParent);
-    m_labelEnd.Create(_T("끝 위치(x, y)"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), pParent);
-    m_labelSize.Create(_T("크기(W, H)"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), pParent);
-    m_labelAxis.Create(_T("기준 축"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), pParent);
+    m_labelStart.Create(_T("시작 위치(x, y)"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this);
+    m_labelEnd.Create(_T("끝 위치(x, y)"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this);
+    m_labelSize.Create(_T("크기(W, H)"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this);
+    m_labelAxis.Create(_T("기준 축"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this);
 
     // 모터 관리 버튼 생성
-    m_addMotorButton.Create(_T("추가"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), pParent, 1001);
-    m_removeMotorButton.Create(_T("삭제"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), pParent, 1002);
-    m_saveMotorButton.Create(_T("저장"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), pParent, 1003);
-    m_loadMotorButton.Create(_T("불러오기"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), pParent, 1004);
+    m_addMotorButton.Create(_T("추가"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 1001);
+    m_removeMotorButton.Create(_T("삭제"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 1002);
+    m_saveMotorButton.Create(_T("저장"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 1003);
+    m_loadMotorButton.Create(_T("불러오기"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 1004);
+	return 0;
 }
 
-void MotorUI::SetPositionUI(CRect& drawArea, int cx, int cy)
+void MotorUI::OnSize(UINT nType, int cx, int cy)
 {
+	CWnd::OnSize(nType, cx, cy);
+
+	// 전체 창의 왼쪽 80% 영역을 도형 그리는 공간으로 사용
+	CRect m_drawArea;
+	m_drawArea.SetRect(10, 10, (int)(cx * 0.8) - 20, cy - 10);
     // UI 컨트롤들의 위치를 그리드에 맞게 배치
 	const int margin = 10;
 	const int sectionGap = 20;
@@ -71,7 +85,7 @@ void MotorUI::SetPositionUI(CRect& drawArea, int cx, int cy)
 	const int editWidth = 100;
 	const int editHeight = 25;
 
-	int rightWidth = cx - drawArea.right - 2 * margin;
+	int rightWidth = cx - m_drawArea.right - 2 * margin;
 	int motorAreaWidth = cx - rightWidth - 2 * margin;
 	int motorAreaHeight = cy - 2 * margin;
 
@@ -138,7 +152,7 @@ void MotorUI::SetPositionUI(CRect& drawArea, int cx, int cy)
 	int controlHeight = cy - controlTop - margin;
 	CRect controlRect(rightX, controlTop, rightX + rightWidth, controlTop + controlHeight);
 
-	m_motorControlPanel.UpdateLayout(controlRect);
+	// m_motorControlPanel.UpdateLayout(controlRect);
 
 	m_groupControl.SetWindowPos(nullptr, rightX, controlTop, rightWidth, controlHeight, SWP_NOZORDER);
 }

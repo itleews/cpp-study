@@ -2,17 +2,28 @@
 #include "MotorControlPanel.h"
 
 BEGIN_MESSAGE_MAP(MotorControlPanel, CWnd)
+	ON_WM_CREATE()
     ON_BN_CLICKED(1, &MotorControlPanel::OnButtonUpClicked)
     ON_BN_CLICKED(2, &MotorControlPanel::OnButtonDownClicked)
     ON_BN_CLICKED(3, &MotorControlPanel::OnButtonLeftClicked)
     ON_BN_CLICKED(4, &MotorControlPanel::OnButtonRightClicked)
 END_MESSAGE_MAP()
 
-void MotorControlPanel::CreatePanel(CWnd* pParent) {
-    m_buttonUp.Create(_T("▲"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, CRect(0, 0, 0, 0), pParent, 1);
-    m_buttonDown.Create(_T("▼"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, CRect(0, 0, 0, 0), pParent, 2);
-    m_buttonLeft.Create(_T("◀"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, CRect(0, 0, 0, 0), pParent, 3);
-    m_buttonRight.Create(_T("▶"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, CRect(0, 0, 0, 0), pParent, 4);
+int MotorControlPanel::OnCreate(LPCREATESTRUCT lpCreateStruct)
+{
+    if (CWnd::OnCreate(lpCreateStruct) == -1)
+        return -1;
+
+    // 버튼 생성 (this가 부모!)
+    m_buttonUp.Create(_T("▲"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        CRect(50, 20, 110, 80), this, 1);
+    m_buttonDown.Create(_T("▼"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        CRect(50, 90, 110, 150), this, 2);
+    m_buttonLeft.Create(_T("◀"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        CRect(10, 90, 70, 150), this, 3);
+    m_buttonRight.Create(_T("▶"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        CRect(90, 90, 150, 150), this, 4);
+    return 0;
 }
 
 void MotorControlPanel::UpdateLayout(const CRect& area) {
