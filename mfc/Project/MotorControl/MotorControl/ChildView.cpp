@@ -81,7 +81,6 @@ void CChildView::OnPaint()
 	memDC.FrameRect(m_drawArea, &CBrush(RGB(0, 0, 0)));
 	CRect rightRect(m_drawArea.right, clientRect.top, clientRect.right, clientRect.bottom);
 	memDC.FillSolidRect(rightRect, RGB(240, 240, 240));
-	m_motorUI.m_motorControlPanel.Draw(&memDC);
 
 	// 왼쪽 클리핑 설정
 	memDC.IntersectClipRect(m_drawArea);
@@ -129,6 +128,7 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		return -1;
 
 	m_motorUI.CreateUI(this);
+	m_motorUI.m_motorControlPanel.CreatePanel(this);
 
 	return 0;
 }

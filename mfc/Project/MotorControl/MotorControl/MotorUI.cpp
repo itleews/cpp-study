@@ -57,8 +57,6 @@ void MotorUI::CreateUI(CWnd* pParent)
     m_removeMotorButton.Create(_T("삭제"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), pParent, 1002);
     m_saveMotorButton.Create(_T("저장"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), pParent, 1003);
     m_loadMotorButton.Create(_T("불러오기"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), pParent, 1004);
-
-	m_motorControlPanel.Create(pParent, CRect(0, 0, 0, 0));
 }
 
 void MotorUI::SetPositionUI(CRect& drawArea, int cx, int cy)
@@ -140,7 +138,6 @@ void MotorUI::SetPositionUI(CRect& drawArea, int cx, int cy)
 	int controlHeight = cy - controlTop - margin;
 	CRect controlRect(rightX, controlTop, rightX + rightWidth, controlTop + controlHeight);
 
-	m_motorControlPanel.SetWindowPos(&CWnd::wndTop, controlRect.left, controlRect.top, controlRect.Width(), controlRect.Height(), SWP_SHOWWINDOW);
 	m_motorControlPanel.UpdateLayout(controlRect);
 
 	m_groupControl.SetWindowPos(nullptr, rightX, controlTop, rightWidth, controlHeight, SWP_NOZORDER);
