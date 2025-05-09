@@ -21,6 +21,7 @@ public:
     void DisplayMotorRecursive(CListCtrl& listCtrl, Motor* node, int depth, int& itemIndex);
     Motor* GetSelectedMotor(int selectedIndex);
     Motor* FindMotorByID(Motor* node, int selectedID);
+	void DeleteMotorRecursive(Motor* motor);
 
 protected:
     // UI 생성 함수

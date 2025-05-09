@@ -274,7 +274,7 @@ void MotorUI::OnAddMotor()
 			parentMotor = GetSelectedMotor(motorIdInt);
 
 			if (!parentMotor) {
-				AfxMessageBox(_T("모터를 선택하세요!"));
+				AfxMessageBox(_T("선택한 ID에 해당하는 모터가 존재하지 않습니다."));
 				return;
 			}
 
@@ -347,7 +347,7 @@ void MotorUI::OnRemoveMotor()
 {
 	std::vector<int> selectedIndices;
 
-	// 다중 선택된 인덱스 수집
+	// 선택된 항목 수집
 	int index = -1;
 	while ((index = m_motorListCtrl.GetNextItem(index, LVNI_SELECTED)) != -1)
 	{
@@ -360,14 +360,12 @@ void MotorUI::OnRemoveMotor()
 		return;
 	}
 
-	// 삭제할 Motor 포인터 저장
+	// 삭제 대상 수집
 	std::vector<Motor*> motorsToDelete;
-
 	for (int selectedIndex : selectedIndices)
 	{
 		CString motorIDStr = m_motorListCtrl.GetItemText(selectedIndex, 0);
 		int motorIdInt = _ttoi(motorIDStr);
-
 		Motor* motorToDelete = GetSelectedMotor(motorIdInt);
 		if (motorToDelete)
 		{
@@ -375,12 +373,14 @@ void MotorUI::OnRemoveMotor()
 		}
 	}
 
-	// 삭제 처리
+	// 삭제 수행
 	for (Motor* motorToDelete : motorsToDelete)
 	{
+		DeleteMotorRecursive(motorToDelete); // 하위 모터 포함 삭제
+
 		if (motorToDelete->parentMotor)
 		{
-			auto& siblings = motorToDelete->parentMotor->subMotors;
+			auto& siblings = motorToDelete->parentMotor->children;
 			auto it = std::find(siblings.begin(), siblings.end(), motorToDelete);
 			if (it != siblings.end())
 				siblings.erase(it);
@@ -393,20 +393,47 @@ void MotorUI::OnRemoveMotor()
 				roots.erase(it);
 		}
 
-		delete motorToDelete;
+		// motorToDelete는 이제 이미 삭제되었으므로, 여기에 delete 호출을 하지 않음
 	}
 
-	// 인덱스 역순으로 리스트에서 삭제 (index shift 방지)
-	std::sort(selectedIndices.rbegin(), selectedIndices.rend());
-	for (int selectedIndex : selectedIndices)
-	{
-		m_motorListCtrl.DeleteItem(selectedIndex);
-	}
+	// 리스트 초기화 후 다시 채우기
+	m_motorListCtrl.SetRedraw(FALSE);
+	m_motorListCtrl.DeleteAllItems();
+
+	DisplayMotorTree(m_motorListCtrl, m_motorManager.rootMotors);
+
+	m_motorListCtrl.SetRedraw(TRUE);
+	m_motorListCtrl.RedrawWindow();
 
 	// 다시 그리기
 	if (m_pParentView)
 		m_pParentView->Invalidate();
 }
+
+void MotorUI::DeleteMotorRecursive(Motor* motor)
+{
+	// 하위 모터 먼저 삭제
+	for (Motor* subMotor : motor->children)
+	{
+		DeleteMotorRecursive(subMotor);
+		delete subMotor; // 하위 모터 메모리 해제
+	}
+
+	motor->children.clear(); // 하위 모터 벡터도 정리
+
+	// 부모 모터가 있다면 해당 모터에서 이 모터 삭제
+	if (motor->parentMotor)
+	{
+		auto& siblings = motor->parentMotor->children;
+		auto it = std::find(siblings.begin(), siblings.end(), motor);
+		if (it != siblings.end())
+		{
+			siblings.erase(it); // 부모 리스트에서 제거
+		}
+	}
+}
+
+
 
 // 모터 저장 기능
 void MotorUI::OnSaveMotor()
