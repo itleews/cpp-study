@@ -1,10 +1,19 @@
 #include "pch.h"
 #include "MotorUI.h"
 #include "ChildView.h"
+#include <algorithm>
 
 BEGIN_MESSAGE_MAP(MotorUI, CWnd)
 	ON_WM_CREATE()
 	ON_WM_SIZE()
+	ON_BN_CLICKED(1001, &MotorUI::OnAddMotor) // 축 추가 버튼 클릭
+	ON_BN_CLICKED(1002, &MotorUI::OnRemoveMotor) // 축 삭제 버튼 클릭
+	ON_BN_CLICKED(1003, &MotorUI::OnSaveMotor) // 모터 저장 버튼 클릭
+	ON_BN_CLICKED(1004, &MotorUI::OnLoadMotor) // 모터 불러오기 버튼 클릭
+	ON_EN_CHANGE(2001, &MotorUI::OnChangeStartX)  // m_startXEdit
+	ON_EN_CHANGE(2002, &MotorUI::OnChangeStartY)  // m_startYEdit
+	ON_BN_CLICKED(3003, &MotorUI::OnBnClickedRadioXAxis) // X축 라디오 버튼 클릭
+	ON_BN_CLICKED(3004, &MotorUI::OnBnClickedRadioYAxis) // Y축 라디오 버튼 클릭
 END_MESSAGE_MAP()
 
 int MotorUI::OnCreate(LPCREATESTRUCT lpCreateStruct)
@@ -65,6 +74,13 @@ int MotorUI::OnCreate(LPCREATESTRUCT lpCreateStruct)
     m_removeMotorButton.Create(_T("삭제"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 1002);
     m_saveMotorButton.Create(_T("저장"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 1003);
     m_loadMotorButton.Create(_T("불러오기"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 1004);
+
+	// 조작부 버튼 생성
+	m_controlButton[0].Create(_T("▲"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 4001);
+	m_controlButton[1].Create(_T("▼"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 4002);
+	m_controlButton[2].Create(_T("◀"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 4003);
+	m_controlButton[3].Create(_T("▶"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 4004);
+
 	return 0;
 }
 
@@ -72,10 +88,6 @@ void MotorUI::OnSize(UINT nType, int cx, int cy)
 {
 	CWnd::OnSize(nType, cx, cy);
 
-	// 전체 창의 왼쪽 80% 영역을 도형 그리는 공간으로 사용
-	CRect m_drawArea;
-	m_drawArea.SetRect(10, 10, (int)(cx * 0.8) - 20, cy - 10);
-    // UI 컨트롤들의 위치를 그리드에 맞게 배치
 	const int margin = 10;
 	const int sectionGap = 20;
 
@@ -85,11 +97,11 @@ void MotorUI::OnSize(UINT nType, int cx, int cy)
 	const int editWidth = 100;
 	const int editHeight = 25;
 
-	int rightWidth = cx - m_drawArea.right - 2 * margin;
+	int rightWidth = cx;
 	int motorAreaWidth = cx - rightWidth - 2 * margin;
 	int motorAreaHeight = cy - 2 * margin;
 
-	int rightX = motorAreaWidth + margin;
+	int rightX = motorAreaWidth + margin + 10;
 
 	// 1. 리스트 컨트롤
 	int listHeight = cy / 3;
@@ -150,11 +162,32 @@ void MotorUI::OnSize(UINT nType, int cx, int cy)
 	// 4. 조작부
 	int controlTop = buttonGroupY + buttonGroupHeight + sectionGap;
 	int controlHeight = cy - controlTop - margin;
-	CRect controlRect(rightX, controlTop, rightX + rightWidth, controlTop + controlHeight);
 
-	// m_motorControlPanel.UpdateLayout(controlRect);
+	int controlButtonWidth = (rightWidth - 3 * colGap) / 4;
+	int controlButtonHeight = (controlHeight - 3 * rowGap) / 4;
 
+	// 버튼 배치의 중심점
+	int centerX = rightX + rightWidth / 2;
+	int centerY = controlTop + controlHeight / 2;
+
+	int bw = controlButtonWidth;
+	int bh = controlButtonHeight;
+
+	// 위 (0) 버튼 위치
+	m_controlButton[0].SetWindowPos(nullptr, centerX - bw / 2, centerY - bh - rowGap, bw, bh, SWP_NOZORDER);
+
+	// 아래 (1) 버튼 위치
+	m_controlButton[1].SetWindowPos(nullptr, centerX - bw / 2, centerY + bh + rowGap, bw, bh, SWP_NOZORDER);
+
+	// 왼 (2) 버튼 위치
+	m_controlButton[2].SetWindowPos(nullptr, centerX - bw - colGap, centerY, bw, bh, SWP_NOZORDER);
+
+	// 오 (3) 버튼 위치
+	m_controlButton[3].SetWindowPos(nullptr, centerX + bw + colGap, centerY, bw, bh, SWP_NOZORDER);
+
+	// 그룹 전체의 크기 설정
 	m_groupControl.SetWindowPos(nullptr, rightX, controlTop, rightWidth, controlHeight, SWP_NOZORDER);
+
 }
 
 void MotorUI::DisplayMotorTree(CListCtrl& listCtrl, const std::vector<Motor*>& rootMotors)
@@ -203,3 +236,245 @@ void MotorUI::DisplayMotorRecursive(CListCtrl& listCtrl, Motor* node, int depth,
 	}
 }
 
+void MotorUI::OnAddMotor()
+{
+	// 위치 텍스트 읽기
+	CString sx, sy, ex, ey, w, h;
+	m_startXEdit.GetWindowTextW(sx);
+	m_startYEdit.GetWindowTextW(sy);
+	m_endXEdit.GetWindowTextW(ex);
+	m_endYEdit.GetWindowTextW(ey);
+	m_width.GetWindowTextW(w);
+	m_height.GetWindowTextW(h);
+
+	CPoint start(_ttoi(sx), _ttoi(sy));
+	CPoint end(_ttoi(ex), _ttoi(ey));
+	CSize motor(_ttoi(w), _ttoi(h));
+
+	CRect curRect(start.x, start.y, end.x, end.y);
+	curRect.NormalizeRect();  // 좌상단-우하단 정렬
+
+	/*if (curRect.Width() > m_logicalBounds.Width() || curRect.Height() > m_logicalBounds.Height()) {
+		m_logicalBounds.SetRect(0, 0, max(curRect.Width() + 10, m_logicalBounds.Width() + 10), max(curRect.Height() + 10, m_logicalBounds.Height() + 10));
+	}*/
+
+	int motorX = m_radioXAxis.GetCheck() == BST_CHECKED ? (end.x - start.x) / 2 + start.x : end.x;
+	int motorY = m_radioXAxis.GetCheck() == BST_CHECKED ? start.y : (end.y - start.y) / 2 + start.y;
+
+	// 체크박스 상태에 따라 하위 모터 추가 여부 결정
+	BOOL bChecked = m_subMotorCheck.GetCheck();
+	Motor* parentMotor = nullptr;
+
+	if (bChecked == BST_CHECKED) {
+		// 하위 모터를 추가하려면 부모 모터를 선택해야 함
+		int selectedIndex = m_motorListCtrl.GetNextItem(-1, LVNI_SELECTED);
+		if (selectedIndex != -1) {
+			CString motorID = m_motorListCtrl.GetItemText(selectedIndex, 0);
+			int motorIdInt = _ttoi(motorID);
+			parentMotor = GetSelectedMotor(motorIdInt);
+
+			if (!parentMotor) {
+				AfxMessageBox(_T("모터를 선택하세요!"));
+				return;
+			}
+
+			// 하위 모터는 부모 모터의 영역 내에 있어야 함
+			CPoint motorStart = parentMotor->motorPos - parentMotor->motorSize;
+			CPoint motorEnd = parentMotor->motorPos + parentMotor->motorSize;
+
+			// 하위 모터가 부모 모터의 영역 내에 있어야 함을 체크
+			if (start.x < motorStart.x || start.y < motorStart.y ||
+				end.x > motorEnd.x || end.y > motorEnd.y) {
+				AfxMessageBox(_T("하위 모터는 상위 모터의 영역 내에 있어야 합니다."));
+				return;
+			}
+		}
+		else {
+			AfxMessageBox(_T("하위 모터를 추가할 항목을 선택하세요!"));
+			return;
+		}
+	}
+
+	// 모터 추가
+	m_motorManager.AddMotor(
+		parentMotor, // 부모 모터 (없으면 nullptr)
+		m_radioXAxis.GetCheck() == BST_CHECKED,
+		CPoint(start.x, start.y),
+		CPoint(end.x, end.y),
+		CPoint(motorX, motorY),
+		CSize(motor.cx / 2, motor.cy / 2)
+	);
+
+	// 리스트 컨트롤에 모터 트리 표시
+	DisplayMotorTree(m_motorListCtrl, m_motorManager.rootMotors);
+
+	// 다시 그리기
+	if (m_pParentView)
+		m_pParentView->Invalidate();
+}
+
+
+Motor* MotorUI::GetSelectedMotor(int selectedIndex)
+{
+	// rootMotors에서 시작하여 트리 구조를 재귀적으로 탐색
+	for (Motor* rootMotor : m_motorManager.rootMotors)
+	{
+		Motor* selectedMotor = FindMotorByID(rootMotor, selectedIndex);
+		if (selectedMotor) return selectedMotor;
+	}
+	return nullptr;
+}
+
+// 재귀적으로 모터를 찾는 함수 (ID 비교)
+Motor* MotorUI::FindMotorByID(Motor* node, int selectedID)
+{
+	if (!node) return nullptr;
+
+	if (node->m_id == selectedID)  // 선택된 ID와 일치하면 그 모터를 반환
+		return node;
+
+	// 자식들에 대해 재귀 호출
+	for (Motor* child : node->children)
+	{
+		Motor* foundMotor = FindMotorByID(child, selectedID);
+		if (foundMotor) return foundMotor;
+	}
+
+	return nullptr; // 찾지 못했으면 null 반환
+}
+
+void MotorUI::OnRemoveMotor()
+{
+	std::vector<int> selectedIndices;
+
+	// 다중 선택된 인덱스 수집
+	int index = -1;
+	while ((index = m_motorListCtrl.GetNextItem(index, LVNI_SELECTED)) != -1)
+	{
+		selectedIndices.push_back(index);
+	}
+
+	if (selectedIndices.empty())
+	{
+		AfxMessageBox(_T("삭제할 모터를 선택하세요!"));
+		return;
+	}
+
+	// 삭제할 Motor 포인터 저장
+	std::vector<Motor*> motorsToDelete;
+
+	for (int selectedIndex : selectedIndices)
+	{
+		CString motorIDStr = m_motorListCtrl.GetItemText(selectedIndex, 0);
+		int motorIdInt = _ttoi(motorIDStr);
+
+		Motor* motorToDelete = GetSelectedMotor(motorIdInt);
+		if (motorToDelete)
+		{
+			motorsToDelete.push_back(motorToDelete);
+		}
+	}
+
+	// 삭제 처리
+	for (Motor* motorToDelete : motorsToDelete)
+	{
+		if (motorToDelete->parentMotor)
+		{
+			auto& siblings = motorToDelete->parentMotor->subMotors;
+			auto it = std::find(siblings.begin(), siblings.end(), motorToDelete);
+			if (it != siblings.end())
+				siblings.erase(it);
+		}
+		else
+		{
+			auto& roots = m_motorManager.rootMotors;
+			auto it = std::find(roots.begin(), roots.end(), motorToDelete);
+			if (it != roots.end())
+				roots.erase(it);
+		}
+
+		delete motorToDelete;
+	}
+
+	// 인덱스 역순으로 리스트에서 삭제 (index shift 방지)
+	std::sort(selectedIndices.rbegin(), selectedIndices.rend());
+	for (int selectedIndex : selectedIndices)
+	{
+		m_motorListCtrl.DeleteItem(selectedIndex);
+	}
+
+	// 다시 그리기
+	if (m_pParentView)
+		m_pParentView->Invalidate();
+}
+
+// 모터 저장 기능
+void MotorUI::OnSaveMotor()
+{
+	m_motorManager.SaveMotorData();
+}
+
+void MotorUI::OnLoadMotor()
+{
+	m_motorManager.LoadMotorData();
+	// 리스트 컨트롤 초기화
+	m_motorListCtrl.DeleteAllItems();
+
+	// 모터 리스트에 있는 모든 모터를 리스트 컨트롤에 추가
+	for (auto motor : m_motorManager.rootMotors)
+	{
+		int index = m_motorListCtrl.GetItemCount();
+		CString idStr, typeStr, strPosStr, endPosStr, motorPosStr;
+		idStr.Format(_T("%d"), motor->m_id);
+		typeStr = motor->isX ? _T("X") : _T("Y");
+		strPosStr.Format(_T("(%d, %d)"), motor->strPos.x, motor->strPos.y);
+		endPosStr.Format(_T("(%d, %d)"), motor->endPos.x, motor->endPos.y);
+		motorPosStr.Format(_T("(%d, %d)"), motor->motorPos.x, motor->motorPos.y);
+		m_motorListCtrl.InsertItem(index, idStr);
+		m_motorListCtrl.SetItemText(index, 1, typeStr);
+		m_motorListCtrl.SetItemText(index, 2, strPosStr);
+		m_motorListCtrl.SetItemText(index, 3, endPosStr);
+		m_motorListCtrl.SetItemText(index, 4, motorPosStr);
+	}
+
+	if (m_pParentView)
+		m_pParentView->Invalidate();
+}
+
+void MotorUI::OnBnClickedRadioXAxis()
+{
+	m_endYEdit.EnableWindow(FALSE);
+	m_endXEdit.EnableWindow(TRUE);
+	CString startY;
+	m_startYEdit.GetWindowTextW(startY);
+	m_endYEdit.SetWindowTextW(startY);
+}
+
+void MotorUI::OnBnClickedRadioYAxis()
+{
+	m_endXEdit.EnableWindow(FALSE);
+	m_endYEdit.EnableWindow(TRUE);
+	CString startX;
+	m_startXEdit.GetWindowTextW(startX);
+	m_endXEdit.SetWindowTextW(startX);
+}
+
+void MotorUI::OnChangeStartX()
+{
+	if (m_radioYAxis.GetSafeHwnd() && m_radioYAxis.GetCheck() == BST_CHECKED)  // Y축 라디오 버튼 선택되었을 때
+	{
+		CString startX;
+		m_startXEdit.GetWindowTextW(startX);
+		m_endXEdit.SetWindowTextW(startX);
+	}
+}
+
+void MotorUI::OnChangeStartY()
+{
+	if (m_radioXAxis.GetSafeHwnd() && m_radioXAxis.GetCheck() == BST_CHECKED)  // X축 라디오 버튼 선택되었을 때
+	{
+		CString startY;
+		m_startYEdit.GetWindowTextW(startY);
+		m_endYEdit.SetWindowTextW(startY);
+	}
+}

@@ -17,9 +17,7 @@ public:
 
 // 특성입니다.
 public:
-	MotorManager m_motorManager;
 	MotorUI m_motorUI;
-	MotorControlPanel m_motorControlPanel;
 	CRect m_drawArea; // 그리기 영역
 	double m_zoomFactor = 2.5;
 	CPoint m_mousePos;
@@ -55,22 +53,13 @@ public:
 	virtual ~CChildView();
 	void DrawGrid(CDC* pDC);
 	void DrawSubMotor(Motor* parentMotor, CDC* pDC);
-	Motor* GetSelectedMotor(int selectedIndex);
-	Motor* FindMotorByID(Motor* node, int selectedID);
+	
 
 	// 생성된 메시지 맵 함수
 protected:
 	afx_msg void OnPaint();
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
-	afx_msg void OnAddMotor();
-	afx_msg void OnRemoveMotor();
-	afx_msg void OnSaveMotor();
-	afx_msg void OnLoadMotor();
-	afx_msg void OnBnClickedRadioXAxis();
-	afx_msg void OnBnClickedRadioYAxis();
-	afx_msg void OnChangeStartX();
-	afx_msg void OnChangeStartY();
 	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
