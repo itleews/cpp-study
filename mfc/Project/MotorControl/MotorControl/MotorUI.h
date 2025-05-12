@@ -18,10 +18,15 @@ public:
 
     void SetParentView(CChildView* pView) { m_pParentView = pView; }
     void DisplayMotorTree(CListCtrl& listCtrl, const std::vector<Motor*>& rootMotors);
-    void DisplayMotorRecursive(CListCtrl& listCtrl, Motor* node, int depth, int& itemIndex);
+    void DisplayMotorRecursive(CListCtrl& listCtrl, Motor* node, int depth, int& itemIndex, const CPoint& parentOrigin);
     Motor* GetSelectedMotor(int selectedIndex);
     Motor* FindMotorByID(Motor* node, int selectedID);
 	void DeleteMotorRecursive(Motor* motor);
+
+    CPoint SubToLogical(CPoint subMotorPos, CPoint mainMotorPos) {
+		// 하위 모터의 위치를 부모 모터의 위치로 변환
+		return CPoint(subMotorPos + mainMotorPos);
+    }
 
 protected:
     // UI 생성 함수
@@ -29,6 +34,7 @@ protected:
     afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
     afx_msg void OnAddMotor();
+	afx_msg void OnAddSubMotor();
     afx_msg void OnRemoveMotor();
     afx_msg void OnSaveMotor();
     afx_msg void OnLoadMotor();
