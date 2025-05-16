@@ -1,4 +1,4 @@
-#include "pch.h"
+ï»¿#include "pch.h"
 #include "MotorUI.h"
 #include "ChildView.h"
 #include <algorithm>
@@ -6,15 +6,15 @@
 BEGIN_MESSAGE_MAP(MotorUI, CWnd)
 	ON_WM_CREATE()
 	ON_WM_SIZE()
-	ON_BN_CLICKED(1001, &MotorUI::OnAddMotor) // Ãà Ãß°¡ ¹öÆ° Å¬¸¯
-	ON_BN_CLICKED(2007, &MotorUI::OnAddSubMotor) // ÇÏÀ§ ¸ğÅÍ Ãß°¡ ¹öÆ° Å¬¸¯
-	ON_BN_CLICKED(1002, &MotorUI::OnRemoveMotor) // Ãà »èÁ¦ ¹öÆ° Å¬¸¯
-	ON_BN_CLICKED(1003, &MotorUI::OnSaveMotor) // ¸ğÅÍ ÀúÀå ¹öÆ° Å¬¸¯
-	ON_BN_CLICKED(1004, &MotorUI::OnLoadMotor) // ¸ğÅÍ ºÒ·¯¿À±â ¹öÆ° Å¬¸¯
+	ON_BN_CLICKED(1001, &MotorUI::OnAddMotor) // ì¶• ì¶”ê°€ ë²„íŠ¼ í´ë¦­
+	ON_BN_CLICKED(2007, &MotorUI::OnAddSubMotor) // í•˜ìœ„ ëª¨í„° ì¶”ê°€ ë²„íŠ¼ í´ë¦­
+	ON_BN_CLICKED(1002, &MotorUI::OnRemoveMotor) // ì¶• ì‚­ì œ ë²„íŠ¼ í´ë¦­
+	ON_BN_CLICKED(1003, &MotorUI::OnSaveMotor) // ëª¨í„° ì €ì¥ ë²„íŠ¼ í´ë¦­
+	ON_BN_CLICKED(1004, &MotorUI::OnLoadMotor) // ëª¨í„° ë¶ˆëŸ¬ì˜¤ê¸° ë²„íŠ¼ í´ë¦­
 	ON_EN_CHANGE(2001, &MotorUI::OnChangeStartX)  // m_startXEdit
 	ON_EN_CHANGE(2002, &MotorUI::OnChangeStartY)  // m_startYEdit
-	ON_BN_CLICKED(3003, &MotorUI::OnBnClickedRadioXAxis) // XÃà ¶óµğ¿À ¹öÆ° Å¬¸¯
-	ON_BN_CLICKED(3004, &MotorUI::OnBnClickedRadioYAxis) // YÃà ¶óµğ¿À ¹öÆ° Å¬¸¯
+	ON_BN_CLICKED(3003, &MotorUI::OnBnClickedRadioXAxis) // Xì¶• ë¼ë””ì˜¤ ë²„íŠ¼ í´ë¦­
+	ON_BN_CLICKED(3004, &MotorUI::OnBnClickedRadioYAxis) // Yì¶• ë¼ë””ì˜¤ ë²„íŠ¼ í´ë¦­
 END_MESSAGE_MAP()
 
 int MotorUI::OnCreate(LPCREATESTRUCT lpCreateStruct)
@@ -22,21 +22,22 @@ int MotorUI::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 
-    // ¸®½ºÆ® ÄÁÆ®·Ñ »ı¼º
+    // ë¦¬ìŠ¤íŠ¸ ì»¨íŠ¸ë¡¤ ìƒì„±
     m_motorListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT, CRect(0, 0, 0, 0), this, 1);
     m_motorListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_INFOTIP | LVS_EX_DOUBLEBUFFER);
-    m_motorListCtrl.InsertColumn(0, _T("¸ğÅÍ ID"), LVCFMT_LEFT, 100);
-    m_motorListCtrl.InsertColumn(1, _T("±âÁØ Ãà"), LVCFMT_LEFT, 100);
-    m_motorListCtrl.InsertColumn(2, _T("½ÃÀÛ À§Ä¡"), LVCFMT_LEFT, 100);
-    m_motorListCtrl.InsertColumn(3, _T("³¡ À§Ä¡"), LVCFMT_LEFT, 100);
-    m_motorListCtrl.InsertColumn(4, _T("ÇöÀç À§Ä¡"), LVCFMT_LEFT, 100);
+    m_motorListCtrl.InsertColumn(0, _T("ëª¨í„° ID"), LVCFMT_LEFT, 100);
+    m_motorListCtrl.InsertColumn(1, _T("ì¶•"), LVCFMT_LEFT, 50);
+    m_motorListCtrl.InsertColumn(2, _T("ì‹œì‘ ìœ„ì¹˜"), LVCFMT_LEFT, 100);
+    m_motorListCtrl.InsertColumn(3, _T("ë ìœ„ì¹˜"), LVCFMT_LEFT, 100);
+    m_motorListCtrl.InsertColumn(4, _T("í˜„ì¬ ìœ„ì¹˜"), LVCFMT_LEFT, 100);
+	m_motorListCtrl.InsertColumn(5, _T("ì ˆëŒ€ ìœ„ì¹˜"), LVCFMT_LEFT, 100);
 
-    // ±×·ì¹Ú½º »ı¼º
-    m_groupInput.Create(_T("À§Ä¡ ¹× Å©±â ¼³Á¤"), WS_CHILD | WS_VISIBLE | BS_GROUPBOX, CRect(0, 0, 0, 0), this, 3000);
-    m_groupButtons.Create(_T("¸ğÅÍ °ü¸®"), WS_CHILD | WS_VISIBLE | BS_GROUPBOX, CRect(0, 0, 0, 0), this, 3001);
-	m_groupControl.Create(_T("¸ğÅÍ Á¶ÀÛºÎ"), WS_CHILD | WS_VISIBLE | BS_GROUPBOX, CRect(0, 0, 0, 0), this, 3002);
+    // ê·¸ë£¹ë°•ìŠ¤ ìƒì„±
+    m_groupInput.Create(_T("ëª¨í„° ê´€ë¦¬"), WS_CHILD | WS_VISIBLE | BS_GROUPBOX, CRect(0, 0, 0, 0), this, 3000);
+    m_groupButtons.Create(_T("íŒŒì¼ ê´€ë¦¬"), WS_CHILD | WS_VISIBLE | BS_GROUPBOX, CRect(0, 0, 0, 0), this, 3001);
+	m_groupControl.Create(_T("ëª¨í„° ì¡°ì‘ë¶€"), WS_CHILD | WS_VISIBLE | BS_GROUPBOX, CRect(0, 0, 0, 0), this, 3002);
 
-    // ÀÔ·Â ÇÊµå »ı¼º
+    // ì…ë ¥ í•„ë“œ ìƒì„±
     m_startXEdit.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, CRect(0, 0, 0, 0), this, 2001);
     m_startXEdit.SetWindowTextW(_T("0"));
 
@@ -55,31 +56,31 @@ int MotorUI::OnCreate(LPCREATESTRUCT lpCreateStruct)
     m_height.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, CRect(0, 0, 0, 0), this, 2006);
     m_height.SetWindowTextW(_T("100"));
 
-	m_subMotorCheck.Create(_T("ÇÏÀ§ ¸ğÅÍ Ãß°¡"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 2007);
+	m_addSubMotorButton.Create(_T("í•˜ìœ„ ëª¨í„° ì¶”ê°€"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 2007);
 
-    // ¶óµğ¿À ¹öÆ° »ı¼º
-    m_radioXAxis.Create(_T("XÃà"), WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, CRect(0, 0, 0, 0), this, 3003);
-    m_radioYAxis.Create(_T("YÃà"), WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, CRect(0, 0, 0, 0), this, 3004);
-    m_radioXAxis.SetCheck(TRUE);  // ±âº»À¸·Î XÃà ¼±ÅÃ
-    m_endYEdit.EnableWindow(FALSE);  // YÃà ºñÈ°¼ºÈ­
+    // ë¼ë””ì˜¤ ë²„íŠ¼ ìƒì„±
+    m_radioXAxis.Create(_T("Xì¶•"), WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, CRect(0, 0, 0, 0), this, 3003);
+    m_radioYAxis.Create(_T("Yì¶•"), WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON, CRect(0, 0, 0, 0), this, 3004);
+    m_radioXAxis.SetCheck(TRUE);  // ê¸°ë³¸ìœ¼ë¡œ Xì¶• ì„ íƒ
+    m_endYEdit.EnableWindow(FALSE);  // Yì¶• ë¹„í™œì„±í™”
 
-    // ¶óº§ »ı¼º
-    m_labelStart.Create(_T("½ÃÀÛ À§Ä¡(x, y)"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this);
-    m_labelEnd.Create(_T("³¡ À§Ä¡(x, y)"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this);
-    m_labelSize.Create(_T("Å©±â(W, H)"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this);
-    m_labelAxis.Create(_T("±âÁØ Ãà"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this);
+    // ë¼ë²¨ ìƒì„±
+    m_labelStart.Create(_T("ì‹œì‘ ìœ„ì¹˜(x, y)"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this);
+    m_labelEnd.Create(_T("ë ìœ„ì¹˜(x, y)"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this);
+    m_labelSize.Create(_T("í¬ê¸°(W, H)"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this);
+    m_labelAxis.Create(_T("ê¸°ì¤€ ì¶•"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this);
 
-    // ¸ğÅÍ °ü¸® ¹öÆ° »ı¼º
-    m_addMotorButton.Create(_T("Ãß°¡"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 1001);
-    m_removeMotorButton.Create(_T("»èÁ¦"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 1002);
-    m_saveMotorButton.Create(_T("ÀúÀå"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 1003);
-    m_loadMotorButton.Create(_T("ºÒ·¯¿À±â"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 1004);
+    // ëª¨í„° ê´€ë¦¬ ë²„íŠ¼ ìƒì„±
+    m_addMotorButton.Create(_T("ì¶”ê°€"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 1001);
+    m_removeMotorButton.Create(_T("ì‚­ì œ"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 1002);
+    m_saveMotorButton.Create(_T("ì €ì¥"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 1003);
+    m_loadMotorButton.Create(_T("ë¶ˆëŸ¬ì˜¤ê¸°"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 1004);
 
-	// Á¶ÀÛºÎ ¹öÆ° »ı¼º
-	m_controlButton[0].Create(_T("¡ã"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 4001);
-	m_controlButton[1].Create(_T("¡å"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 4002);
-	m_controlButton[2].Create(_T("¢¸"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 4003);
-	m_controlButton[3].Create(_T("¢º"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 4004);
+	// ì¡°ì‘ë¶€ ë²„íŠ¼ ìƒì„±
+	m_controlButton[0].Create(_T("â–²"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 4001);
+	m_controlButton[1].Create(_T("â–¼"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 4002);
+	m_controlButton[2].Create(_T("â—€"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 4003);
+	m_controlButton[3].Create(_T("â–¶"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 4004);
 
 	return 0;
 }
@@ -103,7 +104,7 @@ void MotorUI::OnSize(UINT nType, int cx, int cy)
 
 	int rightX = motorAreaWidth + margin + 10;
 
-	// 1. ¸®½ºÆ® ÄÁÆ®·Ñ
+	// 1. ë¦¬ìŠ¤íŠ¸ ì»¨íŠ¸ë¡¤
 	int listHeight = cy / 3;
 	m_motorListCtrl.SetWindowPos(nullptr, rightX, margin, rightWidth, listHeight, SWP_NOZORDER);
 
@@ -113,23 +114,25 @@ void MotorUI::OnSize(UINT nType, int cx, int cy)
 
 	const int rowGap = 10;
 	const int colGap = 10;
-	const int labelWidth = 150;
+	const int labelWidth = 170;
 	const int fieldWidth = 80;
 	const int fieldHeight = 25;
 	const int groupPadding = 10;
 
 	int halfWidth = (inputGroupWidth - groupPadding * 2 - colGap) / 2 - 10;
 
-	// 2. ÀÔ·Â ±×·ì¹Ú½º
+	// 2. ì…ë ¥ ê·¸ë£¹ë°•ìŠ¤
 	int row1Y = inputStartY + groupPadding + 15;
 	m_labelStart.SetWindowPos(nullptr, inputStartX + groupPadding, row1Y, labelWidth, fieldHeight, SWP_NOZORDER);
 	m_startXEdit.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap, row1Y, fieldWidth, fieldHeight, SWP_NOZORDER);
 	m_startYEdit.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap + fieldWidth + colGap, row1Y, fieldWidth, fieldHeight, SWP_NOZORDER);
+	m_addMotorButton.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap + labelWidth + colGap, row1Y, labelWidth, btnHeight, SWP_NOZORDER);
 
 	int row2Y = row1Y + fieldHeight + rowGap;
 	m_labelEnd.SetWindowPos(nullptr, inputStartX + groupPadding, row2Y, labelWidth, fieldHeight, SWP_NOZORDER);
 	m_endXEdit.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap, row2Y, fieldWidth, fieldHeight, SWP_NOZORDER);
 	m_endYEdit.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap + fieldWidth + colGap, row2Y, fieldWidth, fieldHeight, SWP_NOZORDER);
+	m_removeMotorButton.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap + labelWidth + colGap, row2Y, labelWidth, btnHeight, SWP_NOZORDER);
 
 	int row3Y = row2Y + fieldHeight + rowGap;
 	m_labelSize.SetWindowPos(nullptr, inputStartX + groupPadding, row3Y, labelWidth, fieldHeight, SWP_NOZORDER);
@@ -140,65 +143,61 @@ void MotorUI::OnSize(UINT nType, int cx, int cy)
 	m_labelAxis.SetWindowPos(nullptr, inputStartX + groupPadding, row4Y, labelWidth, fieldHeight, SWP_NOZORDER);
 	m_radioXAxis.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap, row4Y, 60, fieldHeight, SWP_NOZORDER);
 	m_radioYAxis.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap + 70, row4Y, 60, fieldHeight, SWP_NOZORDER);
-	m_subMotorCheck.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap + 180, row4Y, 180, fieldHeight, SWP_NOZORDER);
+	m_addSubMotorButton.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap + labelWidth + colGap, row4Y, labelWidth, fieldHeight, SWP_NOZORDER);
 
 	int inputGroupHeight = (row4Y + fieldHeight + groupPadding) - inputStartY;
 	m_groupInput.SetWindowPos(nullptr, rightX, inputStartY, rightWidth, inputGroupHeight, SWP_NOZORDER);
 
-	// 3. ¹öÆ° ±×·ì¹Ú½º
+	// 3. ë²„íŠ¼ ê·¸ë£¹ë°•ìŠ¤
 	int buttonGroupY = inputStartY + inputGroupHeight + sectionGap;
 
-	int buttonY = buttonGroupY + 20;
-	m_addMotorButton.SetWindowPos(nullptr, inputStartX + groupPadding, buttonY, halfWidth, btnHeight, SWP_NOZORDER);
-	m_removeMotorButton.SetWindowPos(nullptr, inputStartX + groupPadding + halfWidth + colGap, buttonY, halfWidth, btnHeight, SWP_NOZORDER);
+	int buttonY = buttonGroupY + btnHeight + rowGap;
+	m_saveMotorButton.SetWindowPos(nullptr, inputStartX + groupPadding, buttonY, halfWidth, btnHeight, SWP_NOZORDER);
+	m_loadMotorButton.SetWindowPos(nullptr, inputStartX + groupPadding + halfWidth + colGap, buttonY, halfWidth, btnHeight, SWP_NOZORDER);
 
-	int buttonY2 = buttonY + btnHeight + rowGap;
-	m_saveMotorButton.SetWindowPos(nullptr, inputStartX + groupPadding, buttonY2, halfWidth, btnHeight, SWP_NOZORDER);
-	m_loadMotorButton.SetWindowPos(nullptr, inputStartX + groupPadding + halfWidth + colGap, buttonY2, halfWidth, btnHeight, SWP_NOZORDER);
-
-	int buttonGroupHeight = (buttonY2 + btnHeight + groupPadding) - buttonGroupY;
+	int buttonGroupHeight = (buttonY + btnHeight + groupPadding) - buttonGroupY;
 	m_groupButtons.SetWindowPos(nullptr, rightX, buttonGroupY, rightWidth, buttonGroupHeight, SWP_NOZORDER);
 
-	// 4. Á¶ÀÛºÎ
+	// 4. ì¡°ì‘ë¶€
 	int controlTop = buttonGroupY + buttonGroupHeight + sectionGap;
 	int controlHeight = cy - controlTop - margin;
 
 	int controlButtonWidth = (rightWidth - 3 * colGap) / 4;
 	int controlButtonHeight = (controlHeight - 3 * rowGap) / 4;
 
-	// ¹öÆ° ¹èÄ¡ÀÇ Áß½ÉÁ¡
+	// ë²„íŠ¼ ë°°ì¹˜ì˜ ì¤‘ì‹¬ì 
 	int centerX = rightX + rightWidth / 2;
 	int centerY = controlTop + controlHeight / 3;
 
 	int bw = controlButtonWidth;
 	int bh = controlButtonHeight;
 
-	// À§ (0) ¹öÆ° À§Ä¡
+	// ìœ„ (0) ë²„íŠ¼ ìœ„ì¹˜
 	m_controlButton[0].SetWindowPos(nullptr, centerX - bw / 2, centerY - bh - rowGap, bw, bh, SWP_NOZORDER);
 
-	// ¾Æ·¡ (1) ¹öÆ° À§Ä¡
+	// ì•„ë˜ (1) ë²„íŠ¼ ìœ„ì¹˜
 	m_controlButton[1].SetWindowPos(nullptr, centerX - bw / 2, centerY + bh + rowGap, bw, bh, SWP_NOZORDER);
 
-	// ¿Ş (2) ¹öÆ° À§Ä¡
+	// ì™¼ (2) ë²„íŠ¼ ìœ„ì¹˜
 	m_controlButton[2].SetWindowPos(nullptr, centerX - bw * 2 + colGap + 50, centerY, bw, bh, SWP_NOZORDER);
 
-	// ¿À (3) ¹öÆ° À§Ä¡
+	// ì˜¤ (3) ë²„íŠ¼ ìœ„ì¹˜
 	m_controlButton[3].SetWindowPos(nullptr, centerX + bw / 2 + colGap, centerY, bw, bh, SWP_NOZORDER);
 
-	// ±×·ì ÀüÃ¼ÀÇ Å©±â ¼³Á¤
+	// ê·¸ë£¹ ì „ì²´ì˜ í¬ê¸° ì„¤ì •
 	m_groupControl.SetWindowPos(nullptr, rightX, controlTop, rightWidth, controlHeight, SWP_NOZORDER);
 
 }
 
 void MotorUI::DisplayMotorTree(CListCtrl& listCtrl, const std::vector<Motor*>& rootMotors)
 {
-	listCtrl.DeleteAllItems(); // ±âÁ¸ ³»¿ë ºñ¿ì±â
+	listCtrl.DeleteAllItems(); // ê¸°ì¡´ ë‚´ìš© ë¹„ìš°ê¸°
 
 	int itemIndex = 0;
 
 	for (Motor* root : rootMotors)
 	{
-		// ÃÖ»óÀ§ ¸ğÅÍ´Â ÀüÃ¼ ÁÂÇ¥°è ±âÁØÀÌ¹Ç·Î (0, 0) ±âÁØÀ¸·Î ½ÃÀÛ
+		// ìµœìƒìœ„ ëª¨í„°ëŠ” ì „ì²´ ì¢Œí‘œê³„ ê¸°ì¤€ì´ë¯€ë¡œ (0, 0) ê¸°ì¤€ìœ¼ë¡œ ì‹œì‘
 		DisplayMotorRecursive(listCtrl, root, 0, itemIndex, CPoint(0, 0));
 	}
 }
@@ -209,7 +208,7 @@ void MotorUI::DisplayMotorRecursive(CListCtrl& listCtrl, Motor* node, int depth,
 
 	CString displayMotorID;
 
-	// µé¿©¾²±â
+	// ë“¤ì—¬ì“°ê¸°
 	for (int i = 0; i < depth; ++i)
 		displayMotorID += _T("    ");
 
@@ -217,10 +216,10 @@ void MotorUI::DisplayMotorRecursive(CListCtrl& listCtrl, Motor* node, int depth,
 	idStr.Format(_T("%d"), node->m_id);
 	displayMotorID += idStr;
 
-	CString typeStr, strPosStr, endPosStr, motorPosStr;
+	CString typeStr, strPosStr, endPosStr, motorPosStr, absMotorPosStr;
 	typeStr = node->isX ? _T("X") : _T("Y");
 
-	// ºÎ¸ğ ±âÁØ »ó´ë ÁÂÇ¥·Î Ãâ·Â
+	// ë¶€ëª¨ ê¸°ì¤€ ìƒëŒ€ ì¢Œí‘œë¡œ ì¶œë ¥
 	CPoint relStrPos = node->strPos - parentOrigin;
 	CPoint relEndPos = node->endPos - parentOrigin;
 	CPoint relMotorPos = node->motorPos - parentOrigin;
@@ -228,26 +227,30 @@ void MotorUI::DisplayMotorRecursive(CListCtrl& listCtrl, Motor* node, int depth,
 	strPosStr.Format(_T("(%d, %d)"), relStrPos.x, relStrPos.y);
 	endPosStr.Format(_T("(%d, %d)"), relEndPos.x, relEndPos.y);
 	motorPosStr.Format(_T("(%d, %d)"), relMotorPos.x, relMotorPos.y);
+	absMotorPosStr.Format(_T("(%d, %d)"), node->motorPos.x, node->motorPos.y);
+
 
 	listCtrl.InsertItem(itemIndex, displayMotorID);
 	listCtrl.SetItemText(itemIndex, 1, typeStr);
 	listCtrl.SetItemText(itemIndex, 2, strPosStr);
 	listCtrl.SetItemText(itemIndex, 3, endPosStr);
 	listCtrl.SetItemText(itemIndex, 4, motorPosStr);
+	listCtrl.SetItemText(itemIndex, 5, absMotorPosStr);
 
 	++itemIndex;
 
-	// Àç±Í È£ÃâÇÒ ¶§ ÇöÀç ¸ğÅÍ À§Ä¡¸¦ ±âÁØÁ¡À¸·Î ³Ñ±è
+	// ì¬ê·€ í˜¸ì¶œí•  ë•Œ í˜„ì¬ ëª¨í„° ìœ„ì¹˜ë¥¼ ê¸°ì¤€ì ìœ¼ë¡œ ë„˜ê¹€
 	for (Motor* child : node->children)
 	{
-		DisplayMotorRecursive(listCtrl, child, depth + 1, itemIndex, node->motorPos - node->motorSize);
+		if (child)
+			DisplayMotorRecursive(listCtrl, child, depth + 1, itemIndex, node->motorPos - node->motorSize);
 	}
 }
 
 
 void MotorUI::OnAddMotor()
 {
-	// À§Ä¡ ÅØ½ºÆ® ÀĞ±â
+	// ìœ„ì¹˜ í…ìŠ¤íŠ¸ ì½ê¸°
 	CString sx, sy, ex, ey, w, h;
 	m_startXEdit.GetWindowTextW(sx);
 	m_startYEdit.GetWindowTextW(sy);
@@ -261,18 +264,58 @@ void MotorUI::OnAddMotor()
 	CSize motor(_ttoi(w), _ttoi(h));
 
 	CRect curRect(start.x, start.y, end.x, end.y);
-	curRect.NormalizeRect();  // ÁÂ»ó´Ü-¿ìÇÏ´Ü Á¤·Ä
+	curRect.NormalizeRect();  // ì¢Œìƒë‹¨-ìš°í•˜ë‹¨ ì •ë ¬
 
 	/*if (curRect.Width() > m_logicalBounds.Width() || curRect.Height() > m_logicalBounds.Height()) {
 		m_logicalBounds.SetRect(0, 0, max(curRect.Width() + 10, m_logicalBounds.Width() + 10), max(curRect.Height() + 10, m_logicalBounds.Height() + 10));
 	}*/
 
+	// í•˜ìœ„ ëª¨í„°ë¥¼ ì¶”ê°€í•˜ë ¤ë©´ ë¶€ëª¨ ëª¨í„°ë¥¼ ì„ íƒí•´ì•¼ í•¨
+	BOOL bChecked = m_addSubMotorButton.GetCheck();
+	Motor* parentMotor = nullptr;
+
+	if (m_isAddSubmotorMode) {
+		int selectedIndex = m_motorListCtrl.GetNextItem(-1, LVNI_SELECTED);
+		if (selectedIndex != -1) {
+			CString motorID = m_motorListCtrl.GetItemText(selectedIndex, 0);
+			int motorIdInt = _ttoi(motorID);
+			parentMotor = GetSelectedMotor(motorIdInt);
+
+			if (!parentMotor) {
+				AfxMessageBox(_T("ì„ íƒí•œ IDì— í•´ë‹¹í•˜ëŠ” ëª¨í„°ê°€ ì¡´ì¬í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤."));
+				return;
+			}
+
+			// í•˜ìœ„ ëª¨í„°ëŠ” ë¶€ëª¨ ëª¨í„°ì˜ ì˜ì—­ ë‚´ì— ìˆì–´ì•¼ í•¨
+			CPoint motorStart = parentMotor->motorPos - parentMotor->motorSize;
+			CPoint motorEnd = parentMotor->motorPos + parentMotor->motorSize;
+
+			CPoint subMotorStart = CPoint(start.x, start.y);
+			CPoint subMotorEnd = CPoint(end.x, end.y);
+			start = SubToLogical(subMotorStart, motorStart);
+			end = SubToLogical(subMotorEnd, motorStart);
+
+			// í•˜ìœ„ ëª¨í„°ê°€ ë¶€ëª¨ ëª¨í„°ì˜ ì˜ì—­ ë‚´ì— ìˆì–´ì•¼ í•¨ì„ ì²´í¬
+			if (start.x < motorStart.x || start.y < motorStart.y ||
+				end.x > motorEnd.x || end.y > motorEnd.y) {
+				AfxMessageBox(_T("í•˜ìœ„ ëª¨í„°ëŠ” ìƒìœ„ ëª¨í„°ì˜ ì˜ì—­ ë‚´ì— ìˆì–´ì•¼ í•©ë‹ˆë‹¤."));
+				return;
+			}
+
+			m_isAddSubmotorMode = false; // í•˜ìœ„ ëª¨í„° ì¶”ê°€ í›„ ëª¨ë“œ í•´ì œ
+		}
+		else {
+			AfxMessageBox(_T("í•˜ìœ„ ëª¨í„°ë¥¼ ì¶”ê°€í•  í•­ëª©ì„ ì„ íƒí•˜ì„¸ìš”!"));
+			return;
+		}
+	}
+
 	int motorX = m_radioXAxis.GetCheck() == BST_CHECKED ? (end.x - start.x) / 2 + start.x : end.x;
 	int motorY = m_radioXAxis.GetCheck() == BST_CHECKED ? start.y : (end.y - start.y) / 2 + start.y;
 
-	// ¸ğÅÍ Ãß°¡
+	// ëª¨í„° ì¶”ê°€
 	m_motorManager.AddMotor(
-		nullptr, // ºÎ¸ğ ¸ğÅÍ (¾øÀ¸¸é nullptr)
+		parentMotor, // ë¶€ëª¨ ëª¨í„° (ì—†ìœ¼ë©´ nullptr)
 		m_radioXAxis.GetCheck() == BST_CHECKED,
 		CPoint(start.x, start.y),
 		CPoint(end.x, end.y),
@@ -280,93 +323,39 @@ void MotorUI::OnAddMotor()
 		CSize(motor.cx / 2, motor.cy / 2)
 	);
 
-	// ¸®½ºÆ® ÄÁÆ®·Ñ¿¡ ¸ğÅÍ Æ®¸® Ç¥½Ã
+	// ë¦¬ìŠ¤íŠ¸ ì»¨íŠ¸ë¡¤ì— ëª¨í„° íŠ¸ë¦¬ í‘œì‹œ
 	DisplayMotorTree(m_motorListCtrl, m_motorManager.rootMotors);
 
-	// ´Ù½Ã ±×¸®±â
+	// ë‹¤ì‹œ ê·¸ë¦¬ê¸°
 	if (m_pParentView)
 		m_pParentView->Invalidate();
 }
 
-// ÇÏÀ§ ¸ğÅÍ Ãß°¡
+// í•˜ìœ„ ëª¨í„° ì¶”ê°€
 void MotorUI::OnAddSubMotor() {
-	// À§Ä¡ ÅØ½ºÆ® ÀĞ±â
-	CString sx, sy, ex, ey, w, h;
-	m_startXEdit.GetWindowTextW(sx);
-	m_startYEdit.GetWindowTextW(sy);
-	m_endXEdit.GetWindowTextW(ex);
-	m_endYEdit.GetWindowTextW(ey);
-	m_width.GetWindowTextW(w);
-	m_height.GetWindowTextW(h);
-
-	CPoint start(_ttoi(sx), _ttoi(sy));
-	CPoint end(_ttoi(ex), _ttoi(ey));
-	CSize motor(_ttoi(w), _ttoi(h));
-
-	CRect curRect(start.x, start.y, end.x, end.y);
-	curRect.NormalizeRect();  // ÁÂ»ó´Ü-¿ìÇÏ´Ü Á¤·Ä
-
-	// ÇÏÀ§ ¸ğÅÍ¸¦ Ãß°¡ÇÏ·Á¸é ºÎ¸ğ ¸ğÅÍ¸¦ ¼±ÅÃÇØ¾ß ÇÔ
-	BOOL bChecked = m_subMotorCheck.GetCheck();
-	Motor* parentMotor = nullptr;
+	// í•˜ìœ„ ëª¨í„° ì¶”ê°€ ëª¨ë“œ
+	if (m_motorManager.rootMotors.empty()) {
+		AfxMessageBox(_T("í•˜ìœ„ ëª¨í„°ë¥¼ ì¶”ê°€í•  ìƒìœ„ ëª¨í„°ê°€ ì—†ìŠµë‹ˆë‹¤."));
+		return;
+	}
+	m_isAddSubmotorMode = true;
 
 	int selectedIndex = m_motorListCtrl.GetNextItem(-1, LVNI_SELECTED);
 	if (selectedIndex != -1) {
 		CString motorID = m_motorListCtrl.GetItemText(selectedIndex, 0);
 		int motorIdInt = _ttoi(motorID);
-		parentMotor = GetSelectedMotor(motorIdInt);
-
-		if (!parentMotor) {
-			AfxMessageBox(_T("¼±ÅÃÇÑ ID¿¡ ÇØ´çÇÏ´Â ¸ğÅÍ°¡ Á¸ÀçÇÏÁö ¾Ê½À´Ï´Ù."));
-			return;
-		}
-
-		// ÇÏÀ§ ¸ğÅÍ´Â ºÎ¸ğ ¸ğÅÍÀÇ ¿µ¿ª ³»¿¡ ÀÖ¾î¾ß ÇÔ
-		CPoint motorStart = parentMotor->motorPos - parentMotor->motorSize;
-		CPoint motorEnd = parentMotor->motorPos + parentMotor->motorSize;
-
-		CPoint subMotorStart = CPoint(start.x, start.y);
-		CPoint subMotorEnd = CPoint(end.x, end.y);
-		start = SubToLogical(subMotorStart, motorStart);
-		end = SubToLogical(subMotorEnd, motorStart);
-
-		// ÇÏÀ§ ¸ğÅÍ°¡ ºÎ¸ğ ¸ğÅÍÀÇ ¿µ¿ª ³»¿¡ ÀÖ¾î¾ß ÇÔÀ» Ã¼Å©
-		if (start.x < motorStart.x || start.y < motorStart.y ||
-			end.x > motorEnd.x || end.y > motorEnd.y) {
-			AfxMessageBox(_T("ÇÏÀ§ ¸ğÅÍ´Â »óÀ§ ¸ğÅÍÀÇ ¿µ¿ª ³»¿¡ ÀÖ¾î¾ß ÇÕ´Ï´Ù."));
-			return;
-		}
+		Motor* selectedMotor = GetSelectedMotor(motorIdInt);
+		
+		CPoint topLeft = selectedMotor->motorPos - selectedMotor->motorSize;
+		CPoint bottomRight = selectedMotor->motorPos + selectedMotor->motorSize;
+		m_selectedMotorRect.SetRect(topLeft, bottomRight);
 	}
-	else {
-		AfxMessageBox(_T("ÇÏÀ§ ¸ğÅÍ¸¦ Ãß°¡ÇÒ Ç×¸ñÀ» ¼±ÅÃÇÏ¼¼¿ä!"));
-		return;
-	}
-
-	int motorX = m_radioXAxis.GetCheck() == BST_CHECKED ? (end.x - start.x) / 2 + start.x : end.x;
-	int motorY = m_radioXAxis.GetCheck() == BST_CHECKED ? start.y : (end.y - start.y) / 2 + start.y;
-
-	// ¸ğÅÍ Ãß°¡
-	m_motorManager.AddMotor(
-		parentMotor, // ºÎ¸ğ ¸ğÅÍ (¾øÀ¸¸é nullptr)
-		m_radioXAxis.GetCheck() == BST_CHECKED,
-		CPoint(start.x, start.y),
-		CPoint(end.x, end.y),
-		CPoint(motorX, motorY),
-		CSize(motor.cx / 2, motor.cy / 2)
-	);
-
-	// ¸®½ºÆ® ÄÁÆ®·Ñ¿¡ ¸ğÅÍ Æ®¸® Ç¥½Ã
-	DisplayMotorTree(m_motorListCtrl, m_motorManager.rootMotors);
-
-	// ´Ù½Ã ±×¸®±â
-	if (m_pParentView)
-		m_pParentView->Invalidate();
 }
 
 
 Motor* MotorUI::GetSelectedMotor(int selectedIndex)
 {
-	// rootMotors¿¡¼­ ½ÃÀÛÇÏ¿© Æ®¸® ±¸Á¶¸¦ Àç±ÍÀûÀ¸·Î Å½»ö
+	// rootMotorsì—ì„œ ì‹œì‘í•˜ì—¬ íŠ¸ë¦¬ êµ¬ì¡°ë¥¼ ì¬ê·€ì ìœ¼ë¡œ íƒìƒ‰
 	for (Motor* rootMotor : m_motorManager.rootMotors)
 	{
 		Motor* selectedMotor = FindMotorByID(rootMotor, selectedIndex);
@@ -375,29 +364,29 @@ Motor* MotorUI::GetSelectedMotor(int selectedIndex)
 	return nullptr;
 }
 
-// Àç±ÍÀûÀ¸·Î ¸ğÅÍ¸¦ Ã£´Â ÇÔ¼ö (ID ºñ±³)
+// ì¬ê·€ì ìœ¼ë¡œ ëª¨í„°ë¥¼ ì°¾ëŠ” í•¨ìˆ˜ (ID ë¹„êµ)
 Motor* MotorUI::FindMotorByID(Motor* node, int selectedID)
 {
 	if (!node) return nullptr;
 
-	if (node->m_id == selectedID)  // ¼±ÅÃµÈ ID¿Í ÀÏÄ¡ÇÏ¸é ±× ¸ğÅÍ¸¦ ¹İÈ¯
+	if (node->m_id == selectedID)  // ì„ íƒëœ IDì™€ ì¼ì¹˜í•˜ë©´ ê·¸ ëª¨í„°ë¥¼ ë°˜í™˜
 		return node;
 
-	// ÀÚ½Äµé¿¡ ´ëÇØ Àç±Í È£Ãâ
+	// ìì‹ë“¤ì— ëŒ€í•´ ì¬ê·€ í˜¸ì¶œ
 	for (Motor* child : node->children)
 	{
 		Motor* foundMotor = FindMotorByID(child, selectedID);
 		if (foundMotor) return foundMotor;
 	}
 
-	return nullptr; // Ã£Áö ¸øÇßÀ¸¸é null ¹İÈ¯
+	return nullptr; // ì°¾ì§€ ëª»í–ˆìœ¼ë©´ null ë°˜í™˜
 }
 
 void MotorUI::OnRemoveMotor()
 {
 	std::vector<int> selectedIndices;
 
-	// ¼±ÅÃµÈ Ç×¸ñ ¼öÁı
+	// ì„ íƒëœ í•­ëª© ìˆ˜ì§‘
 	int index = -1;
 	while ((index = m_motorListCtrl.GetNextItem(index, LVNI_SELECTED)) != -1)
 	{
@@ -406,11 +395,11 @@ void MotorUI::OnRemoveMotor()
 
 	if (selectedIndices.empty())
 	{
-		AfxMessageBox(_T("»èÁ¦ÇÒ ¸ğÅÍ¸¦ ¼±ÅÃÇÏ¼¼¿ä!"));
+		AfxMessageBox(_T("ì‚­ì œí•  ëª¨í„°ë¥¼ ì„ íƒí•˜ì„¸ìš”!"));
 		return;
 	}
 
-	// »èÁ¦ ´ë»ó ¼öÁı
+	// ì‚­ì œ ëŒ€ìƒ ìˆ˜ì§‘
 	std::vector<Motor*> motorsToDelete;
 	for (int selectedIndex : selectedIndices)
 	{
@@ -423,30 +412,13 @@ void MotorUI::OnRemoveMotor()
 		}
 	}
 
-	// »èÁ¦ ¼öÇà
+	// ì‚­ì œ ìˆ˜í–‰
 	for (Motor* motorToDelete : motorsToDelete)
 	{
-		DeleteMotorRecursive(motorToDelete); // ÇÏÀ§ ¸ğÅÍ Æ÷ÇÔ »èÁ¦
-
-		if (motorToDelete->parentMotor)
-		{
-			auto& siblings = motorToDelete->parentMotor->children;
-			auto it = std::find(siblings.begin(), siblings.end(), motorToDelete);
-			if (it != siblings.end())
-				siblings.erase(it);
-		}
-		else
-		{
-			auto& roots = m_motorManager.rootMotors;
-			auto it = std::find(roots.begin(), roots.end(), motorToDelete);
-			if (it != roots.end())
-				roots.erase(it);
-		}
-
-		// motorToDelete´Â ÀÌÁ¦ ÀÌ¹Ì »èÁ¦µÇ¾úÀ¸¹Ç·Î, ¿©±â¿¡ delete È£ÃâÀ» ÇÏÁö ¾ÊÀ½
+		DeleteMotorRecursive(motorToDelete); // í•˜ìœ„ ëª¨í„° í¬í•¨ ì‚­ì œ
 	}
 
-	// ¸®½ºÆ® ÃÊ±âÈ­ ÈÄ ´Ù½Ã Ã¤¿ì±â
+	// ë¦¬ìŠ¤íŠ¸ ì´ˆê¸°í™” í›„ ë‹¤ì‹œ ì±„ìš°ê¸°
 	m_motorListCtrl.SetRedraw(FALSE);
 	m_motorListCtrl.DeleteAllItems();
 
@@ -455,37 +427,42 @@ void MotorUI::OnRemoveMotor()
 	m_motorListCtrl.SetRedraw(TRUE);
 	m_motorListCtrl.RedrawWindow();
 
-	// ´Ù½Ã ±×¸®±â
+	// ë‹¤ì‹œ ê·¸ë¦¬ê¸°
 	if (m_pParentView)
 		m_pParentView->Invalidate();
 }
 
 void MotorUI::DeleteMotorRecursive(Motor* motor)
 {
-	// ÇÏÀ§ ¸ğÅÍ ¸ÕÀú »èÁ¦
-	for (Motor* subMotor : motor->children)
+	// ìì‹ ëª©ë¡ì„ ë³µì‚¬í•˜ì—¬ ì•ˆì „í•˜ê²Œ ìˆœíšŒ
+	std::vector<Motor*> childrenCopy = motor->children;
+	for (Motor* subMotor : childrenCopy)
 	{
 		DeleteMotorRecursive(subMotor);
-		delete subMotor; // ÇÏÀ§ ¸ğÅÍ ¸Ş¸ğ¸® ÇØÁ¦
 	}
 
-	motor->children.clear(); // ÇÏÀ§ ¸ğÅÍ º¤ÅÍµµ Á¤¸®
+	motor->children.clear();  // ìì‹ ë¦¬ìŠ¤íŠ¸ ë¹„ìš°ê¸°
 
-	// ºÎ¸ğ ¸ğÅÍ°¡ ÀÖ´Ù¸é ÇØ´ç ¸ğÅÍ¿¡¼­ ÀÌ ¸ğÅÍ »èÁ¦
+	// ë¶€ëª¨ì—ì„œ ì´ ëª¨í„° ì œê±°
 	if (motor->parentMotor)
 	{
 		auto& siblings = motor->parentMotor->children;
 		auto it = std::find(siblings.begin(), siblings.end(), motor);
 		if (it != siblings.end())
-		{
-			siblings.erase(it); // ºÎ¸ğ ¸®½ºÆ®¿¡¼­ Á¦°Å
-		}
+			siblings.erase(it);
 	}
+	else
+	{
+		auto& roots = m_motorManager.rootMotors;
+		auto it = std::find(roots.begin(), roots.end(), motor);
+		if (it != roots.end())
+			roots.erase(it);
+	}
+
+	delete motor;
 }
 
-
-
-// ¸ğÅÍ ÀúÀå ±â´É
+// ëª¨í„° ì €ì¥ ê¸°ëŠ¥
 void MotorUI::OnSaveMotor()
 {
 	m_motorManager.SaveMotorData();
@@ -494,10 +471,10 @@ void MotorUI::OnSaveMotor()
 void MotorUI::OnLoadMotor()
 {
 	m_motorManager.LoadMotorData();
-	// ¸®½ºÆ® ÄÁÆ®·Ñ ÃÊ±âÈ­
+	// ë¦¬ìŠ¤íŠ¸ ì»¨íŠ¸ë¡¤ ì´ˆê¸°í™”
 	m_motorListCtrl.DeleteAllItems();
 
-	// ¸ğÅÍ ¸®½ºÆ®¿¡ ÀÖ´Â ¸ğµç ¸ğÅÍ¸¦ ¸®½ºÆ® ÄÁÆ®·Ñ¿¡ Ãß°¡
+	// ëª¨í„° ë¦¬ìŠ¤íŠ¸ì— ìˆëŠ” ëª¨ë“  ëª¨í„°ë¥¼ ë¦¬ìŠ¤íŠ¸ ì»¨íŠ¸ë¡¤ì— ì¶”ê°€
 	for (auto motor : m_motorManager.rootMotors)
 	{
 		int index = m_motorListCtrl.GetItemCount();
@@ -538,7 +515,7 @@ void MotorUI::OnBnClickedRadioYAxis()
 
 void MotorUI::OnChangeStartX()
 {
-	if (m_radioYAxis.GetSafeHwnd() && m_radioYAxis.GetCheck() == BST_CHECKED)  // YÃà ¶óµğ¿À ¹öÆ° ¼±ÅÃµÇ¾úÀ» ¶§
+	if (m_radioYAxis.GetSafeHwnd() && m_radioYAxis.GetCheck() == BST_CHECKED)  // Yì¶• ë¼ë””ì˜¤ ë²„íŠ¼ ì„ íƒë˜ì—ˆì„ ë•Œ
 	{
 		CString startX;
 		m_startXEdit.GetWindowTextW(startX);
@@ -548,7 +525,7 @@ void MotorUI::OnChangeStartX()
 
 void MotorUI::OnChangeStartY()
 {
-	if (m_radioXAxis.GetSafeHwnd() && m_radioXAxis.GetCheck() == BST_CHECKED)  // XÃà ¶óµğ¿À ¹öÆ° ¼±ÅÃµÇ¾úÀ» ¶§
+	if (m_radioXAxis.GetSafeHwnd() && m_radioXAxis.GetCheck() == BST_CHECKED)  // Xì¶• ë¼ë””ì˜¤ ë²„íŠ¼ ì„ íƒë˜ì—ˆì„ ë•Œ
 	{
 		CString startY;
 		m_startYEdit.GetWindowTextW(startY);

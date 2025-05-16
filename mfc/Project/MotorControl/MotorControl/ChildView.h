@@ -53,21 +53,18 @@ public:
 	virtual ~CChildView();
 	void DrawGrid(CDC* pDC);
 	void DrawSubMotor(Motor* parentMotor, CDC* pDC);
-	
+	void DrawAddSubmotorMode(CDC* pDC);
 
 	// 생성된 메시지 맵 함수
 protected:
 	afx_msg void OnPaint();
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 	DECLARE_MESSAGE_MAP()
-
-private:
-	// 모터 리스트를 위한 CListCtrl
-	CListCtrl m_motorListCtrl;
 };
 

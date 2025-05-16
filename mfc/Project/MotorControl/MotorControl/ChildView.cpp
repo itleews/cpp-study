@@ -28,6 +28,7 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 	ON_WM_PAINT()
 	ON_WM_CREATE()
 	ON_WM_SIZE()
+	ON_WM_TIMER()
 	ON_WM_MOUSEWHEEL()
 	ON_WM_MOUSEMOVE()
 	ON_WM_LBUTTONDOWN()
@@ -76,6 +77,11 @@ void CChildView::OnPaint()
 
 	DrawGrid(&memDC); // 그리드 그리기
 
+	if (m_motorUI.m_isAddSubmotorMode && !m_motorUI.m_motorManager.rootMotors.empty())
+	{
+		DrawAddSubmotorMode(&memDC);
+	}
+
 	// 도형 그리기
 	for (auto axis : m_motorUI.m_motorManager.rootMotors)
 	{
@@ -116,7 +122,7 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 
-	if (!m_motorUI.Create(NULL, _T("Motor UI"), WS_CHILD | WS_VISIBLE | WS_BORDER,
+	if (!m_motorUI.Create(NULL, _T("Motor UI"), WS_CHILD | WS_VISIBLE,
 			CRect(300, 300, 500, 500), this, 1001))
 	{
 		AfxMessageBox(_T("MotorUI 생성 실패"));
@@ -125,6 +131,8 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	{
 		m_motorUI.SetParentView(this);
 	}
+
+	SetTimer(1, 100, NULL);
 
 	return 0;
 }
@@ -143,6 +151,16 @@ void CChildView::OnSize(UINT nType, int cx, int cy)
 		m_motorUI.MoveWindow(uiX, 10, cx - uiX - 10, cy - 20);
 	}
 }
+
+void CChildView::OnTimer(UINT_PTR nIDEvent)
+{
+	if (nIDEvent == 1)
+	{
+		InvalidateRect(&m_drawArea, FALSE);
+	}
+	CWnd::OnTimer(nIDEvent);
+}
+
 
 
 void CChildView::DrawGrid(CDC* pDC)
@@ -174,6 +192,59 @@ void CChildView::DrawGrid(CDC* pDC)
 	// 펜을 원래대로 돌려놓음
 	pDC->SelectObject(pOldPen);
 }
+
+void CChildView::DrawAddSubmotorMode(CDC* pDC)
+{
+	CRect rect(m_drawArea.left, m_drawArea.top, m_drawArea.right, m_drawArea.bottom);
+	pDC->FrameRect(rect, &CBrush(RGB(255, 0, 0))); // 빨간색 테두리
+
+	pDC->SetBkMode(TRANSPARENT);
+	pDC->SetTextColor(RGB(255, 0, 0)); // 빨간색 글씨
+	CString msg = _T("하위 모터를 추가할 상위 모터를 선택하세요");
+	CSize textSize = pDC->GetTextExtent(msg);
+
+	// 텍스트 출력
+	pDC->TextOutW((rect.left + rect.right) / 2 - textSize.cx / 2, rect.top + 10, msg);
+
+	// 선택된 모터 영역
+	CRect selectedRect = m_motorUI.m_selectedMotorRect; // 직접 선택 영역 가져오기
+
+	// 영역 제외 클리핑 설정
+	pDC->ExcludeClipRect(selectedRect);
+
+	// 반투명 검정 덮기
+	COLORREF shadowColor = RGB(0, 0, 0);
+	BYTE alpha = 100; // 0~255 투명도 (낮을수록 투명)
+
+	// Alpha 블렌딩 하려면 CDC::FillSolidRect로는 안되고, AlphaBlend API 필요
+	BLENDFUNCTION blendFunc = { 0 };
+	blendFunc.BlendOp = AC_SRC_OVER;
+	blendFunc.SourceConstantAlpha = alpha;
+	blendFunc.AlphaFormat = 0;
+
+	// 메모리 DC에 반투명 사각형을 그리고 그것을 본 DC에 AlphaBlend로 복사
+	CDC memDC;
+	memDC.CreateCompatibleDC(pDC);
+	CBitmap bmp;
+	bmp.CreateCompatibleBitmap(pDC, rect.Width(), rect.Height());
+	CBitmap* pOldBmp = memDC.SelectObject(&bmp);
+
+	// 투명한 배경 초기화
+	memDC.FillSolidRect(0, 0, rect.Width(), rect.Height(), RGB(0, 0, 0));
+
+	// 그림자 영역을 검정색으로 채움
+	memDC.FillSolidRect(0, 0, rect.Width(), rect.Height(), shadowColor);
+
+	// 메인 DC에 alpha blending
+	pDC->AlphaBlend(rect.left, rect.top, rect.Width(), rect.Height(),
+		&memDC, 0, 0, rect.Width(), rect.Height(), blendFunc);
+
+	memDC.SelectObject(pOldBmp);
+
+	// 클리핑 복원
+	pDC->SelectClipRgn(NULL);
+}
+
 
 // 하위 모터를 재귀적으로 그리기 위한 함수
 void CChildView::DrawSubMotor(Motor* parentMotor, CDC* pDC)

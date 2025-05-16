@@ -9,12 +9,14 @@ public:
     // UI 컨트롤 선언
     MotorManager m_motorManager;
     CListCtrl m_motorListCtrl;
-    CButton m_addMotorButton, m_removeMotorButton, m_saveMotorButton, m_loadMotorButton, m_subMotorCheck;
+    CButton m_addMotorButton, m_removeMotorButton, m_saveMotorButton, m_loadMotorButton, m_addSubMotorButton;
     CButton m_groupInput, m_groupButtons, m_groupControl;
     CEdit m_startXEdit, m_startYEdit, m_endXEdit, m_endYEdit, m_width, m_height;
     CButton m_radioXAxis, m_radioYAxis;
 	CButton m_controlButton[4]; // 조작부 버튼들
     CStatic m_labelStart, m_labelEnd, m_labelSize, m_labelAxis;
+	bool m_isAddSubmotorMode = false;
+    CRect m_selectedMotorRect;
 
     void SetParentView(CChildView* pView) { m_pParentView = pView; }
     void DisplayMotorTree(CListCtrl& listCtrl, const std::vector<Motor*>& rootMotors);
