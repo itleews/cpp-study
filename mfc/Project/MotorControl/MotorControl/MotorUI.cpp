@@ -16,7 +16,7 @@ BEGIN_MESSAGE_MAP(MotorUI, CWnd)
 	ON_EN_CHANGE(2002, &MotorUI::OnChangeStartY)  // m_startYEdit
 	ON_BN_CLICKED(3003, &MotorUI::OnBnClickedRadioXAxis) // X축 라디오 버튼 클릭
 	ON_BN_CLICKED(3004, &MotorUI::OnBnClickedRadioYAxis) // Y축 라디오 버튼 클릭
-	ON_NOTIFY(LVN_ITEMCHANGED, 1, &MotorUI::OnLvnItemChangedMotorList) // 리스트 컨트롤 항목 변경
+	ON_NOTIFY(NM_CLICK, 1, &MotorUI::OnNMClickMotorList) // 리스트 컨트롤 항목 변경
 	ON_BN_CLICKED(4001, &MotorUI::OnBnClickedControlUpButton) // 조작부 버튼 클릭
 	ON_BN_CLICKED(4002, &MotorUI::OnBnClickedControlDownButton) // 조작부 버튼 클릭
 	ON_BN_CLICKED(4003, &MotorUI::OnBnClickedControlLeftButton) // 조작부 버튼 클릭
@@ -234,11 +234,10 @@ void MotorUI::OnAddSubMotor() {
 		return;
 	}
 	m_isAddSubmotorMode = true;
+	m_selectedMotorRect = NULL;
 	m_groupInput.SetWindowText(_T("하위 모터 추가"));
 	m_removeMotorButton.SetWindowText(_T("취소"));
 	m_addSubMotorButton.EnableWindow(FALSE);
-
-	int selectedIndex = NULL;
 }
 
 
@@ -419,30 +418,24 @@ void MotorUI::OnChangeStartY()
 	}
 }
 
-void MotorUI::OnLvnItemChangedMotorList(NMHDR* pNMHDR, LRESULT* pResult)
+void MotorUI::OnNMClickMotorList(NMHDR* pNMHDR, LRESULT* pResult)
 {
-	LPNMLISTVIEW pListView = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+	int selectedIndex = m_motorListCtrl.GetNextItem(-1, LVNI_SELECTED);
+	if (selectedIndex != -1) {
+		CString motorID = m_motorListCtrl.GetItemText(selectedIndex, 0);
+		int motorIdInt = _ttoi(motorID);
+		Motor* selectedMotor = GetSelectedMotor(motorIdInt);
 
-	// 선택된 항목이 바뀌었는지 확인
-	if ((pListView->uChanged & LVIF_STATE) &&
-		(pListView->uNewState & LVIS_SELECTED))
-	{
-		int selectedIndex = m_motorListCtrl.GetNextItem(-1, LVNI_SELECTED);
-		if (selectedIndex != -1) {
-			CString motorID = m_motorListCtrl.GetItemText(selectedIndex, 0);
-			int motorIdInt = _ttoi(motorID);
-			Motor* selectedMotor = GetSelectedMotor(motorIdInt);
-
-			if (selectedMotor) {
-				CPoint topLeft = selectedMotor->motorPos - selectedMotor->motorSize;
-				CPoint bottomRight = selectedMotor->motorPos + selectedMotor->motorSize;
-				m_selectedMotorRect.SetRect(topLeft, bottomRight);
-			}
+		if (selectedMotor) {
+			CPoint topLeft = selectedMotor->motorPos - selectedMotor->motorSize;
+			CPoint bottomRight = selectedMotor->motorPos + selectedMotor->motorSize;
+			m_selectedMotorRect.SetRect(topLeft, bottomRight);
 		}
 	}
 
 	*pResult = 0;
 }
+
 
 void MotorUI::MoveMotorRecursive(Motor* motor, int dx, int dy)
 {

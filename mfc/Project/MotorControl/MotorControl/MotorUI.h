@@ -51,7 +51,7 @@ public:
     void MoveMotorRecursive(Motor* motor, int dx, int dy);
 
     CPoint SubToLogical(CPoint subMotorPos, CPoint mainMotorPos) {
-		// 하위 모터의 위치를 부모 모터의 위치로 변환
+		// 하위 모터의 위치를 논리 위치로 변환
 		return CPoint(subMotorPos + mainMotorPos);
     }
 
@@ -70,7 +70,7 @@ protected:
     afx_msg void OnBnClickedRadioYAxis();
     afx_msg void OnChangeStartX();
     afx_msg void OnChangeStartY();
-    afx_msg void OnLvnItemChangedMotorList(NMHDR* pNMHDR, LRESULT* pResult);
+    afx_msg void OnNMClickMotorList(NMHDR* pNMHDR, LRESULT* pResult);
     afx_msg void OnBnClickedControlUpButton();
 	afx_msg void OnBnClickedControlDownButton();
 	afx_msg void OnBnClickedControlLeftButton();
