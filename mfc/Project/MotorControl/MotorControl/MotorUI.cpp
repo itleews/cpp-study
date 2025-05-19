@@ -6,6 +6,7 @@
 BEGIN_MESSAGE_MAP(MotorUI, CWnd)
 	ON_WM_CREATE()
 	ON_WM_SIZE()
+	ON_WM_TIMER()
 	ON_BN_CLICKED(1001, &MotorUI::OnAddMotor) // 축 추가 버튼 클릭
 	ON_BN_CLICKED(2007, &MotorUI::OnAddSubMotor) // 하위 모터 추가 버튼 클릭
 	ON_BN_CLICKED(1002, &MotorUI::OnRemoveMotor) // 축 삭제 버튼 클릭
@@ -16,7 +17,13 @@ BEGIN_MESSAGE_MAP(MotorUI, CWnd)
 	ON_BN_CLICKED(3003, &MotorUI::OnBnClickedRadioXAxis) // X축 라디오 버튼 클릭
 	ON_BN_CLICKED(3004, &MotorUI::OnBnClickedRadioYAxis) // Y축 라디오 버튼 클릭
 	ON_NOTIFY(LVN_ITEMCHANGED, 1, &MotorUI::OnLvnItemChangedMotorList) // 리스트 컨트롤 항목 변경
+	ON_BN_CLICKED(4001, &MotorUI::OnBnClickedControlUpButton) // 조작부 버튼 클릭
+	ON_BN_CLICKED(4002, &MotorUI::OnBnClickedControlDownButton) // 조작부 버튼 클릭
+	ON_BN_CLICKED(4003, &MotorUI::OnBnClickedControlLeftButton) // 조작부 버튼 클릭
+	ON_BN_CLICKED(4004, &MotorUI::OnBnClickedControlRightButton) // 조작부 버튼 클릭
 END_MESSAGE_MAP()
+
+const int MOVE_DELTA = 5;  // 한 번에 움직이는 거리(픽셀 단위)
 
 int MotorUI::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
@@ -25,7 +32,8 @@ int MotorUI::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
     // 리스트 컨트롤 생성
     m_motorListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT, CRect(0, 0, 0, 0), this, 1);
-    m_motorListCtrl.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES | LVS_EX_INFOTIP | LVS_EX_DOUBLEBUFFER);
+	m_motorListCtrl.SetExtendedStyle(LVS_EX_DOUBLEBUFFER | LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
+
     m_motorListCtrl.InsertColumn(0, _T("모터 ID"), LVCFMT_LEFT, 100);
     m_motorListCtrl.InsertColumn(1, _T("축"), LVCFMT_LEFT, 50);
     m_motorListCtrl.InsertColumn(2, _T("시작 위치"), LVCFMT_LEFT, 100);
@@ -86,6 +94,8 @@ int MotorUI::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_controlButton[1].Create(_T("▼"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 4002);
 	m_controlButton[2].Create(_T("◀"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 4003);
 	m_controlButton[3].Create(_T("▶"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 4004);
+
+	SetTimer(2, 16, NULL);
 
 	return 0;
 }
@@ -198,64 +208,104 @@ void MotorUI::OnSize(UINT nType, int cx, int cy)
 
 }
 
-void MotorUI::DisplayMotorTree(CListCtrl& listCtrl, const std::vector<Motor*>& rootMotors)
+void MotorUI::OnTimer(UINT_PTR nIDEvent)
 {
-	listCtrl.DeleteAllItems(); // 기존 내용 비우기
-
-	int itemIndex = 0;
-
-	for (Motor* root : rootMotors)
+	if (nIDEvent == 2)
 	{
-		// 최상위 모터는 전체 좌표계 기준이므로 (0, 0) 기준으로 시작
-		DisplayMotorRecursive(listCtrl, root, 0, itemIndex, CPoint(0, 0));
+		if (!m_isAddSubmotorMode)
+			UpdateMotorListTexts();
 	}
+
+	CWnd::OnTimer(nIDEvent);
 }
 
-void MotorUI::DisplayMotorRecursive(CListCtrl& listCtrl, Motor* node, int depth, int& itemIndex, const CPoint& parentOrigin)
+void MotorUI::OnDestroy()
+{
+	KillTimer(2);  // 타이머 ID 1 제거
+	CWnd::OnDestroy();
+}
+
+
+void MotorUI::BuildDisplayRows(Motor* node, int depth, const CPoint& parentOrigin, std::vector<DisplayRow>& outRows)
 {
 	if (!node) return;
 
-	CString displayMotorID;
-
-	// 들여쓰기
+	CString indent;
 	for (int i = 0; i < depth; ++i)
-		displayMotorID += _T("    ");
+		indent += _T("    ");
 
 	CString idStr;
 	idStr.Format(_T("%d"), node->m_id);
-	displayMotorID += idStr;
 
-	CString typeStr, strPosStr, endPosStr, motorPosStr, absMotorPosStr;
-	typeStr = node->isX ? _T("X") : _T("Y");
+	CString typeStr = node->isX ? _T("X") : _T("Y");
 
-	// 부모 기준 상대 좌표로 출력
 	CPoint relStrPos = node->strPos - parentOrigin;
 	CPoint relEndPos = node->endPos - parentOrigin;
 	CPoint relMotorPos = node->motorPos - parentOrigin;
 
+	CString strPosStr, endPosStr, relMotorPosStr, absMotorPosStr;
 	strPosStr.Format(_T("(%d, %d)"), relStrPos.x, relStrPos.y);
 	endPosStr.Format(_T("(%d, %d)"), relEndPos.x, relEndPos.y);
-	motorPosStr.Format(_T("(%d, %d)"), relMotorPos.x, relMotorPos.y);
+	relMotorPosStr.Format(_T("(%d, %d)"), relMotorPos.x, relMotorPos.y);
 	absMotorPosStr.Format(_T("(%d, %d)"), node->motorPos.x, node->motorPos.y);
 
+	DisplayRow row = {
+		indent + idStr,
+		typeStr,
+		strPosStr,
+		endPosStr,
+		relMotorPosStr,
+		absMotorPosStr
+	};
+	outRows.push_back(row);
 
-	listCtrl.InsertItem(itemIndex, displayMotorID);
-	listCtrl.SetItemText(itemIndex, 1, typeStr);
-	listCtrl.SetItemText(itemIndex, 2, strPosStr);
-	listCtrl.SetItemText(itemIndex, 3, endPosStr);
-	listCtrl.SetItemText(itemIndex, 4, motorPosStr);
-	listCtrl.SetItemText(itemIndex, 5, absMotorPosStr);
-
-	++itemIndex;
-
-	// 재귀 호출할 때 현재 모터 위치를 기준점으로 넘김
 	for (Motor* child : node->children)
 	{
-		if (child)
-			DisplayMotorRecursive(listCtrl, child, depth + 1, itemIndex, node->motorPos - node->motorSize);
+		CPoint newOrigin = node->motorPos - node->motorSize;
+		BuildDisplayRows(child, depth + 1, newOrigin, outRows);
 	}
 }
 
+void MotorUI::DisplayMotorTree(CListCtrl& listCtrl, const std::vector<Motor*>& rootMotors)
+{
+	listCtrl.DeleteAllItems();
+
+	std::vector<DisplayRow> rows;
+	for (Motor* root : rootMotors)
+		BuildDisplayRows(root, 0, CPoint(0, 0), rows);
+
+	for (int i = 0; i < (int)rows.size(); ++i)
+	{
+		listCtrl.InsertItem(i, rows[i].id);
+		listCtrl.SetItemText(i, 1, rows[i].type);
+		listCtrl.SetItemText(i, 2, rows[i].strPos);
+		listCtrl.SetItemText(i, 3, rows[i].endPos);
+		listCtrl.SetItemText(i, 4, rows[i].relMotorPos);
+		listCtrl.SetItemText(i, 5, rows[i].absMotorPos);
+	}
+}
+
+void MotorUI::UpdateMotorListTexts()
+{
+	std::vector<DisplayRow> rows;
+	for (Motor* root : m_motorManager.rootMotors)
+		BuildDisplayRows(root, 0, CPoint(0, 0), rows);
+
+	int itemCount = m_motorListCtrl.GetItemCount();
+
+	m_motorListCtrl.SetRedraw(FALSE);
+
+	for (int i = 0; i < itemCount && i < (int)rows.size(); ++i)
+	{
+		m_motorListCtrl.SetItemText(i, 2, rows[i].strPos);
+		m_motorListCtrl.SetItemText(i, 3, rows[i].endPos);
+		m_motorListCtrl.SetItemText(i, 4, rows[i].relMotorPos);
+		m_motorListCtrl.SetItemText(i, 5, rows[i].absMotorPos);
+	}
+
+	m_motorListCtrl.SetRedraw(TRUE);
+	m_motorListCtrl.UpdateWindow();
+}
 
 void MotorUI::OnAddMotor()
 {
@@ -340,10 +390,6 @@ void MotorUI::OnAddMotor()
 
 	// 리스트 컨트롤에 모터 트리 표시
 	DisplayMotorTree(m_motorListCtrl, m_motorManager.rootMotors);
-
-	// 다시 그리기
-	if (m_pParentView)
-		m_pParentView->Invalidate();
 }
 
 // 하위 모터 추가
@@ -435,18 +481,7 @@ void MotorUI::OnRemoveMotor()
 		DeleteMotorRecursive(motorToDelete); // 하위 모터 포함 삭제
 	}
 
-	// 리스트 초기화 후 다시 채우기
-	m_motorListCtrl.SetRedraw(FALSE);
-	m_motorListCtrl.DeleteAllItems();
-
 	DisplayMotorTree(m_motorListCtrl, m_motorManager.rootMotors);
-
-	m_motorListCtrl.SetRedraw(TRUE);
-	m_motorListCtrl.RedrawWindow();
-
-	// 다시 그리기
-	if (m_pParentView)
-		m_pParentView->Invalidate();
 }
 
 void MotorUI::DeleteMotorRecursive(Motor* motor)
@@ -573,4 +608,70 @@ void MotorUI::OnLvnItemChangedMotorList(NMHDR* pNMHDR, LRESULT* pResult)
 	}
 
 	*pResult = 0;
+}
+
+void MotorUI::MoveMotorRecursive(Motor* motor, int dx, int dy)
+{
+	if (!motor) return;
+
+	if (motor->parentMotor) {
+		CPoint parentTopLeft = motor->parentMotor->motorPos - motor->parentMotor->motorSize;
+		CPoint parentBottomRight = motor->parentMotor->motorPos + motor->parentMotor->motorSize;
+
+		CPoint newStrPos = motor->strPos + CPoint(dx, dy);
+		CPoint newEndPos = motor->endPos + CPoint(dx, dy);
+
+		if (newStrPos.x < parentTopLeft.x || newStrPos.y < parentTopLeft.y ||
+			newEndPos.x > parentBottomRight.x || newEndPos.y > parentBottomRight.y)
+		{
+			return; // 부모 영역을 벗어나므로 이동하지 않음
+		}
+	}
+
+	motor->strPos.x += dx;
+	motor->strPos.y += dy;
+	motor->endPos.x += dx;
+	motor->endPos.y += dy;
+	motor->motorPos.x += dx;
+	motor->motorPos.y += dy;
+
+	for (Motor* child : motor->children)
+	{
+		MoveMotorRecursive(child, dx, dy);
+	}
+}
+
+void MotorUI::MoveSelectedAxis(int dx, int dy)
+{
+	int selectedIndex = m_motorListCtrl.GetNextItem(-1, LVNI_SELECTED);
+	if (selectedIndex == -1) return;
+
+	CString motorID = m_motorListCtrl.GetItemText(selectedIndex, 0);
+	int motorIdInt = _ttoi(motorID);
+
+	Motor* selectedMotor = GetSelectedMotor(motorIdInt);
+	if (selectedMotor)
+	{
+		MoveMotorRecursive(selectedMotor, dx, dy);
+	}
+}
+
+void MotorUI::OnBnClickedControlUpButton()
+{
+	MoveSelectedAxis(0, -MOVE_DELTA);
+}
+
+void MotorUI::OnBnClickedControlDownButton()
+{
+	MoveSelectedAxis(0, MOVE_DELTA);
+}
+
+void MotorUI::OnBnClickedControlLeftButton()
+{
+	MoveSelectedAxis(-MOVE_DELTA, 0);
+}
+
+void MotorUI::OnBnClickedControlRightButton()
+{
+	MoveSelectedAxis(MOVE_DELTA, 0);
 }
