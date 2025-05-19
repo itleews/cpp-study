@@ -35,8 +35,6 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 	ON_WM_LBUTTONUP()
 END_MESSAGE_MAP()
 
-
-
 // CChildView 메시지 처리기
 
 BOOL CChildView::PreCreateWindow(CREATESTRUCT& cs) 
@@ -77,11 +75,6 @@ void CChildView::OnPaint()
 
 	DrawGrid(&memDC); // 그리드 그리기
 
-	if (m_motorUI.m_isAddSubmotorMode && !m_motorUI.m_motorManager.rootMotors.empty())
-	{
-		DrawAddSubmotorMode(&memDC);
-	}
-
 	// 도형 그리기
 	for (auto axis : m_motorUI.m_motorManager.rootMotors)
 	{
@@ -108,6 +101,11 @@ void CChildView::OnPaint()
 
 		// 하위 모터 그리기 (재귀적으로)
 		DrawSubMotor(axis, &memDC);  // axis에서 children을 재귀적으로 처리
+	}
+
+	if (m_motorUI.m_isAddSubmotorMode && !m_motorUI.m_motorManager.rootMotors.empty())
+	{
+		DrawAddSubmotorMode(&memDC);
 	}
 
 	// 최종 결과를 실제 DC에 복사
@@ -161,8 +159,6 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
 	CWnd::OnTimer(nIDEvent);
 }
 
-
-
 void CChildView::DrawGrid(CDC* pDC)
 {
 	CPen pen(PS_SOLID, 1, RGB(200, 200, 200)); 
@@ -195,47 +191,35 @@ void CChildView::DrawGrid(CDC* pDC)
 
 void CChildView::DrawAddSubmotorMode(CDC* pDC)
 {
-	CRect rect(m_drawArea.left, m_drawArea.top, m_drawArea.right, m_drawArea.bottom);
-	pDC->FrameRect(rect, &CBrush(RGB(255, 0, 0))); // 빨간색 테두리
+	CRect rect = m_drawArea; // 그리드 영역 사용
+	CRect selectedRect = m_motorUI.m_selectedMotorRect;
 
-	pDC->SetBkMode(TRANSPARENT);
-	pDC->SetTextColor(RGB(255, 0, 0)); // 빨간색 글씨
-	CString msg = _T("하위 모터를 추가할 상위 모터를 선택하세요");
-	CSize textSize = pDC->GetTextExtent(msg);
+	if (!selectedRect.IsRectEmpty())
+	{
+		CPoint LogicalStart = LogicalToScreen(selectedRect.TopLeft());
+		CPoint LogicalEnd = LogicalToScreen(selectedRect.BottomRight());
+		selectedRect = CRect(LogicalStart, LogicalEnd);
+		pDC->ExcludeClipRect(selectedRect);
+	}
 
-	// 텍스트 출력
-	pDC->TextOutW((rect.left + rect.right) / 2 - textSize.cx / 2, rect.top + 10, msg);
-
-	// 선택된 모터 영역
-	CRect selectedRect = m_motorUI.m_selectedMotorRect; // 직접 선택 영역 가져오기
-
-	// 영역 제외 클리핑 설정
-	pDC->ExcludeClipRect(selectedRect);
-
-	// 반투명 검정 덮기
+	// 그림자 배경 준비
 	COLORREF shadowColor = RGB(0, 0, 0);
-	BYTE alpha = 100; // 0~255 투명도 (낮을수록 투명)
+	BYTE alpha = 100;
 
-	// Alpha 블렌딩 하려면 CDC::FillSolidRect로는 안되고, AlphaBlend API 필요
 	BLENDFUNCTION blendFunc = { 0 };
 	blendFunc.BlendOp = AC_SRC_OVER;
 	blendFunc.SourceConstantAlpha = alpha;
 	blendFunc.AlphaFormat = 0;
 
-	// 메모리 DC에 반투명 사각형을 그리고 그것을 본 DC에 AlphaBlend로 복사
 	CDC memDC;
 	memDC.CreateCompatibleDC(pDC);
 	CBitmap bmp;
 	bmp.CreateCompatibleBitmap(pDC, rect.Width(), rect.Height());
 	CBitmap* pOldBmp = memDC.SelectObject(&bmp);
 
-	// 투명한 배경 초기화
-	memDC.FillSolidRect(0, 0, rect.Width(), rect.Height(), RGB(0, 0, 0));
-
-	// 그림자 영역을 검정색으로 채움
 	memDC.FillSolidRect(0, 0, rect.Width(), rect.Height(), shadowColor);
 
-	// 메인 DC에 alpha blending
+	// Alpha blending
 	pDC->AlphaBlend(rect.left, rect.top, rect.Width(), rect.Height(),
 		&memDC, 0, 0, rect.Width(), rect.Height(), blendFunc);
 
@@ -243,8 +227,36 @@ void CChildView::DrawAddSubmotorMode(CDC* pDC)
 
 	// 클리핑 복원
 	pDC->SelectClipRgn(NULL);
-}
 
+	CPen redPen(PS_SOLID, 5, RGB(255, 0, 0));
+	CPen* pOldPen = pDC->SelectObject(&redPen);
+	pDC->SelectStockObject(NULL_BRUSH); // 내부 채우기 없음
+	pDC->Rectangle(rect);
+	pDC->SelectObject(pOldPen); // 펜 복원
+
+	pDC->SetBkMode(TRANSPARENT);
+	pDC->SetTextColor(RGB(255, 0, 0));
+
+	CFont bigFont;
+	bigFont.CreateFontW(
+		40,                        // height (크게)
+		0, 0, 0, FW_BOLD,          // 굵게
+		FALSE, FALSE, FALSE,
+		DEFAULT_CHARSET,
+		OUT_OUTLINE_PRECIS,
+		CLIP_DEFAULT_PRECIS,
+		CLEARTYPE_QUALITY,
+		DEFAULT_PITCH | FF_SWISS,
+		_T("맑은 고딕")             // 폰트 이름
+	);
+	CFont* pOldFont = pDC->SelectObject(&bigFont);
+
+	CString msg = _T("모터 목록에서 하위 모터를 추가할 상위 모터를 선택하세요");
+	CSize textSize = pDC->GetTextExtent(msg);
+	pDC->TextOutW((rect.left + rect.right) / 2, rect.top + 50, msg);
+
+	pDC->SelectObject(pOldFont); // 폰트 복원
+}
 
 // 하위 모터를 재귀적으로 그리기 위한 함수
 void CChildView::DrawSubMotor(Motor* parentMotor, CDC* pDC)

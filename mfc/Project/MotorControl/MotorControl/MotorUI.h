@@ -11,10 +11,10 @@ public:
     CListCtrl m_motorListCtrl;
     CButton m_addMotorButton, m_removeMotorButton, m_saveMotorButton, m_loadMotorButton, m_addSubMotorButton;
     CButton m_groupInput, m_groupButtons, m_groupControl;
-    CEdit m_startXEdit, m_startYEdit, m_endXEdit, m_endYEdit, m_width, m_height;
+    CEdit m_startXEdit, m_startYEdit, m_endXEdit, m_endYEdit, m_width, m_height, m_speed;
     CButton m_radioXAxis, m_radioYAxis;
 	CButton m_controlButton[4]; // 조작부 버튼들
-    CStatic m_labelStart, m_labelEnd, m_labelSize, m_labelAxis;
+    CStatic m_labelStart, m_labelEnd, m_labelSize, m_labelAxis, m_labelSpeed;
 	bool m_isAddSubmotorMode = false;
     CRect m_selectedMotorRect;
 
@@ -44,5 +44,6 @@ protected:
     afx_msg void OnBnClickedRadioYAxis();
     afx_msg void OnChangeStartX();
     afx_msg void OnChangeStartY();
+    afx_msg void OnLvnItemChangedMotorList(NMHDR* pNMHDR, LRESULT* pResult);
     DECLARE_MESSAGE_MAP()
 };

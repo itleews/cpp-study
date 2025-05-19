@@ -15,6 +15,7 @@ BEGIN_MESSAGE_MAP(MotorUI, CWnd)
 	ON_EN_CHANGE(2002, &MotorUI::OnChangeStartY)  // m_startYEdit
 	ON_BN_CLICKED(3003, &MotorUI::OnBnClickedRadioXAxis) // X축 라디오 버튼 클릭
 	ON_BN_CLICKED(3004, &MotorUI::OnBnClickedRadioYAxis) // Y축 라디오 버튼 클릭
+	ON_NOTIFY(LVN_ITEMCHANGED, 1, &MotorUI::OnLvnItemChangedMotorList) // 리스트 컨트롤 항목 변경
 END_MESSAGE_MAP()
 
 int MotorUI::OnCreate(LPCREATESTRUCT lpCreateStruct)
@@ -56,6 +57,9 @@ int MotorUI::OnCreate(LPCREATESTRUCT lpCreateStruct)
     m_height.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, CRect(0, 0, 0, 0), this, 2006);
     m_height.SetWindowTextW(_T("100"));
 
+	m_speed.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, CRect(0, 0, 0, 0), this, 2008);
+	m_speed.SetWindowTextW(_T("100"));
+
 	m_addSubMotorButton.Create(_T("하위 모터 추가"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 2007);
 
     // 라디오 버튼 생성
@@ -69,6 +73,7 @@ int MotorUI::OnCreate(LPCREATESTRUCT lpCreateStruct)
     m_labelEnd.Create(_T("끝 위치(x, y)"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this);
     m_labelSize.Create(_T("크기(W, H)"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this);
     m_labelAxis.Create(_T("기준 축"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this);
+	m_labelSpeed.Create(_T("모터 속도"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this);
 
     // 모터 관리 버튼 생성
     m_addMotorButton.Create(_T("추가"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 1001);
@@ -143,9 +148,13 @@ void MotorUI::OnSize(UINT nType, int cx, int cy)
 	m_labelAxis.SetWindowPos(nullptr, inputStartX + groupPadding, row4Y, labelWidth, fieldHeight, SWP_NOZORDER);
 	m_radioXAxis.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap, row4Y, 60, fieldHeight, SWP_NOZORDER);
 	m_radioYAxis.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap + 70, row4Y, 60, fieldHeight, SWP_NOZORDER);
-	m_addSubMotorButton.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap + labelWidth + colGap, row4Y, labelWidth, fieldHeight, SWP_NOZORDER);
+	
+	int row5Y = row4Y + fieldHeight + rowGap;
+	m_labelSpeed.SetWindowPos(nullptr, inputStartX + groupPadding, row5Y, labelWidth, fieldHeight, SWP_NOZORDER);
+	m_speed.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap, row5Y, fieldWidth * 2 + colGap, fieldHeight, SWP_NOZORDER);
+	m_addSubMotorButton.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap + labelWidth + colGap, row5Y, labelWidth, btnHeight, SWP_NOZORDER);
 
-	int inputGroupHeight = (row4Y + fieldHeight + groupPadding) - inputStartY;
+	int inputGroupHeight = (row5Y + fieldHeight + groupPadding) - inputStartY;
 	m_groupInput.SetWindowPos(nullptr, rightX, inputStartY, rightWidth, inputGroupHeight, SWP_NOZORDER);
 
 	// 3. 버튼 그룹박스
@@ -303,6 +312,9 @@ void MotorUI::OnAddMotor()
 			}
 
 			m_isAddSubmotorMode = false; // 하위 모터 추가 후 모드 해제
+			m_groupInput.SetWindowText(_T("모터 관리"));
+			m_removeMotorButton.SetWindowText(_T("삭제"));
+			m_addSubMotorButton.EnableWindow(TRUE);
 		}
 		else {
 			AfxMessageBox(_T("하위 모터를 추가할 항목을 선택하세요!"));
@@ -339,6 +351,9 @@ void MotorUI::OnAddSubMotor() {
 		return;
 	}
 	m_isAddSubmotorMode = true;
+	m_groupInput.SetWindowText(_T("하위 모터 추가"));
+	m_removeMotorButton.SetWindowText(_T("취소"));
+	m_addSubMotorButton.EnableWindow(FALSE);
 
 	int selectedIndex = m_motorListCtrl.GetNextItem(-1, LVNI_SELECTED);
 	if (selectedIndex != -1) {
@@ -384,6 +399,14 @@ Motor* MotorUI::FindMotorByID(Motor* node, int selectedID)
 
 void MotorUI::OnRemoveMotor()
 {
+	if (m_isAddSubmotorMode) {
+		m_isAddSubmotorMode = false; // 하위 모터 추가 모드 해제
+		m_groupInput.SetWindowText(_T("모터 관리"));
+		m_removeMotorButton.SetWindowText(_T("삭제"));
+		m_addSubMotorButton.EnableWindow(TRUE);
+		return;
+	}
+
 	std::vector<int> selectedIndices;
 
 	// 선택된 항목 수집
@@ -531,4 +554,29 @@ void MotorUI::OnChangeStartY()
 		m_startYEdit.GetWindowTextW(startY);
 		m_endYEdit.SetWindowTextW(startY);
 	}
+}
+
+void MotorUI::OnLvnItemChangedMotorList(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMLISTVIEW pListView = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+
+	// 선택된 항목이 바뀌었는지 확인
+	if ((pListView->uChanged & LVIF_STATE) &&
+		(pListView->uNewState & LVIS_SELECTED))
+	{
+		int selectedIndex = m_motorListCtrl.GetNextItem(-1, LVNI_SELECTED);
+		if (selectedIndex != -1) {
+			CString motorID = m_motorListCtrl.GetItemText(selectedIndex, 0);
+			int motorIdInt = _ttoi(motorID);
+			Motor* selectedMotor = GetSelectedMotor(motorIdInt);
+
+			if (selectedMotor) {
+				CPoint topLeft = selectedMotor->motorPos - selectedMotor->motorSize;
+				CPoint bottomRight = selectedMotor->motorPos + selectedMotor->motorSize;
+				m_selectedMotorRect.SetRect(topLeft, bottomRight);
+			}
+		}
+	}
+
+	*pResult = 0;
 }
