@@ -28,6 +28,17 @@ public:
 	bool m_isAddSubmotorMode = false;
     CRect m_selectedMotorRect;
 
+    void CreateListControl();
+    void CreateInputFields();
+	void CreateGroupBoxes();
+	void CreateRadioButtons();
+    void CreateLabels();
+    void CreateMotorButtons();
+    void CreateControlButtons();
+    void CreateEdit(CEdit& edit, int id, const CString& defaultText);
+    void CreateStatic(CStatic& label, const CString& text);
+	void CreateButton(CButton& button, int id, const CString& text);
+
     void SetParentView(CChildView* pView) { m_pParentView = pView; }
     void DisplayMotorTree(CListCtrl& listCtrl, const std::vector<Motor*>& rootMotors);
     void BuildDisplayRows(Motor* node, int depth, const CPoint& parentOrigin, std::vector<DisplayRow>& outRows);
