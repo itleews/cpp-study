@@ -78,29 +78,9 @@ void CChildView::OnPaint()
 	// 도형 그리기
 	for (auto axis : m_motorUI.m_motorManager.rootMotors)
 	{
-		// 화면 좌표로 변환
-		CPoint screenStart = LogicalToScreen(axis->strPos);
-		CPoint screenEnd = LogicalToScreen(axis->endPos);
-		CPoint screenMotorStart = LogicalToScreen(axis->motorPos - axis->motorSize);
-		CPoint screenMotorEnd = LogicalToScreen(axis->motorPos + axis->motorSize);
-
-		memDC.MoveTo(screenStart.x, screenStart.y);
-		memDC.LineTo(screenEnd.x, screenEnd.y);
-
-		CRect motorRect(screenMotorStart.x, screenMotorStart.y, screenMotorEnd.x, screenMotorEnd.y);
-		memDC.FillSolidRect(motorRect, RGB(255, 255, 255));
-		memDC.FrameRect(motorRect, &CBrush(RGB(0, 0, 0)));
-
-		memDC.SetBkMode(TRANSPARENT);
-		memDC.SetTextColor(RGB(0, 0, 0));
-		memDC.SetTextAlign(TA_CENTER | TA_BASELINE);
-
-		CString str;
-		str.Format(_T("ID:%d"), axis->m_id);
-		memDC.TextOutW(screenStart.x, screenStart.y - 30, str);
-
+		DrawMotor(axis, &memDC);
 		// 하위 모터 그리기 (재귀적으로)
-		DrawSubMotor(axis, &memDC);  // axis에서 children을 재귀적으로 처리
+		DrawSubMotor(axis, &memDC);
 	}
 
 	if (m_motorUI.m_isAddSubmotorMode)
@@ -210,6 +190,42 @@ void CChildView::DrawGrid(CDC* pDC)
 	pDC->SelectObject(pOldPen);
 }
 
+void CChildView::DrawMotor(Motor* motor, CDC* pDC) {
+	// 화면 좌표로 변환
+	CPoint screenStart = LogicalToScreen(motor->strPos);
+	CPoint screenEnd = LogicalToScreen(motor->endPos);
+	CPoint screenMotorStart = LogicalToScreen(motor->motorPos - motor->motorSize);
+	CPoint screenMotorEnd = LogicalToScreen(motor->motorPos + motor->motorSize);
+
+	pDC->MoveTo(screenStart.x, screenStart.y);
+	pDC->LineTo(screenEnd.x, screenEnd.y);
+
+	CRect motorRect(screenMotorStart.x, screenMotorStart.y, screenMotorEnd.x, screenMotorEnd.y);
+	pDC->FillSolidRect(motorRect, RGB(255, 255, 255));
+	pDC->FrameRect(motorRect, &CBrush(RGB(0, 0, 0)));
+
+	pDC->SetBkMode(TRANSPARENT);
+	pDC->SetTextColor(RGB(0, 0, 0));
+	pDC->SetTextAlign(TA_CENTER | TA_BASELINE);
+
+	CString str;
+	str.Format(_T("ID:%d"), motor->m_id);
+	pDC->TextOutW(screenStart.x, screenStart.y - 30, str);
+}
+
+// 하위 모터를 재귀적으로 그리기 위한 함수
+void CChildView::DrawSubMotor(Motor* parentMotor, CDC* pDC)
+{
+	// 하위 모터가 있는 경우 재귀적으로 그리기
+	for (Motor* child : parentMotor->children)
+	{
+		DrawMotor(child, pDC); // 자식 모터 그리기
+
+		// 자식의 하위 모터도 그리기 (재귀 호출)
+		DrawSubMotor(child, pDC);
+	}
+}
+
 void CChildView::DrawAddSubmotorMode(CDC* pDC)
 {
 	CRect rect = m_drawArea; // 그리드 영역 사용
@@ -217,10 +233,21 @@ void CChildView::DrawAddSubmotorMode(CDC* pDC)
 
 	if (!selectedRect.IsRectEmpty())
 	{
+		CPoint motorSize = selectedRect.BottomRight() - selectedRect.TopLeft();
 		CPoint LogicalStart = LogicalToScreen(selectedRect.TopLeft());
 		CPoint LogicalEnd = LogicalToScreen(selectedRect.BottomRight());
 		selectedRect = CRect(LogicalStart, LogicalEnd);
 		pDC->ExcludeClipRect(selectedRect);
+
+		// 좌상단 좌표 텍스트 출력
+		CString topLeftText;
+		topLeftText.Format(_T("(0, 0)"));
+		pDC->TextOutW(selectedRect.left, selectedRect.top - 20, topLeftText); // 위쪽에 약간 띄워서 출력
+
+		// 우하단 좌표 텍스트 출력
+		CString bottomRightText;
+		bottomRightText.Format(_T("(%d, %d)"), motorSize.x, motorSize.y);
+		pDC->TextOutW(selectedRect.right, selectedRect.bottom + 20, bottomRightText); // 아래쪽에 약간 띄워서 출력
 	}
 
 	// 그림자 배경 준비
@@ -277,38 +304,6 @@ void CChildView::DrawAddSubmotorMode(CDC* pDC)
 	pDC->TextOutW((rect.left + rect.right) / 2, rect.top + 50, msg);
 
 	pDC->SelectObject(pOldFont); // 폰트 복원
-}
-
-// 하위 모터를 재귀적으로 그리기 위한 함수
-void CChildView::DrawSubMotor(Motor* parentMotor, CDC* pDC)
-{
-	// 하위 모터가 있는 경우 재귀적으로 그리기
-	for (Motor* child : parentMotor->children)
-	{
-		// 화면 좌표로 변환
-		CPoint screenStart = LogicalToScreen(child->strPos);
-		CPoint screenEnd = LogicalToScreen(child->endPos);
-		CPoint screenMotorStart = LogicalToScreen(child->motorPos - child->motorSize);
-		CPoint screenMotorEnd = LogicalToScreen(child->motorPos + child->motorSize);
-
-		pDC->MoveTo(screenStart.x, screenStart.y);
-		pDC->LineTo(screenEnd.x, screenEnd.y);
-
-		CRect motorRect(screenMotorStart.x, screenMotorStart.y, screenMotorEnd.x, screenMotorEnd.y);
-		pDC->FillSolidRect(motorRect, RGB(255, 255, 255));
-		pDC->FrameRect(motorRect, &CBrush(RGB(0, 0, 0)));
-
-		pDC->SetBkMode(TRANSPARENT);
-		pDC->SetTextColor(RGB(0, 0, 0));
-		pDC->SetTextAlign(TA_CENTER | TA_BASELINE);
-
-		CString str;
-		str.Format(_T("ID:%d"), child->m_id);
-		pDC->TextOutW(screenStart.x, screenStart.y - 30, str);
-
-		// 자식의 하위 모터도 그리기 (재귀 호출)
-		DrawSubMotor(child, pDC);
-	}
 }
 
 BOOL CChildView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)

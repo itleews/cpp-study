@@ -52,6 +52,7 @@ protected:
 public:
 	virtual ~CChildView();
 	void DrawGrid(CDC* pDC);
+	void DrawMotor(Motor* motor, CDC* pDC);
 	void DrawSubMotor(Motor* parentMotor, CDC* pDC);
 	void DrawAddSubmotorMode(CDC* pDC);
 	void OnDestroy();
