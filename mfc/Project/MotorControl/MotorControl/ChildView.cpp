@@ -103,7 +103,7 @@ void CChildView::OnPaint()
 		DrawSubMotor(axis, &memDC);  // axis에서 children을 재귀적으로 처리
 	}
 
-	if (m_motorUI.m_isAddSubmotorMode && !m_motorUI.m_motorManager.rootMotors.empty())
+	if (m_motorUI.m_isAddSubmotorMode)
 	{
 		DrawAddSubmotorMode(&memDC);
 	}
@@ -130,7 +130,7 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		m_motorUI.SetParentView(this);
 	}
 
-	SetTimer(1, 100, NULL);
+	SetTimer(1, 16, NULL);
 
 	return 0;
 }
@@ -154,9 +154,30 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
 {
 	if (nIDEvent == 1)
 	{
+		// 다시 그리기
 		InvalidateRect(&m_drawArea, FALSE);
+
+		if (m_motorUI.m_isAddSubmotorMode)
+		{
+			return;
+		}
+
+		double deltaTime = 0.016; // 약 60fps = 16ms 주기
+
+		// 모든 모터 위치를 갱신
+		for (auto axis : m_motorUI.m_motorManager.rootMotors)
+		{
+			axis->MoveMotor(deltaTime);
+		}
 	}
+
 	CWnd::OnTimer(nIDEvent);
+}
+
+void CChildView::OnDestroy()
+{
+	KillTimer(1);  // 타이머 ID 1 제거
+	CWnd::OnDestroy();
 }
 
 void CChildView::DrawGrid(CDC* pDC)

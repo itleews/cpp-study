@@ -260,17 +260,19 @@ void MotorUI::DisplayMotorRecursive(CListCtrl& listCtrl, Motor* node, int depth,
 void MotorUI::OnAddMotor()
 {
 	// 위치 텍스트 읽기
-	CString sx, sy, ex, ey, w, h;
+	CString sx, sy, ex, ey, w, h, s;
 	m_startXEdit.GetWindowTextW(sx);
 	m_startYEdit.GetWindowTextW(sy);
 	m_endXEdit.GetWindowTextW(ex);
 	m_endYEdit.GetWindowTextW(ey);
 	m_width.GetWindowTextW(w);
 	m_height.GetWindowTextW(h);
+	m_speed.GetWindowTextW(s);
 
 	CPoint start(_ttoi(sx), _ttoi(sy));
 	CPoint end(_ttoi(ex), _ttoi(ey));
 	CSize motor(_ttoi(w), _ttoi(h));
+	int speed = _ttoi(s);
 
 	CRect curRect(start.x, start.y, end.x, end.y);
 	curRect.NormalizeRect();  // 좌상단-우하단 정렬
@@ -332,7 +334,8 @@ void MotorUI::OnAddMotor()
 		CPoint(start.x, start.y),
 		CPoint(end.x, end.y),
 		CPoint(motorX, motorY),
-		CSize(motor.cx / 2, motor.cy / 2)
+		CSize(motor.cx / 2, motor.cy / 2),
+		speed // 속도
 	);
 
 	// 리스트 컨트롤에 모터 트리 표시
@@ -355,16 +358,7 @@ void MotorUI::OnAddSubMotor() {
 	m_removeMotorButton.SetWindowText(_T("취소"));
 	m_addSubMotorButton.EnableWindow(FALSE);
 
-	int selectedIndex = m_motorListCtrl.GetNextItem(-1, LVNI_SELECTED);
-	if (selectedIndex != -1) {
-		CString motorID = m_motorListCtrl.GetItemText(selectedIndex, 0);
-		int motorIdInt = _ttoi(motorID);
-		Motor* selectedMotor = GetSelectedMotor(motorIdInt);
-		
-		CPoint topLeft = selectedMotor->motorPos - selectedMotor->motorSize;
-		CPoint bottomRight = selectedMotor->motorPos + selectedMotor->motorSize;
-		m_selectedMotorRect.SetRect(topLeft, bottomRight);
-	}
+	int selectedIndex = NULL;
 }
 
 

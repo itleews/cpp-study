@@ -15,10 +15,8 @@ public:
 		Motor* parentMotor,
 		bool isXDirection,
 		CPoint strPos, CPoint endPos, CPoint motorPos,
-		CSize motorSize);
+		CSize motorSize, int motorSpeed);
 
-	//Motor* FindAxis(int id);
-	//void MoveAxis(int id, CPoint dest);
 	Motor* ParseMotor(const std::string& line);
 	void SaveMotorData();
 	void SaveMotorRecursive(std::ofstream& file, Motor* motor);

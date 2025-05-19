@@ -6,12 +6,14 @@ Motor* MotorManager::AddMotor(
     Motor* parentMotor,
     bool isXDirection,
     CPoint strPos, CPoint endPos, CPoint motorPos,
-    CSize motorSize)
+    CSize motorSize, int motorSpeed)
 {
     Motor* newMotor = new Motor(
         nextId++, isXDirection,
         strPos, endPos, motorPos,
-        motorSize);
+        motorSize, motorSpeed);
+
+	newMotor->parentMotor = parentMotor; // ⭐ 부모 설정
 
     if (parentMotor)
     {
@@ -24,22 +26,6 @@ Motor* MotorManager::AddMotor(
 
     return newMotor;
 }
-
-//Motor* MotorManager::FindAxis(int id) {
-//	for (auto motor : rootMotors) {
-//		if (motor->m_id == id) {
-//			return motor;
-//		}
-//	}
-//	return nullptr;
-//}
-
-//void MotorManager::MoveAxis(int id, CPoint dest) {
-//	MotorAxis* axis = FindAxis(id);
-//	if (axis) {
-//		axis->MoveTo(dest);
-//	}
-//}
 
 void MotorManager::SaveMotorData() {
     // 파일 저장 다이얼로그 띄우기
@@ -183,12 +169,16 @@ Motor* MotorManager::ParseMotor(const std::string& line) {
     std::getline(iss, token, ',');  // motorSize.cy
     int motorSizeY = std::stoi(token);
 
+	std::getline(iss, token, ',');
+	int motorSpeed = std::stoi(token); // 모터 속도
+
     // Motor 객체 생성
     Motor* motor = new Motor(id, isX ? _T("X") : _T("Y"),
         CPoint(strPosX, strPosY),
         CPoint(endPosX, endPosY),
         CPoint(motorPosX, motorPosY),
-        CSize(motorSizeX, motorSizeY));
+        CSize(motorSizeX, motorSizeY),
+        motorSpeed); // 모터 속도 추가
 
     return motor;
 }
