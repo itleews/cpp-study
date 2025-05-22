@@ -1,6 +1,11 @@
 ﻿#include "pch.h"
 #include "MotorAxis.h"
 
+Motor::Motor()
+    : m_id(0), isX(true), strPos(0, 0), endPos(0, 0), motorPos(0, 0),
+    motorSize(0, 0), motorSpeed(0) {
+}
+
 Motor::Motor(int id, bool isXDirection,
 	CPoint str, CPoint end, CPoint motor, CSize size, int speed)
 	: m_id(id), isX(isXDirection),

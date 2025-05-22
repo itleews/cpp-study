@@ -4,7 +4,6 @@
 
 class CChildView;
 
-
 struct DisplayRow {
     CString id;
     CString type;
@@ -25,8 +24,10 @@ public:
     CButton m_radioXAxis, m_radioYAxis;
 	CButton m_controlButton[4]; // 조작부 버튼들
     CStatic m_labelStart, m_labelEnd, m_labelSize, m_labelAxis, m_labelSpeed;
+	bool m_isAddMotorMode = false;
 	bool m_isAddSubmotorMode = false;
     CRect m_selectedMotorRect;
+    Motor m_previewMotor;
 
     void CreateListControl();
     void CreateInputFields();
@@ -49,6 +50,7 @@ public:
     void OnDestroy();
     void UpdateMotorListTexts();
     void MoveMotorRecursive(Motor* motor, int dx, int dy);
+    void UpdatePreview();
 
     CPoint SubToLogical(CPoint subMotorPos, CPoint mainMotorPos) {
 		// 하위 모터의 위치를 논리 위치로 변환
@@ -68,6 +70,7 @@ protected:
     afx_msg void OnLoadMotor();
     afx_msg void OnBnClickedRadioXAxis();
     afx_msg void OnBnClickedRadioYAxis();
+    afx_msg void OnEditChanged();
     afx_msg void OnChangeStartX();
     afx_msg void OnChangeStartY();
     afx_msg void OnNMClickMotorList(NMHDR* pNMHDR, LRESULT* pResult);

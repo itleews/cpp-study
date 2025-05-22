@@ -14,6 +14,11 @@ BEGIN_MESSAGE_MAP(MotorUI, CWnd)
 	ON_BN_CLICKED(1004, &MotorUI::OnLoadMotor) // 모터 불러오기 버튼 클릭
 	ON_EN_CHANGE(2001, &MotorUI::OnChangeStartX)  // m_startXEdit
 	ON_EN_CHANGE(2002, &MotorUI::OnChangeStartY)  // m_startYEdit
+	ON_EN_CHANGE(2003, &MotorUI::OnEditChanged)
+	ON_EN_CHANGE(2004, &MotorUI::OnEditChanged)
+	ON_EN_CHANGE(2005, &MotorUI::OnEditChanged)
+	ON_EN_CHANGE(2006, &MotorUI::OnEditChanged)
+	ON_EN_CHANGE(2008, &MotorUI::OnEditChanged)
 	ON_BN_CLICKED(3003, &MotorUI::OnBnClickedRadioXAxis) // X축 라디오 버튼 클릭
 	ON_BN_CLICKED(3004, &MotorUI::OnBnClickedRadioYAxis) // Y축 라디오 버튼 클릭
 	ON_NOTIFY(NM_CLICK, 1, &MotorUI::OnNMClickMotorList) // 리스트 컨트롤 항목 변경
@@ -143,88 +148,39 @@ void MotorUI::UpdateMotorListTexts()
 
 void MotorUI::OnAddMotor()
 {
-	// 위치 텍스트 읽기
-	CString sx, sy, ex, ey, w, h, s;
-	m_startXEdit.GetWindowTextW(sx);
-	m_startYEdit.GetWindowTextW(sy);
-	m_endXEdit.GetWindowTextW(ex);
-	m_endYEdit.GetWindowTextW(ey);
-	m_width.GetWindowTextW(w);
-	m_height.GetWindowTextW(h);
-	m_speed.GetWindowTextW(s);
-
-	CPoint start(_ttoi(sx), _ttoi(sy));
-	CPoint end(_ttoi(ex), _ttoi(ey));
-	CSize motor(_ttoi(w), _ttoi(h));
-	int speed = _ttoi(s);
-
-	CRect curRect(start.x, start.y, end.x, end.y);
-	curRect.NormalizeRect();  // 좌상단-우하단 정렬
-
-	/*if (curRect.Width() > m_logicalBounds.Width() || curRect.Height() > m_logicalBounds.Height()) {
-		m_logicalBounds.SetRect(0, 0, max(curRect.Width() + 10, m_logicalBounds.Width() + 10), max(curRect.Height() + 10, m_logicalBounds.Height() + 10));
-	}*/
-
-	// 하위 모터를 추가하려면 부모 모터를 선택해야 함
-	BOOL bChecked = m_addSubMotorButton.GetCheck();
-	Motor* parentMotor = nullptr;
-
-	if (m_isAddSubmotorMode) {
-		int selectedIndex = m_motorListCtrl.GetNextItem(-1, LVNI_SELECTED);
-		if (selectedIndex != -1) {
-			CString motorID = m_motorListCtrl.GetItemText(selectedIndex, 0);
-			int motorIdInt = _ttoi(motorID);
-			parentMotor = GetSelectedMotor(motorIdInt);
-
-			if (!parentMotor) {
-				AfxMessageBox(_T("선택한 ID에 해당하는 모터가 존재하지 않습니다."));
-				return;
-			}
-
-			// 하위 모터는 부모 모터의 영역 내에 있어야 함
-			CPoint motorStart = parentMotor->motorPos - parentMotor->motorSize;
-			CPoint motorEnd = parentMotor->motorPos + parentMotor->motorSize;
-
-			CPoint subMotorStart = CPoint(start.x, start.y);
-			CPoint subMotorEnd = CPoint(end.x, end.y);
-			start = SubToLogical(subMotorStart, motorStart);
-			end = SubToLogical(subMotorEnd, motorStart);
-
-			// 하위 모터가 부모 모터의 영역 내에 있어야 함을 체크
-			if (start.x < motorStart.x || start.y < motorStart.y ||
-				end.x > motorEnd.x || end.y > motorEnd.y) {
-				AfxMessageBox(_T("하위 모터는 상위 모터의 영역 내에 있어야 합니다."));
-				return;
-			}
-
-			m_isAddSubmotorMode = false; // 하위 모터 추가 후 모드 해제
-			m_groupInput.SetWindowText(_T("모터 관리"));
-			m_removeMotorButton.SetWindowText(_T("삭제"));
-			m_addSubMotorButton.EnableWindow(TRUE);
-		}
-		else {
-			AfxMessageBox(_T("하위 모터를 추가할 항목을 선택하세요!"));
-			return;
-		}
+	if (!m_isAddMotorMode && !m_isAddSubmotorMode) {
+		m_isAddMotorMode = true;
+		m_addMotorButton.SetWindowText(_T("완료"));
+		m_removeMotorButton.SetWindowText(_T("취소"));
+		UpdatePreview();
+		return;
 	}
 
-	int motorX = m_radioXAxis.GetCheck() == BST_CHECKED ? (end.x - start.x) / 2 + start.x : end.x;
-	int motorY = m_radioXAxis.GetCheck() == BST_CHECKED ? start.y : (end.y - start.y) / 2 + start.y;
+	// 하위 모터 조건 검사
+	if (m_isAddSubmotorMode && m_previewMotor.parentMotor == nullptr) {
+		AfxMessageBox(_T("하위 모터를 추가할 상위 모터를 선택하세요!"));
+		return;
+	}
 
-	// 모터 추가
+	m_isAddMotorMode = false;
+	m_isAddSubmotorMode = false;
+	m_addMotorButton.SetWindowText(_T("추가"));
+	m_removeMotorButton.SetWindowText(_T("삭제"));
+
 	m_motorManager.AddMotor(
-		parentMotor, // 부모 모터 (없으면 nullptr)
-		m_radioXAxis.GetCheck() == BST_CHECKED,
-		CPoint(start.x, start.y),
-		CPoint(end.x, end.y),
-		CPoint(motorX, motorY),
-		CSize(motor.cx / 2, motor.cy / 2),
-		speed // 속도
+		m_previewMotor.parentMotor, // 부모 모터 (없으면 nullptr)
+		m_previewMotor.isX,
+		m_previewMotor.strPos,
+		m_previewMotor.endPos,
+		m_previewMotor.motorPos,
+		m_previewMotor.motorSize,
+		m_previewMotor.motorSpeed // 속도
 	);
 
 	// 리스트 컨트롤에 모터 트리 표시
 	DisplayMotorTree(m_motorListCtrl, m_motorManager.rootMotors);
 }
+
 
 // 하위 모터 추가
 void MotorUI::OnAddSubMotor() {
@@ -234,8 +190,17 @@ void MotorUI::OnAddSubMotor() {
 		return;
 	}
 	m_isAddSubmotorMode = true;
-	m_selectedMotorRect = NULL;
+	m_selectedMotorRect.SetRect(0, 0, 0, 0);
+
+	UpdatePreview();
+	m_previewMotor.parentMotor = nullptr;
+	m_previewMotor.strPos = CPoint(0, 0);
+	m_previewMotor.endPos = CPoint(0, 0);
+	m_previewMotor.motorPos = CPoint(0, 0);
+	m_previewMotor.motorSize = CSize(0, 0);
+	m_previewMotor.motorSpeed = 0; // 속도 설정
 	m_groupInput.SetWindowText(_T("하위 모터 추가"));
+	m_addMotorButton.SetWindowText(_T("완료"));
 	m_removeMotorButton.SetWindowText(_T("취소"));
 	m_addSubMotorButton.EnableWindow(FALSE);
 }
@@ -277,6 +242,13 @@ void MotorUI::OnRemoveMotor()
 		m_groupInput.SetWindowText(_T("모터 관리"));
 		m_removeMotorButton.SetWindowText(_T("삭제"));
 		m_addSubMotorButton.EnableWindow(TRUE);
+		return;
+	}
+
+	if (m_isAddMotorMode) {
+		m_isAddMotorMode = false; // 모터 추가 모드 해제
+		m_addMotorButton.SetWindowText(_T("추가"));
+		m_removeMotorButton.SetWindowText(_T("삭제"));
 		return;
 	}
 
@@ -346,6 +318,89 @@ void MotorUI::DeleteMotorRecursive(Motor* motor)
 
 	delete motor;
 }
+
+void MotorUI::OnEditChanged()
+{
+	UpdatePreview();
+}
+
+void MotorUI::UpdatePreview()
+{
+	if (!m_isAddMotorMode && !m_isAddSubmotorMode) return;
+
+	// 위치 텍스트 읽기
+	CString sx, sy, ex, ey, w, h, s;
+	m_startXEdit.GetWindowTextW(sx);
+	m_startYEdit.GetWindowTextW(sy);
+	m_endXEdit.GetWindowTextW(ex);
+	m_endYEdit.GetWindowTextW(ey);
+	m_width.GetWindowTextW(w);
+	m_height.GetWindowTextW(h);
+	m_speed.GetWindowTextW(s);
+
+	CPoint start(_ttoi(sx), _ttoi(sy));
+	CPoint end(_ttoi(ex), _ttoi(ey));
+	CSize motor(_ttoi(w), _ttoi(h));
+	int speed = _ttoi(s);
+
+	CRect curRect(start.x, start.y, end.x, end.y);
+	curRect.NormalizeRect();  // 좌상단-우하단 정렬
+
+	/*if (curRect.Width() > m_logicalBounds.Width() || curRect.Height() > m_logicalBounds.Height()) {
+		m_logicalBounds.SetRect(0, 0, max(curRect.Width() + 10, m_logicalBounds.Width() + 10), max(curRect.Height() + 10, m_logicalBounds.Height() + 10));
+	}*/
+
+	// 하위 모터를 추가하려면 부모 모터를 선택해야 함
+	Motor* parentMotor = nullptr;
+
+	if (m_isAddSubmotorMode) {
+		int selectedIndex = m_motorListCtrl.GetNextItem(-1, LVNI_SELECTED);
+		if (selectedIndex != -1) {
+			CString motorID = m_motorListCtrl.GetItemText(selectedIndex, 0);
+			int motorIdInt = _ttoi(motorID);
+			parentMotor = GetSelectedMotor(motorIdInt);
+
+			if (!parentMotor) {
+				AfxMessageBox(_T("선택한 ID에 해당하는 모터가 존재하지 않습니다."));
+				return;
+			}
+
+			// 하위 모터는 부모 모터의 영역 내에 있어야 함
+			CPoint motorStart = parentMotor->motorPos - parentMotor->motorSize;
+			CPoint motorEnd = parentMotor->motorPos + parentMotor->motorSize;
+
+			CPoint subMotorStart = CPoint(start.x, start.y);
+			CPoint subMotorEnd = CPoint(end.x, end.y);
+			start = SubToLogical(subMotorStart, motorStart);
+			end = SubToLogical(subMotorEnd, motorStart);
+
+			// 하위 모터가 부모 모터의 영역 내에 있어야 함을 체크
+			if (start.x < motorStart.x || start.y < motorStart.y ||
+				end.x > motorEnd.x || end.y > motorEnd.y) {
+				AfxMessageBox(_T("하위 모터는 상위 모터의 영역 내에 있어야 합니다."));
+				return;
+			}
+
+			m_groupInput.SetWindowText(_T("모터 관리"));
+			m_addSubMotorButton.EnableWindow(TRUE);
+		}
+		else {
+			return;
+		}
+	}
+
+	int motorX = m_radioXAxis.GetCheck() == BST_CHECKED ? (end.x - start.x) / 2 + start.x : end.x;
+	int motorY = m_radioXAxis.GetCheck() == BST_CHECKED ? start.y : (end.y - start.y) / 2 + start.y;
+
+	m_previewMotor.parentMotor = parentMotor;
+	m_previewMotor.isX = m_radioXAxis.GetCheck() == BST_CHECKED;
+	m_previewMotor.strPos = start;
+	m_previewMotor.endPos = end;
+	m_previewMotor.motorPos = CPoint(motorX, motorY);
+	m_previewMotor.motorSize = CSize(motor.cx / 2, motor.cy / 2);
+	m_previewMotor.motorSpeed = speed; // 속도 설정
+}
+
 
 // 모터 저장 기능
 void MotorUI::OnSaveMotor()

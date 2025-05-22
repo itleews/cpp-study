@@ -55,8 +55,9 @@ public:
 	void DrawMotor(Motor* motor, CDC* pDC);
 	void DrawSubMotor(Motor* parentMotor, CDC* pDC);
 	void DrawAddSubmotorMode(CDC* pDC);
+	void DrawPreviewMotor(CDC* pDC);
 	void OnDestroy();
-
+	
 	// 생성된 메시지 맵 함수
 protected:
 	afx_msg void OnPaint();

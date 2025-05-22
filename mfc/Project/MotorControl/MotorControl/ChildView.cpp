@@ -88,6 +88,12 @@ void CChildView::OnPaint()
 		DrawAddSubmotorMode(&memDC);
 	}
 
+	if (m_motorUI.m_isAddMotorMode || m_motorUI.m_isAddSubmotorMode)
+	{
+		// 모터 추가 모드일 때는 미리보기 모터 그리기
+		DrawPreviewMotor(&memDC);
+	}
+
 	// 최종 결과를 실제 DC에 복사
 	dc.BitBlt(0, 0, clientRect.Width(), clientRect.Height(), &memDC, 0, 0, SRCCOPY);
 
@@ -224,6 +230,34 @@ void CChildView::DrawSubMotor(Motor* parentMotor, CDC* pDC)
 		// 자식의 하위 모터도 그리기 (재귀 호출)
 		DrawSubMotor(child, pDC);
 	}
+}
+
+void CChildView::DrawPreviewMotor(CDC* pDC) {
+	// 원래 로직 좌표 기준으로 사각형 생성
+	Motor preMotor = m_motorUI.m_previewMotor;
+	CPoint screenStart = LogicalToScreen(preMotor.strPos);
+	CPoint screenEnd = LogicalToScreen(preMotor.endPos);
+	CPoint screenMotorStart = LogicalToScreen(preMotor.motorPos - preMotor.motorSize);
+	CPoint screenMotorEnd = LogicalToScreen(preMotor.motorPos + preMotor.motorSize);
+
+	// 점선 펜 생성
+	CPen pen(PS_DASH, 1, RGB(255, 0, 0));
+	CPen* pOldPen = pDC->SelectObject(&pen);
+
+	// 브러시는 NULL로 설정
+	CBrush* pOldBrush = (CBrush*)pDC->SelectStockObject(NULL_BRUSH);
+
+	// 변환된 좌표로 사각형 그리기
+	CRect previewRect;
+	previewRect.SetRect(screenStart.x, screenMotorStart.y - 10, screenEnd.x, screenMotorEnd.y + 10);
+	pDC->Rectangle(previewRect);
+
+	// 펜과 브러시 복원
+	pDC->SelectObject(pOldPen);
+	pDC->SelectObject(pOldBrush);
+
+	// 모터 도형은 기존 논리 좌표 기준으로 그려짐
+	DrawMotor(&m_motorUI.m_previewMotor, pDC);
 }
 
 void CChildView::DrawAddSubmotorMode(CDC* pDC)

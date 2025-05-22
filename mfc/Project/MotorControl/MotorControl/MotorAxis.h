@@ -12,6 +12,7 @@ public:
     CPoint motorOffset;
     std::vector<Motor*> children;
 
+	Motor(); // 기본 생성자
     Motor(int id, bool isXDirection, CPoint str, CPoint end, CPoint motor, CSize size, int speed);
     void MoveMotor(double deltaTime);
     void MoveByParentDelta(const CPoint& delta);
