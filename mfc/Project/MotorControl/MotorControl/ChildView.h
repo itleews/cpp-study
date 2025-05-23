@@ -26,6 +26,7 @@ public:
 	bool m_isPanning = false;
 	CRect m_logicalBounds = CRect(0, 0, 1000, 1000);
 	int m_dashOffset = 0;
+	bool m_isPaused = false;
 
 // 작업입니다.
 public:

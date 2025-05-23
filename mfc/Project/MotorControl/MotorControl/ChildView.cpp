@@ -94,6 +94,19 @@ void CChildView::OnPaint()
 		DrawPreviewMotor(&memDC);
 	}
 
+	if (m_isPaused)
+	{
+		CPen redPen(PS_SOLID, 5, RGB(255, 0, 0));
+		CPen* pOldPen = memDC.SelectObject(&redPen);
+		memDC.SelectStockObject(NULL_BRUSH);
+		memDC.Rectangle(m_drawArea);
+		memDC.SelectObject(pOldPen);
+
+		memDC.SetBkMode(TRANSPARENT);
+		memDC.SetTextColor(RGB(255, 0, 0));
+		memDC.TextOut(m_drawArea.left + 50, m_drawArea.top + 30, _T("일시정지"));
+	}
+
 	// 최종 결과를 실제 DC에 복사
 	dc.BitBlt(0, 0, clientRect.Width(), clientRect.Height(), &memDC, 0, 0, SRCCOPY);
 
@@ -143,11 +156,13 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
 		// 다시 그리기
 		InvalidateRect(&m_drawArea, FALSE);
 
-		if (m_motorUI.m_isAddSubmotorMode)
+		if (m_motorUI.m_isAddSubmotorMode || m_motorUI.m_isSaveMotorMode)
 		{
+			m_isPaused = true; // 일시정지
 			return;
 		}
 
+		m_isPaused = false; // 일시정지 해제
 		double deltaTime = 0.016; // 약 60fps = 16ms 주기
 
 		// 모든 모터 위치를 갱신
@@ -315,34 +330,26 @@ void CChildView::DrawAddSubmotorMode(CDC* pDC)
 	// 클리핑 복원
 	pDC->SelectClipRgn(NULL);
 
-	CPen redPen(PS_SOLID, 5, RGB(255, 0, 0));
-	CPen* pOldPen = pDC->SelectObject(&redPen);
-	pDC->SelectStockObject(NULL_BRUSH); // 내부 채우기 없음
-	pDC->Rectangle(rect);
-	pDC->SelectObject(pOldPen); // 펜 복원
-
-	pDC->SetBkMode(TRANSPARENT);
-	pDC->SetTextColor(RGB(255, 0, 0));
-
 	CFont bigFont;
 	bigFont.CreateFontW(
-		40,                        // height (크게)
-		0, 0, 0, FW_BOLD,          // 굵게
+		40, 0, 0, 0, FW_BOLD,
 		FALSE, FALSE, FALSE,
 		DEFAULT_CHARSET,
 		OUT_OUTLINE_PRECIS,
 		CLIP_DEFAULT_PRECIS,
 		CLEARTYPE_QUALITY,
 		DEFAULT_PITCH | FF_SWISS,
-		_T("맑은 고딕")             // 폰트 이름
+		_T("맑은 고딕")
 	);
 	CFont* pOldFont = pDC->SelectObject(&bigFont);
+	pDC->SetTextColor(RGB(255, 0, 0));  // ⬅️ 여기에 있어야 함
+	pDC->SetBkMode(TRANSPARENT);       // 배경 투명 설정도 같이 해주면 좋아!
 
 	CString msg = _T("모터 목록에서 하위 모터를 추가할 상위 모터를 선택하세요");
 	CSize textSize = pDC->GetTextExtent(msg);
 	pDC->TextOutW((rect.left + rect.right) / 2, rect.top + 50, msg);
 
-	pDC->SelectObject(pOldFont); // 폰트 복원
+	pDC->SelectObject(pOldFont);  // 폰트 복원도 잊지 마!
 }
 
 BOOL CChildView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)

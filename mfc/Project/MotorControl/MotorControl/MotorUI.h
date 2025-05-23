@@ -26,6 +26,7 @@ public:
     CStatic m_labelStart, m_labelEnd, m_labelSize, m_labelAxis, m_labelSpeed;
 	bool m_isAddMotorMode = false;
 	bool m_isAddSubmotorMode = false;
+	bool m_isSaveMotorMode = false;
     CRect m_selectedMotorRect;
     Motor m_previewMotor;
 

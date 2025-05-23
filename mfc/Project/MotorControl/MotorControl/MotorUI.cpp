@@ -278,10 +278,31 @@ void MotorUI::OnRemoveMotor()
 		}
 	}
 
-	// 삭제 수행
-	for (Motor* motorToDelete : motorsToDelete)
+	// 부모-자식 관계 중복 삭제 방지: 자식 모터는 제외하고 최상위 모터만 삭제
+	std::vector<Motor*> filteredMotors;
+	for (Motor* motor : motorsToDelete) {
+		bool isChildOfAnother = false;
+		for (Motor* other : motorsToDelete) {
+			if (other == motor) continue;
+			Motor* p = motor->parentMotor;
+			while (p) {
+				if (p == other) {
+					isChildOfAnother = true;
+					break;
+				}
+				p = p->parentMotor;
+			}
+			if (isChildOfAnother) break;
+		}
+		if (!isChildOfAnother) {
+			filteredMotors.push_back(motor);
+		}
+	}
+
+	// 최상위 모터만 삭제
+	for (Motor* motorToDelete : filteredMotors)
 	{
-		DeleteMotorRecursive(motorToDelete); // 하위 모터 포함 삭제
+		DeleteMotorRecursive(motorToDelete); // 하위 모터 포함 재귀 삭제
 	}
 
 	DisplayMotorTree(m_motorListCtrl, m_motorManager.rootMotors);
@@ -402,7 +423,9 @@ void MotorUI::UpdatePreview()
 // 모터 저장 기능
 void MotorUI::OnSaveMotor()
 {
+	m_isSaveMotorMode = true;
 	m_motorManager.SaveMotorData();
+	m_isSaveMotorMode = false;
 }
 
 void MotorUI::OnLoadMotor()
@@ -412,21 +435,7 @@ void MotorUI::OnLoadMotor()
 	m_motorListCtrl.DeleteAllItems();
 
 	// 모터 리스트에 있는 모든 모터를 리스트 컨트롤에 추가
-	for (auto motor : m_motorManager.rootMotors)
-	{
-		int index = m_motorListCtrl.GetItemCount();
-		CString idStr, typeStr, strPosStr, endPosStr, motorPosStr;
-		idStr.Format(_T("%d"), motor->m_id);
-		typeStr = motor->isX ? _T("X") : _T("Y");
-		strPosStr.Format(_T("(%d, %d)"), motor->strPos.x, motor->strPos.y);
-		endPosStr.Format(_T("(%d, %d)"), motor->endPos.x, motor->endPos.y);
-		motorPosStr.Format(_T("(%d, %d)"), motor->motorPos.x, motor->motorPos.y);
-		m_motorListCtrl.InsertItem(index, idStr);
-		m_motorListCtrl.SetItemText(index, 1, typeStr);
-		m_motorListCtrl.SetItemText(index, 2, strPosStr);
-		m_motorListCtrl.SetItemText(index, 3, endPosStr);
-		m_motorListCtrl.SetItemText(index, 4, motorPosStr);
-	}
+	DisplayMotorTree(m_motorListCtrl, m_motorManager.rootMotors);
 
 	if (m_pParentView)
 		m_pParentView->Invalidate();
