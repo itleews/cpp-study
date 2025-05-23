@@ -10,6 +10,8 @@ public:
     // UI 컨트롤 선언
     MotorManager m_motorManager;
 	MotorListPanel m_motorListPanel;
+
+    CMFCListCtrl m_motorListCtrl;
     CButton m_addMotorButton, m_removeMotorButton, m_saveMotorButton, m_loadMotorButton, m_addSubMotorButton;
     CButton m_groupInput, m_groupButtons, m_groupControl;
     CEdit m_startXEdit, m_startYEdit, m_endXEdit, m_endYEdit, m_width, m_height, m_speed;
@@ -22,7 +24,7 @@ public:
     CRect m_selectedMotorRect;
     Motor m_previewMotor;
 
-    
+    void CreateListControl();
     void CreateInputFields();
 	void CreateGroupBoxes();
 	void CreateRadioButtons();
@@ -39,7 +41,7 @@ public:
     Motor* FindMotorByID(Motor* node, int selectedID);
 	void DeleteMotorRecursive(Motor* motor);
     void MoveSelectedAxis(int dx, int dy);
-    
+    void UpdateMotorListTexts();
     void MoveMotorRecursive(Motor* motor, int dx, int dy);
     void UpdatePreview();
 
@@ -52,6 +54,8 @@ protected:
     // UI 생성 함수
     CChildView* m_pParentView = nullptr;
     afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+    afx_msg void OnTimer(UINT_PTR nIDEvent);
+    afx_msg void OnDestroy();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
     afx_msg void OnAddMotor();
 	afx_msg void OnAddSubMotor();

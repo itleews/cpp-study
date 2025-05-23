@@ -6,6 +6,7 @@ BEGIN_MESSAGE_MAP(MotorUI, CWnd)
 	ON_WM_CREATE()
 	ON_WM_SIZE()
 	ON_WM_TIMER()
+	ON_WM_DESTROY()
 	ON_BN_CLICKED(1001, &MotorUI::OnAddMotor) // 축 추가 버튼 클릭
 	ON_BN_CLICKED(2007, &MotorUI::OnAddSubMotor) // 하위 모터 추가 버튼 클릭
 	ON_BN_CLICKED(1002, &MotorUI::OnRemoveMotor) // 축 삭제 버튼 클릭
@@ -34,7 +35,7 @@ int MotorUI::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 
-	
+	CreateListControl();
 	CreateGroupBoxes();
 	CreateInputFields();
 	CreateRadioButtons();
@@ -46,8 +47,22 @@ int MotorUI::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	return 0;
 }
 
+void MotorUI::OnTimer(UINT_PTR nIDEvent)
+{
+	if (nIDEvent == 2)
+	{
+		if (!m_isAddSubmotorMode)
+			UpdateMotorListTexts();
+	}
 
+	CWnd::OnTimer(nIDEvent);
+}
 
+void MotorUI::OnDestroy()
+{
+	KillTimer(2);  // 타이머 ID 2 제거
+	CWnd::OnDestroy();
+}
 
 void MotorUI::OnAddMotor()
 {
@@ -81,7 +96,7 @@ void MotorUI::OnAddMotor()
 	);
 
 	// 리스트 컨트롤에 모터 트리 표시
-	DisplayMotorTree(m_motorListCtrl, m_motorManager.rootMotors);
+	m_motorListPanel.DisplayMotorTree(m_motorListCtrl, m_motorManager.rootMotors);
 }
 
 // 하위 모터 추가
@@ -117,6 +132,26 @@ Motor* MotorUI::GetSelectedMotor(int selectedIndex)
 	}
 	return nullptr;
 }
+
+void MotorUI::UpdateMotorListTexts() {
+	std::vector<DisplayRow> rows;
+	for (Motor* root : m_motorManager.rootMotors)
+		m_motorListPanel.BuildDisplayRows(root, 0, CPoint(0, 0), rows);
+
+	m_motorListCtrl.SetRedraw(FALSE);
+
+	int itemCount = m_motorListCtrl.GetItemCount();
+	for (int i = 0; i < itemCount && i < (int)rows.size(); ++i) {
+		m_motorListCtrl.SetItemText(i, 2, rows[i].strPos);
+		m_motorListCtrl.SetItemText(i, 3, rows[i].endPos);
+		m_motorListCtrl.SetItemText(i, 4, rows[i].relMotorPos);
+		m_motorListCtrl.SetItemText(i, 5, rows[i].absMotorPos);
+	}
+
+	m_motorListCtrl.SetRedraw(TRUE);
+	m_motorListCtrl.UpdateWindow();
+}
+
 
 // 재귀적으로 모터를 찾는 함수 (ID 비교)
 Motor* MotorUI::FindMotorByID(Motor* node, int selectedID)
@@ -172,7 +207,7 @@ void MotorUI::OnRemoveMotor()
 	m_motorManager.RemoveMotors(selectedMotorIds);
 
 	// 삭제 후 UI 갱신
-	DisplayMotorTree(m_motorListCtrl, m_motorManager.rootMotors);
+	m_motorListPanel.DisplayMotorTree(m_motorListCtrl, m_motorManager.rootMotors);
 }
 
 void MotorUI::DeleteMotorRecursive(Motor* motor)
@@ -302,7 +337,7 @@ void MotorUI::OnLoadMotor()
 	m_motorListCtrl.DeleteAllItems();
 
 	// 모터 리스트에 있는 모든 모터를 리스트 컨트롤에 추가
-	DisplayMotorTree(m_motorListCtrl, m_motorManager.rootMotors);
+	m_motorListPanel.DisplayMotorTree(m_motorListCtrl, m_motorManager.rootMotors);
 
 	if (m_pParentView)
 		m_pParentView->Invalidate();
@@ -430,7 +465,18 @@ void MotorUI::OnBnClickedControlRightButton()
 	MoveSelectedAxis(MOVE_DELTA, 0);
 }
 
+void MotorUI::CreateListControl()
+{
+	m_motorListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT, CRect(0, 0, 0, 0), this, 1);
+	m_motorListCtrl.SetExtendedStyle(LVS_EX_DOUBLEBUFFER | LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
 
+	m_motorListCtrl.InsertColumn(0, _T("모터 ID"), LVCFMT_LEFT, 100);
+	m_motorListCtrl.InsertColumn(1, _T("축"), LVCFMT_LEFT, 50);
+	m_motorListCtrl.InsertColumn(2, _T("시작 위치"), LVCFMT_LEFT, 100);
+	m_motorListCtrl.InsertColumn(3, _T("끝 위치"), LVCFMT_LEFT, 100);
+	m_motorListCtrl.InsertColumn(4, _T("현재 위치"), LVCFMT_LEFT, 100);
+	m_motorListCtrl.InsertColumn(5, _T("절대 위치"), LVCFMT_LEFT, 100);
+}
 
 void MotorUI::CreateGroupBoxes()
 {
@@ -526,7 +572,7 @@ void MotorUI::OnSize(UINT nType, int cx, int cy)
 
 	// 1. 리스트 컨트롤
 	int listHeight = cy / 3;
-	m_motorListPanel.m_motorListCtrl.SetWindowPos(nullptr, rightX, margin, rightWidth, listHeight, SWP_NOZORDER);
+	m_motorListCtrl.SetWindowPos(nullptr, rightX, margin, rightWidth, listHeight, SWP_NOZORDER);
 
 	int inputStartX = rightX + 10;
 	int inputStartY = listHeight + sectionGap;
