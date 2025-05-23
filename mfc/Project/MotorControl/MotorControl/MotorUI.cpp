@@ -64,7 +64,6 @@ void MotorUI::OnDestroy()
 	CWnd::OnDestroy();
 }
 
-
 void MotorUI::BuildDisplayRows(Motor* node, int depth, const CPoint& parentOrigin, std::vector<DisplayRow>& outRows)
 {
 	if (!node) return;
@@ -181,7 +180,6 @@ void MotorUI::OnAddMotor()
 	DisplayMotorTree(m_motorListCtrl, m_motorManager.rootMotors);
 }
 
-
 // 하위 모터 추가
 void MotorUI::OnAddSubMotor() {
 	// 하위 모터 추가 모드
@@ -204,7 +202,6 @@ void MotorUI::OnAddSubMotor() {
 	m_removeMotorButton.SetWindowText(_T("취소"));
 	m_addSubMotorButton.EnableWindow(FALSE);
 }
-
 
 Motor* MotorUI::GetSelectedMotor(int selectedIndex)
 {
@@ -240,6 +237,7 @@ void MotorUI::OnRemoveMotor()
 	if (m_isAddSubmotorMode) {
 		m_isAddSubmotorMode = false; // 하위 모터 추가 모드 해제
 		m_groupInput.SetWindowText(_T("모터 관리"));
+		m_addMotorButton.SetWindowText(_T("추가"));
 		m_removeMotorButton.SetWindowText(_T("삭제"));
 		m_addSubMotorButton.EnableWindow(TRUE);
 		return;
@@ -401,7 +399,6 @@ void MotorUI::UpdatePreview()
 	m_previewMotor.motorSpeed = speed; // 속도 설정
 }
 
-
 // 모터 저장 기능
 void MotorUI::OnSaveMotor()
 {
@@ -491,7 +488,6 @@ void MotorUI::OnNMClickMotorList(NMHDR* pNMHDR, LRESULT* pResult)
 	*pResult = 0;
 }
 
-
 void MotorUI::MoveMotorRecursive(Motor* motor, int dx, int dy)
 {
 	if (!motor) return;
@@ -578,7 +574,6 @@ void MotorUI::CreateGroupBoxes()
 	m_groupControl.Create(_T("모터 조작부"), WS_CHILD | WS_VISIBLE | BS_GROUPBOX, CRect(0, 0, 0, 0), this, 3002);
 }
 
-
 void MotorUI::CreateInputFields()
 {
 	CreateEdit(m_startXEdit, 2001, _T("0"));
@@ -610,7 +605,6 @@ void MotorUI::CreateLabels()
 	CreateStatic(m_labelSpeed, _T("모터 속도"));
 }
 
-
 void MotorUI::CreateMotorButtons()
 {
 	CreateButton(m_addMotorButton, 1001, _T("추가"));
@@ -629,7 +623,6 @@ void MotorUI::CreateControlButtons()
 		m_controlButton[i].Create(labels[i], WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, ids[i]);
 	}
 }
-
 
 void MotorUI::CreateEdit(CEdit& edit, int id, const CString& defaultText)
 {

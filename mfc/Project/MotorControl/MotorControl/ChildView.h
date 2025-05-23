@@ -25,6 +25,7 @@ public:
 	CPoint m_panOffset{ 0, 0 };
 	bool m_isPanning = false;
 	CRect m_logicalBounds = CRect(0, 0, 1000, 1000);
+	int m_dashOffset = 0;
 
 // 작업입니다.
 public:

@@ -249,7 +249,12 @@ void CChildView::DrawPreviewMotor(CDC* pDC) {
 
 	// 변환된 좌표로 사각형 그리기
 	CRect previewRect;
-	previewRect.SetRect(screenStart.x, screenMotorStart.y - 10, screenEnd.x, screenMotorEnd.y + 10);
+	if (m_motorUI.m_previewMotor.isX) {
+		previewRect.SetRect(screenStart.x, screenMotorStart.y - 10, screenEnd.x, screenMotorEnd.y + 10);
+	}
+	else {
+		previewRect.SetRect(screenMotorStart.x - 10, screenStart.y, screenMotorEnd.x + 10, screenEnd.y);
+	}
 	pDC->Rectangle(previewRect);
 
 	// 펜과 브러시 복원
