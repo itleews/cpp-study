@@ -21,16 +21,22 @@ public:
 public:
 
 // 재정의입니다.
-	protected:
+protected:
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 
 // 구현입니다.
 public:
 	virtual ~CChildView();
 
-	// 생성된 메시지 맵 함수
+private:
+	double m_theta; // 회전 각도 (라디안)
+
+// 생성된 메시지 맵 함수
 protected:
 	afx_msg void OnPaint();
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnDestroy();
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	DECLARE_MESSAGE_MAP()
 };
 
