@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include "../Motor/MotorManager.h"
 
 struct DisplayRow{
     CString id;
@@ -11,7 +12,7 @@ struct DisplayRow{
 };
 
 class MotorListPanel {
-public:   
+public:
     void DisplayMotorTree(CListCtrl& listCtrl, const std::vector<Motor*>& rootMotors);
     void BuildDisplayRows(Motor* node, int depth, const CPoint& parentOrigin, std::vector<DisplayRow>& outRows);
 };

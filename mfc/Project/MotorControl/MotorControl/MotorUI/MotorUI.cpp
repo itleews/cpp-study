@@ -70,7 +70,7 @@ void MotorUI::OnAddMotor()
 		m_isAddMotorMode = true;
 		m_addMotorButton.SetWindowText(_T("완료"));
 		m_removeMotorButton.SetWindowText(_T("취소"));
-		UpdatePreview();
+		UpdatePreviewData();
 		return;
 	}
 
@@ -108,8 +108,7 @@ void MotorUI::OnAddSubMotor() {
 	}
 	m_isAddSubmotorMode = true;
 	m_selectedMotorRect.SetRect(0, 0, 0, 0);
-
-	UpdatePreview();
+	UpdatePreviewData();
 	m_previewMotor.parentMotor = nullptr;
 	m_previewMotor.strPos = CPoint(0, 0);
 	m_previewMotor.endPos = CPoint(0, 0);
@@ -242,85 +241,48 @@ void MotorUI::DeleteMotorRecursive(Motor* motor)
 
 void MotorUI::OnEditChanged()
 {
-	UpdatePreview();
+	UpdatePreviewData();
 }
 
-void MotorUI::UpdatePreview()
+void MotorUI::UpdatePreviewData()
 {
 	if (!m_isAddMotorMode && !m_isAddSubmotorMode) return;
 
-	// 위치 텍스트 읽기
-	CString sx, sy, ex, ey, w, h, s;
-	m_startXEdit.GetWindowTextW(sx);
-	m_startYEdit.GetWindowTextW(sy);
-	m_endXEdit.GetWindowTextW(ex);
-	m_endYEdit.GetWindowTextW(ey);
-	m_width.GetWindowTextW(w);
-	m_height.GetWindowTextW(h);
-	m_speed.GetWindowTextW(s);
+	MotorPreviewInputData input;
+	input.isAddMotorMode = m_isAddMotorMode;
+	input.isAddSubmotorMode = m_isAddSubmotorMode;
 
-	CPoint start(_ttoi(sx), _ttoi(sy));
-	CPoint end(_ttoi(ex), _ttoi(ey));
-	CSize motor(_ttoi(w), _ttoi(h));
-	int speed = _ttoi(s);
+	m_startXEdit.GetWindowTextW(input.sx);
+	m_startYEdit.GetWindowTextW(input.sy);
+	m_endXEdit.GetWindowTextW(input.ex);
+	m_endYEdit.GetWindowTextW(input.ey);
+	m_width.GetWindowTextW(input.width);
+	m_height.GetWindowTextW(input.height);
+	m_speed.GetWindowTextW(input.speed);
 
-	CRect curRect(start.x, start.y, end.x, end.y);
-	curRect.NormalizeRect();  // 좌상단-우하단 정렬
+	input.isXAxis = m_radioXAxis.GetCheck() == BST_CHECKED;
 
-	/*if (curRect.Width() > m_logicalBounds.Width() || curRect.Height() > m_logicalBounds.Height()) {
-		m_logicalBounds.SetRect(0, 0, max(curRect.Width() + 10, m_logicalBounds.Width() + 10), max(curRect.Height() + 10, m_logicalBounds.Height() + 10));
-	}*/
-
-	// 하위 모터를 추가하려면 부모 모터를 선택해야 함
-	Motor* parentMotor = nullptr;
-
+	// 하위 모터 모드인 경우에만 parentMotor 설정
+	input.parentMotor = nullptr;
 	if (m_isAddSubmotorMode) {
-		int selectedIndex = m_motorListCtrl.GetNextItem(-1, LVNI_SELECTED);
-		if (selectedIndex != -1) {
-			CString motorID = m_motorListCtrl.GetItemText(selectedIndex, 0);
-			int motorIdInt = _ttoi(motorID);
-			parentMotor = GetSelectedMotor(motorIdInt);
-
-			if (!parentMotor) {
-				AfxMessageBox(_T("선택한 ID에 해당하는 모터가 존재하지 않습니다."));
-				return;
-			}
-
-			// 하위 모터는 부모 모터의 영역 내에 있어야 함
-			CPoint motorStart = parentMotor->motorPos - parentMotor->motorSize;
-			CPoint motorEnd = parentMotor->motorPos + parentMotor->motorSize;
-
-			CPoint subMotorStart = CPoint(start.x, start.y);
-			CPoint subMotorEnd = CPoint(end.x, end.y);
-			start = SubToLogical(subMotorStart, motorStart);
-			end = SubToLogical(subMotorEnd, motorStart);
-
-			// 하위 모터가 부모 모터의 영역 내에 있어야 함을 체크
-			if (start.x < motorStart.x || start.y < motorStart.y ||
-				end.x > motorEnd.x || end.y > motorEnd.y) {
-				AfxMessageBox(_T("하위 모터는 상위 모터의 영역 내에 있어야 합니다."));
-				return;
-			}
-
-			m_groupInput.SetWindowText(_T("모터 관리"));
-			m_addSubMotorButton.EnableWindow(TRUE);
-		}
-		else {
-			return;
+		int id = GetSelectedMotorId();
+		if (id != -1) {
+			input.parentMotor = GetSelectedMotor(id);
 		}
 	}
 
-	int motorX = m_radioXAxis.GetCheck() == BST_CHECKED ? (end.x - start.x) / 2 + start.x : end.x;
-	int motorY = m_radioXAxis.GetCheck() == BST_CHECKED ? start.y : (end.y - start.y) / 2 + start.y;
-
-	m_previewMotor.parentMotor = parentMotor;
-	m_previewMotor.isX = m_radioXAxis.GetCheck() == BST_CHECKED;
-	m_previewMotor.strPos = start;
-	m_previewMotor.endPos = end;
-	m_previewMotor.motorPos = CPoint(motorX, motorY);
-	m_previewMotor.motorSize = CSize(motor.cx / 2, motor.cy / 2);
-	m_previewMotor.motorSpeed = speed; // 속도 설정
+	m_previewMotor = m_motorPreviewPanel.UpdatePreview(input);
 }
+
+int MotorUI::GetSelectedMotorId() const
+{
+	int selectedIndex = m_motorListCtrl.GetNextItem(-1, LVNI_SELECTED);
+	if (selectedIndex == -1) return -1;
+
+	CString motorID = m_motorListCtrl.GetItemText(selectedIndex, 0);
+	return _ttoi(motorID);
+}
+
 
 // 모터 저장 기능
 void MotorUI::OnSaveMotor()
@@ -341,6 +303,36 @@ void MotorUI::OnLoadMotor()
 
 	if (m_pParentView)
 		m_pParentView->Invalidate();
+}
+
+void MotorUI::MoveSelectedAxis(int dx, int dy)
+{
+	int motorIdInt = GetSelectedMotorId();
+	Motor* selectedMotor = GetSelectedMotor(motorIdInt);
+	if (selectedMotor)
+	{
+		m_motorMovePanel.MoveMotorRecursive(selectedMotor, dx, dy);
+	}
+}
+
+void MotorUI::OnBnClickedControlUpButton()
+{
+	MoveSelectedAxis(0, -MOVE_DELTA);
+}
+
+void MotorUI::OnBnClickedControlDownButton()
+{
+	MoveSelectedAxis(0, MOVE_DELTA);
+}
+
+void MotorUI::OnBnClickedControlLeftButton()
+{
+	MoveSelectedAxis(-MOVE_DELTA, 0);
+}
+
+void MotorUI::OnBnClickedControlRightButton()
+{
+	MoveSelectedAxis(MOVE_DELTA, 0);
 }
 
 void MotorUI::OnBnClickedRadioXAxis()
@@ -399,71 +391,6 @@ void MotorUI::OnNMClickMotorList(NMHDR* pNMHDR, LRESULT* pResult)
 	*pResult = 0;
 }
 
-void MotorUI::MoveMotorRecursive(Motor* motor, int dx, int dy)
-{
-	if (!motor) return;
-
-	if (motor->parentMotor) {
-		CPoint parentTopLeft = motor->parentMotor->motorPos - motor->parentMotor->motorSize;
-		CPoint parentBottomRight = motor->parentMotor->motorPos + motor->parentMotor->motorSize;
-
-		CPoint newStrPos = motor->strPos + CPoint(dx, dy);
-		CPoint newEndPos = motor->endPos + CPoint(dx, dy);
-
-		if (newStrPos.x < parentTopLeft.x || newStrPos.y < parentTopLeft.y ||
-			newEndPos.x > parentBottomRight.x || newEndPos.y > parentBottomRight.y)
-		{
-			return; // 부모 영역을 벗어나므로 이동하지 않음
-		}
-	}
-
-	motor->strPos.x += dx;
-	motor->strPos.y += dy;
-	motor->endPos.x += dx;
-	motor->endPos.y += dy;
-	motor->motorPos.x += dx;
-	motor->motorPos.y += dy;
-
-	for (Motor* child : motor->children)
-	{
-		MoveMotorRecursive(child, dx, dy);
-	}
-}
-
-void MotorUI::MoveSelectedAxis(int dx, int dy)
-{
-	int selectedIndex = m_motorListCtrl.GetNextItem(-1, LVNI_SELECTED);
-	if (selectedIndex == -1) return;
-
-	CString motorID = m_motorListCtrl.GetItemText(selectedIndex, 0);
-	int motorIdInt = _ttoi(motorID);
-
-	Motor* selectedMotor = GetSelectedMotor(motorIdInt);
-	if (selectedMotor)
-	{
-		MoveMotorRecursive(selectedMotor, dx, dy);
-	}
-}
-
-void MotorUI::OnBnClickedControlUpButton()
-{
-	MoveSelectedAxis(0, -MOVE_DELTA);
-}
-
-void MotorUI::OnBnClickedControlDownButton()
-{
-	MoveSelectedAxis(0, MOVE_DELTA);
-}
-
-void MotorUI::OnBnClickedControlLeftButton()
-{
-	MoveSelectedAxis(-MOVE_DELTA, 0);
-}
-
-void MotorUI::OnBnClickedControlRightButton()
-{
-	MoveSelectedAxis(MOVE_DELTA, 0);
-}
 
 void MotorUI::CreateListControl()
 {

@@ -190,8 +190,8 @@
     <ClInclude Include="MotorAxis.h" />
     <ClInclude Include="MotorControl.h" />
     <ClInclude Include="MotorManager.h" />
-    <ClInclude Include="MotorUI\MotorInputPanel.h" />
     <ClInclude Include="MotorUI\MotorListPanel.h" />
+    <ClInclude Include="MotorUI\MotorMovePanel.h" />
     <ClInclude Include="MotorUI\MotorPreviewPanel.h" />
     <ClInclude Include="MotorUI\MotorUI.h" />
     <ClInclude Include="Motor\MotorAxis.h" />
@@ -204,8 +204,8 @@
     <ClCompile Include="ChildView.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="MotorControl.cpp" />
-    <ClCompile Include="MotorUI\MotorInputPanel.cpp" />
     <ClCompile Include="MotorUI\MotorListPanel.cpp" />
+    <ClCompile Include="MotorUI\MotorMovePanel.cpp" />
     <ClCompile Include="MotorUI\MotorPreviewPanel.cpp" />
     <ClCompile Include="MotorUI\MotorUI.cpp" />
     <ClCompile Include="Motor\MotorAxis.cpp" />

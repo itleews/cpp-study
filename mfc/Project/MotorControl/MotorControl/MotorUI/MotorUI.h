@@ -2,6 +2,8 @@
 #include <afxwin.h>
 #include "../Motor/MotorManager.h"
 #include "MotorListPanel.h"
+#include "MotorPreviewPanel.h"
+#include "MotorMovePanel.h"
 
 class CChildView;
 
@@ -10,46 +12,44 @@ public:
     // UI 컨트롤 선언
     MotorManager m_motorManager;
 	MotorListPanel m_motorListPanel;
-
-    CMFCListCtrl m_motorListCtrl;
-    CButton m_addMotorButton, m_removeMotorButton, m_saveMotorButton, m_loadMotorButton, m_addSubMotorButton;
-    CButton m_groupInput, m_groupButtons, m_groupControl;
-    CEdit m_startXEdit, m_startYEdit, m_endXEdit, m_endYEdit, m_width, m_height, m_speed;
-    CButton m_radioXAxis, m_radioYAxis;
-	CButton m_controlButton[4]; // 조작부 버튼들
-    CStatic m_labelStart, m_labelEnd, m_labelSize, m_labelAxis, m_labelSpeed;
+	MotorPreviewPanel m_motorPreviewPanel;
+	MotorMovePanel m_motorMovePanel;
+    
 	bool m_isAddMotorMode = false;
 	bool m_isAddSubmotorMode = false;
 	bool m_isSaveMotorMode = false;
     CRect m_selectedMotorRect;
-    Motor m_previewMotor;
-
-    void CreateListControl();
-    void CreateInputFields();
-	void CreateGroupBoxes();
-	void CreateRadioButtons();
-    void CreateLabels();
-    void CreateMotorButtons();
-    void CreateControlButtons();
-    void CreateEdit(CEdit& edit, int id, const CString& defaultText);
-    void CreateStatic(CStatic& label, const CString& text);
-	void CreateButton(CButton& button, int id, const CString& text);
-
-    void SetParentView(CChildView* pView) { m_pParentView = pView; }
+	Motor m_previewMotor; // 미리보기용 모터
     
+    int GetSelectedMotorId() const;
     Motor* GetSelectedMotor(int selectedIndex);
     Motor* FindMotorByID(Motor* node, int selectedID);
 	void DeleteMotorRecursive(Motor* motor);
     void MoveSelectedAxis(int dx, int dy);
     void UpdateMotorListTexts();
-    void MoveMotorRecursive(Motor* motor, int dx, int dy);
-    void UpdatePreview();
+    void SetParentView(CChildView* pView) { m_pParentView = pView; }
+    
+private:
+    CMFCListCtrl m_motorListCtrl;
+    CButton m_addMotorButton, m_removeMotorButton, m_saveMotorButton, m_loadMotorButton, m_addSubMotorButton;
+    CButton m_groupInput, m_groupButtons, m_groupControl;
+    CEdit m_startXEdit, m_startYEdit, m_endXEdit, m_endYEdit, m_width, m_height, m_speed;
+    CButton m_radioXAxis, m_radioYAxis;
+    CButton m_controlButton[4]; // 조작부 버튼들
+    CStatic m_labelStart, m_labelEnd, m_labelSize, m_labelAxis, m_labelSpeed;
 
-    CPoint SubToLogical(CPoint subMotorPos, CPoint mainMotorPos) {
-		// 하위 모터의 위치를 논리 위치로 변환
-		return CPoint(subMotorPos + mainMotorPos);
-    }
-
+    void CreateListControl();
+    void CreateInputFields();
+    void CreateGroupBoxes();
+    void CreateRadioButtons();
+    void CreateLabels();
+    void CreateMotorButtons();
+    void CreateControlButtons();
+    void CreateEdit(CEdit& edit, int id, const CString& defaultText);
+    void CreateStatic(CStatic& label, const CString& text);
+    void CreateButton(CButton& button, int id, const CString& text);
+    void UpdatePreviewData();
+    
 protected:
     // UI 생성 함수
     CChildView* m_pParentView = nullptr;
