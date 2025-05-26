@@ -1,8 +1,8 @@
 ﻿#include "pch.h"
 #include "MotorManager.h"
 #include "ChildView.h"
-#include <unordered_set>
 
+// 모터 추가
 Motor* MotorManager::AddMotor(
     Motor* parentMotor,
     bool isXDirection,
@@ -39,6 +39,73 @@ int MotorManager::GetMaxId() {
     }
     return maxId;
 }
+
+// 모터 삭제
+void MotorManager::RemoveMotors(const std::vector<int>& ids)
+{
+    // 1. ids로 Motor* 리스트 찾기
+    std::vector<Motor*> motorsToDelete;
+    for (int id : ids)
+    {
+        Motor* motor = GetMotorById(id);
+        if (motor)
+            motorsToDelete.push_back(motor);
+    }
+
+    // 2. 부모-자식 관계 중복 삭제 방지: 자식 모터는 제외하고 최상위 모터만 남기기
+    std::vector<Motor*> filteredMotors;
+    for (Motor* motor : motorsToDelete)
+    {
+        bool isChild = false;
+        for (Motor* other : motorsToDelete)
+        {
+            if (other == motor) continue;
+            Motor* p = motor->parentMotor;
+            while (p)
+            {
+                if (p == other)
+                {
+                    isChild = true;
+                    break;
+                }
+                p = p->parentMotor;
+            }
+            if (isChild) break;
+        }
+        if (!isChild)
+            filteredMotors.push_back(motor);
+    }
+
+    // 3. 재귀 삭제
+    for (Motor* motor : filteredMotors)
+    {
+        DeleteMotorRecursive(motor);
+    }
+}
+
+void MotorManager::DeleteMotorRecursive(Motor* motor)
+{
+    // 자식 모터 먼저 삭제
+    std::vector<Motor*> childrenCopy = motor->children;
+    for (Motor* child : childrenCopy)
+    {
+        DeleteMotorRecursive(child);
+    }
+
+    // 부모-자식 연결 끊기
+    if (motor->parentMotor)
+    {
+        auto& siblings = motor->parentMotor->children;
+        siblings.erase(std::remove(siblings.begin(), siblings.end(), motor), siblings.end());
+    }
+    else
+    {
+        rootMotors.erase(std::remove(rootMotors.begin(), rootMotors.end(), motor), rootMotors.end());
+    }
+
+    delete motor;
+}
+
 
 void MotorManager::SaveMotorData() {
     // 파일 저장 다이얼로그 띄우기
@@ -205,4 +272,26 @@ Motor* MotorManager::ParseMotor(const std::string& line, int& outParentId) {
     motor->motorPos = motorAbsPos;
 
     return motor;
+}
+
+Motor* MotorManager::GetMotorById(int id) {
+    // rootMotors 포함 모든 모터를 탐색해서 id가 일치하는 모터 반환
+    for (Motor* rootMotor : rootMotors) {
+        Motor* found = FindMotorRecursive(rootMotor, id);
+        if (found)
+            return found;
+    }
+    return nullptr; // 못 찾으면 nullptr 반환
+}
+
+Motor* MotorManager::FindMotorRecursive(Motor* motor, int id) {
+    if (motor->m_id == id)
+        return motor;
+
+    for (Motor* child : motor->children) {
+        Motor* found = FindMotorRecursive(child, id);
+        if (found)
+            return found;
+    }
+    return nullptr;
 }

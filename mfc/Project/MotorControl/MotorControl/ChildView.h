@@ -4,8 +4,8 @@
 
 
 #pragma once
-#include "MotorManager.h"
-#include "MotorUI.h"
+#include "Motor/MotorManager.h"
+#include "MotorUI/MotorUI.h"
 
 // CChildView 창
 

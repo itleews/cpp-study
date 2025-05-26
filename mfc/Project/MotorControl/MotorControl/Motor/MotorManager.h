@@ -20,9 +20,15 @@ public:
 		CPoint strPos, CPoint endPos, CPoint motorPos,
 		CSize motorSize, int motorSpeed);
 
-	int GetMaxId();
 	void SaveMotorData();
-	void SaveMotorRecursive(std::ofstream& file, Motor* motor, CPoint parentOffset = (0, 0));
 	void LoadMotorData();
+	Motor* GetMotorById(int id);
+	void RemoveMotors(const std::vector<int>& ids);
+	
+private:
+	int GetMaxId();
+	void DeleteMotorRecursive(Motor* motor);
+	void SaveMotorRecursive(std::ofstream& file, Motor* motor, CPoint parentOffset = (0, 0));
 	Motor* ParseMotor(const std::string& line, int& outParentId);
+	Motor* FindMotorRecursive(Motor* motor, int id);
 };
