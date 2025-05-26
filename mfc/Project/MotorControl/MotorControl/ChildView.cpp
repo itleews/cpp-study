@@ -78,7 +78,12 @@ void CChildView::OnPaint()
 	// 도형 그리기
 	for (auto axis : m_motorUI.m_motorManager.rootMotors)
 	{
-		DrawMotor(axis, &memDC);
+		if (axis->isRotating) {
+			DrawRotatingMotor(axis, &memDC);
+		}
+		else {
+			DrawMotor(axis, &memDC);
+		}
 		// 하위 모터 그리기 (재귀적으로)
 		DrawSubMotor(axis, &memDC);
 	}
@@ -153,6 +158,16 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
 {
 	if (nIDEvent == 1)
 	{
+		for (auto motor : m_motorUI.m_motorManager.rootMotors)
+		{
+			if (motor->isRotating)
+			{
+				motor->rotationAngle += 2.0; // 적절한 회전 속도
+				if (motor->rotationAngle >= 360.0)
+					motor->rotationAngle -= 360.0;
+			}
+		}
+
 		// 다시 그리기
 		InvalidateRect(&m_drawArea, FALSE);
 
@@ -240,8 +255,12 @@ void CChildView::DrawSubMotor(Motor* parentMotor, CDC* pDC)
 	// 하위 모터가 있는 경우 재귀적으로 그리기
 	for (Motor* child : parentMotor->children)
 	{
-		DrawMotor(child, pDC); // 자식 모터 그리기
-
+		if (child->rotationAngle != 0.0) {
+			DrawRotatingMotor(child, pDC);
+		}
+		else {
+			DrawMotor(child, pDC); // 자식 모터 그리기
+		}
 		// 자식의 하위 모터도 그리기 (재귀 호출)
 		DrawSubMotor(child, pDC);
 	}
@@ -350,6 +369,42 @@ void CChildView::DrawAddSubmotorMode(CDC* pDC)
 	pDC->TextOutW((rect.left + rect.right) / 2, rect.top + 50, msg);
 
 	pDC->SelectObject(pOldFont);  // 폰트 복원도 잊지 마!
+}
+
+void CChildView::DrawRotatingMotor(Motor* motor, CDC* pDC)
+{
+	const double PI = 3.14159265358979323846;
+
+	CPoint screenMotorStart = LogicalToScreen(motor->motorPos - motor->motorSize);
+	CPoint screenMotorEnd = LogicalToScreen(motor->motorPos + motor->motorSize);
+	CPoint screenCenter = LogicalToScreen(motor->motorPos);
+
+	// 반지름 계산
+	CPoint screenEnd = LogicalToScreen(motor->motorPos + CSize(motor->motorSize.cx, 0));
+	int radius = (int)std::sqrt(std::pow(screenEnd.x - screenCenter.x, 2) +
+		std::pow(screenEnd.y - screenCenter.y, 2));
+
+	// 원 그리기
+	CRect motorRect(screenMotorStart, screenMotorEnd);
+	CBrush brush(RGB(255, 255, 255));
+	CBrush* pOldBrush = pDC->SelectObject(&brush);
+	pDC->Ellipse(motorRect);
+	pDC->SelectObject(pOldBrush);
+
+	// 회전 방향선
+	double angleRad = motor->rotationAngle * PI / 180.0;
+	Matrix3x3 rotationMatrix = m_motorTransform.rotation(angleRad);
+	POINT rotatedVec = rotationMatrix.transformPoint(radius, 0);
+	CPoint end(screenCenter.x + rotatedVec.x, screenCenter.y + rotatedVec.y);
+
+	pDC->MoveTo(screenCenter);
+	pDC->LineTo(end);
+
+	// 회전각 텍스트
+	CString str;
+	pDC->SetBkMode(TRANSPARENT);
+	str.Format(_T("회전각: %.2f°"), motor->rotationAngle);
+	pDC->TextOutW(screenCenter.x, screenCenter.y - radius - 30, str);
 }
 
 BOOL CChildView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)

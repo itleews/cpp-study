@@ -9,7 +9,6 @@ class CChildView;
 
 class MotorUI : public CWnd {
 public:
-    // UI 컨트롤 선언
     MotorManager m_motorManager;
 	MotorListPanel m_motorListPanel;
 	MotorPreviewPanel m_motorPreviewPanel;
@@ -31,11 +30,11 @@ public:
     
 private:
     CMFCListCtrl m_motorListCtrl;
-    CButton m_addMotorButton, m_removeMotorButton, m_saveMotorButton, m_loadMotorButton, m_addSubMotorButton;
+    CButton m_addMotorBtn, m_removeMotorBtn, m_saveMotorBtn, m_loadMotorBtn, m_addSubMotorBtn, m_addRotMotorBtn;
     CButton m_groupInput, m_groupButtons, m_groupControl;
     CEdit m_startXEdit, m_startYEdit, m_endXEdit, m_endYEdit, m_width, m_height, m_speed;
     CButton m_radioXAxis, m_radioYAxis;
-    CButton m_controlButton[4]; // 조작부 버튼들
+    CButton m_controlBtn[4]; // 조작부 버튼들
     CStatic m_labelStart, m_labelEnd, m_labelSize, m_labelAxis, m_labelSpeed;
 
     void CreateListControl();
@@ -59,6 +58,7 @@ protected:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
     afx_msg void OnAddMotor();
 	afx_msg void OnAddSubMotor();
+    afx_msg void OnAddRotatingMotor();
     afx_msg void OnRemoveMotor();
     afx_msg void OnSaveMotor();
     afx_msg void OnLoadMotor();

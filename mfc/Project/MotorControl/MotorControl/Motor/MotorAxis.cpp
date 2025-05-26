@@ -2,16 +2,25 @@
 #include "MotorAxis.h"
 
 Motor::Motor()
-    : m_id(0), isX(true), strPos(0, 0), endPos(0, 0), motorPos(0, 0),
-    motorSize(0, 0), motorSpeed(0) {
+    : m_id(0), isX(true), isRotating(false), strPos(0, 0), endPos(0, 0), motorPos(0, 0),
+    motorSize(0, 0), motorSpeed(0) {}
+
+Motor::~Motor()
+{
+    for (Motor* child : children) {
+        delete child;
+    }
+    children.clear();
 }
 
-Motor::Motor(int id, bool isXDirection,
-	CPoint str, CPoint end, CPoint motor, CSize size, int speed)
-	: m_id(id), isX(isXDirection),
+Motor::Motor(int id, bool isXDirection, CPoint str, CPoint end, CPoint motor, CSize size, int speed)
+	: m_id(id), isX(isXDirection), isRotating(false),
 	strPos(str), endPos(end), motorPos(motor),
-	motorSize(size), motorSpeed(speed) {
-}
+	motorSize(size), motorSpeed(speed) {}
+
+Motor::Motor(int id, CPoint motor, CSize size, double angle)
+    : m_id(id), motorPos(motor), motorSize(size), rotationAngle(angle),
+    isX(false), isRotating(true), motorSpeed(0), strPos(motor), endPos(motor) {}
 
 void Motor::MoveMotor(double deltaTime)
 {

@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <cmath>
 #include "MotorTransform.h"
 
 Matrix3x3 MotorTransform::translation(double x, double y) {

@@ -7,11 +7,12 @@ BEGIN_MESSAGE_MAP(MotorUI, CWnd)
 	ON_WM_SIZE()
 	ON_WM_TIMER()
 	ON_WM_DESTROY()
-	ON_BN_CLICKED(1001, &MotorUI::OnAddMotor) // 축 추가 버튼 클릭
-	ON_BN_CLICKED(2007, &MotorUI::OnAddSubMotor) // 하위 모터 추가 버튼 클릭
+	ON_BN_CLICKED(1001, &MotorUI::OnAddMotor) // 축 추가 버튼 클릭ㄴ
 	ON_BN_CLICKED(1002, &MotorUI::OnRemoveMotor) // 축 삭제 버튼 클릭
 	ON_BN_CLICKED(1003, &MotorUI::OnSaveMotor) // 모터 저장 버튼 클릭
 	ON_BN_CLICKED(1004, &MotorUI::OnLoadMotor) // 모터 불러오기 버튼 클릭
+	ON_BN_CLICKED(1005, &MotorUI::OnAddRotatingMotor) // 회전 모터 추가 버튼 클릭
+	ON_BN_CLICKED(1006, &MotorUI::OnAddSubMotor) // 하위 모터 추가 버튼 클릭
 	ON_EN_CHANGE(2001, &MotorUI::OnChangeStartX)  // m_startXEdit
 	ON_EN_CHANGE(2002, &MotorUI::OnChangeStartY)  // m_startYEdit
 	ON_EN_CHANGE(2003, &MotorUI::OnEditChanged)
@@ -68,9 +69,9 @@ void MotorUI::OnAddMotor()
 {
 	if (!m_isAddMotorMode && !m_isAddSubmotorMode) {
 		m_isAddMotorMode = true;
-		m_addMotorButton.SetWindowText(_T("완료"));
-		m_removeMotorButton.SetWindowText(_T("취소"));
-		m_addSubMotorButton.EnableWindow(FALSE);
+		m_addMotorBtn.SetWindowText(_T("완료"));
+		m_removeMotorBtn.SetWindowText(_T("취소"));
+		m_addSubMotorBtn.EnableWindow(FALSE);
 		UpdatePreviewData();
 		return;
 	}
@@ -83,9 +84,9 @@ void MotorUI::OnAddMotor()
 
 	m_isAddMotorMode = false;
 	m_isAddSubmotorMode = false;
-	m_addMotorButton.SetWindowText(_T("추가"));
-	m_removeMotorButton.SetWindowText(_T("삭제"));
-	m_addSubMotorButton.EnableWindow(TRUE);
+	m_addMotorBtn.SetWindowText(_T("추가"));
+	m_removeMotorBtn.SetWindowText(_T("삭제"));
+	m_addSubMotorBtn.EnableWindow(TRUE);
 
 	m_motorManager.AddMotor(
 		m_previewMotor.parentMotor, // 부모 모터 (없으면 nullptr)
@@ -118,9 +119,13 @@ void MotorUI::OnAddSubMotor() {
 	m_previewMotor.motorSize = CSize(0, 0);
 	m_previewMotor.motorSpeed = 0; // 속도 설정
 	m_groupInput.SetWindowText(_T("하위 모터 추가"));
-	m_addMotorButton.SetWindowText(_T("완료"));
-	m_removeMotorButton.SetWindowText(_T("취소"));
-	m_addSubMotorButton.EnableWindow(FALSE);
+	m_addMotorBtn.SetWindowText(_T("완료"));
+	m_removeMotorBtn.SetWindowText(_T("취소"));
+	m_addSubMotorBtn.EnableWindow(FALSE);
+}
+
+void MotorUI::OnAddRotatingMotor() {
+	m_motorManager.AddRotatingMotor(nullptr, { 500, 500 }, { 100, 100 }, 30);
 }
 
 Motor* MotorUI::GetSelectedMotor(int selectedIndex)
@@ -176,17 +181,17 @@ void MotorUI::OnRemoveMotor()
 	if (m_isAddSubmotorMode) {
 		m_isAddSubmotorMode = false; // 하위 모터 추가 모드 해제
 		m_groupInput.SetWindowText(_T("모터 관리"));
-		m_addMotorButton.SetWindowText(_T("추가"));
-		m_removeMotorButton.SetWindowText(_T("삭제"));
-		m_addSubMotorButton.EnableWindow(TRUE);
+		m_addMotorBtn.SetWindowText(_T("추가"));
+		m_removeMotorBtn.SetWindowText(_T("삭제"));
+		m_addSubMotorBtn.EnableWindow(TRUE);
 		return;
 	}
 
 	if (m_isAddMotorMode) {
 		m_isAddMotorMode = false; // 모터 추가 모드 해제
-		m_addMotorButton.SetWindowText(_T("추가"));
-		m_removeMotorButton.SetWindowText(_T("삭제"));
-		m_addSubMotorButton.EnableWindow(TRUE);
+		m_addMotorBtn.SetWindowText(_T("추가"));
+		m_removeMotorBtn.SetWindowText(_T("삭제"));
+		m_addSubMotorBtn.EnableWindow(TRUE);
 		return;
 	}
 
@@ -422,8 +427,6 @@ void MotorUI::CreateInputFields()
 	CreateEdit(m_width, 2005, _T("100"));
 	CreateEdit(m_height, 2006, _T("100"));
 	CreateEdit(m_speed, 2008, _T("100"));
-
-	m_addSubMotorButton.Create(_T("하위 모터 추가"), WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, 2007);
 }
 
 void MotorUI::CreateRadioButtons()
@@ -446,10 +449,12 @@ void MotorUI::CreateLabels()
 
 void MotorUI::CreateMotorButtons()
 {
-	CreateButton(m_addMotorButton, 1001, _T("추가"));
-	CreateButton(m_removeMotorButton, 1002, _T("삭제"));
-	CreateButton(m_saveMotorButton, 1003, _T("저장"));
-	CreateButton(m_loadMotorButton, 1004, _T("불러오기"));
+	CreateButton(m_addMotorBtn, 1001, _T("추가"));
+	CreateButton(m_removeMotorBtn, 1002, _T("삭제"));
+	CreateButton(m_saveMotorBtn, 1003, _T("저장"));
+	CreateButton(m_loadMotorBtn, 1004, _T("불러오기"));
+	CreateButton(m_addRotMotorBtn, 1005, _T("회전 모터 추가"));
+	CreateButton(m_addSubMotorBtn, 1006, _T("하위 모터 추가"));
 }
 
 void MotorUI::CreateControlButtons()
@@ -459,7 +464,7 @@ void MotorUI::CreateControlButtons()
 
 	for (int i = 0; i < 4; ++i)
 	{
-		m_controlButton[i].Create(labels[i], WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, ids[i]);
+		m_controlBtn[i].Create(labels[i], WS_CHILD | WS_VISIBLE, CRect(0, 0, 0, 0), this, ids[i]);
 	}
 }
 
@@ -520,13 +525,13 @@ void MotorUI::OnSize(UINT nType, int cx, int cy)
 	m_labelStart.SetWindowPos(nullptr, inputStartX + groupPadding, row1Y, labelWidth, fieldHeight, SWP_NOZORDER);
 	m_startXEdit.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap, row1Y, fieldWidth, fieldHeight, SWP_NOZORDER);
 	m_startYEdit.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap + fieldWidth + colGap, row1Y, fieldWidth, fieldHeight, SWP_NOZORDER);
-	m_addMotorButton.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap + labelWidth + colGap, row1Y, labelWidth, btnHeight, SWP_NOZORDER);
+	m_addMotorBtn.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap + labelWidth + colGap, row1Y, labelWidth, btnHeight, SWP_NOZORDER);
 
 	int row2Y = row1Y + fieldHeight + rowGap;
 	m_labelEnd.SetWindowPos(nullptr, inputStartX + groupPadding, row2Y, labelWidth, fieldHeight, SWP_NOZORDER);
 	m_endXEdit.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap, row2Y, fieldWidth, fieldHeight, SWP_NOZORDER);
 	m_endYEdit.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap + fieldWidth + colGap, row2Y, fieldWidth, fieldHeight, SWP_NOZORDER);
-	m_removeMotorButton.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap + labelWidth + colGap, row2Y, labelWidth, btnHeight, SWP_NOZORDER);
+	m_removeMotorBtn.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap + labelWidth + colGap, row2Y, labelWidth, btnHeight, SWP_NOZORDER);
 
 	int row3Y = row2Y + fieldHeight + rowGap;
 	m_labelSize.SetWindowPos(nullptr, inputStartX + groupPadding, row3Y, labelWidth, fieldHeight, SWP_NOZORDER);
@@ -537,11 +542,12 @@ void MotorUI::OnSize(UINT nType, int cx, int cy)
 	m_labelAxis.SetWindowPos(nullptr, inputStartX + groupPadding, row4Y, labelWidth, fieldHeight, SWP_NOZORDER);
 	m_radioXAxis.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap, row4Y, 60, fieldHeight, SWP_NOZORDER);
 	m_radioYAxis.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap + 70, row4Y, 60, fieldHeight, SWP_NOZORDER);
+	m_addRotMotorBtn.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap + labelWidth + colGap, row4Y, labelWidth, btnHeight, SWP_NOZORDER);
 
 	int row5Y = row4Y + fieldHeight + rowGap;
 	m_labelSpeed.SetWindowPos(nullptr, inputStartX + groupPadding, row5Y, labelWidth, fieldHeight, SWP_NOZORDER);
 	m_speed.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap, row5Y, fieldWidth * 2 + colGap, fieldHeight, SWP_NOZORDER);
-	m_addSubMotorButton.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap + labelWidth + colGap, row5Y, labelWidth, btnHeight, SWP_NOZORDER);
+	m_addSubMotorBtn.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap + labelWidth + colGap, row5Y, labelWidth, btnHeight, SWP_NOZORDER);
 
 	int inputGroupHeight = (row5Y + fieldHeight + groupPadding) - inputStartY;
 	m_groupInput.SetWindowPos(nullptr, rightX, inputStartY, rightWidth, inputGroupHeight, SWP_NOZORDER);
@@ -550,8 +556,8 @@ void MotorUI::OnSize(UINT nType, int cx, int cy)
 	int buttonGroupY = inputStartY + inputGroupHeight + sectionGap;
 
 	int buttonY = buttonGroupY + btnHeight + rowGap;
-	m_saveMotorButton.SetWindowPos(nullptr, inputStartX + groupPadding, buttonY, halfWidth, btnHeight, SWP_NOZORDER);
-	m_loadMotorButton.SetWindowPos(nullptr, inputStartX + groupPadding + halfWidth + colGap, buttonY, halfWidth, btnHeight, SWP_NOZORDER);
+	m_saveMotorBtn.SetWindowPos(nullptr, inputStartX + groupPadding, buttonY, halfWidth, btnHeight, SWP_NOZORDER);
+	m_loadMotorBtn.SetWindowPos(nullptr, inputStartX + groupPadding + halfWidth + colGap, buttonY, halfWidth, btnHeight, SWP_NOZORDER);
 
 	int buttonGroupHeight = (buttonY + btnHeight + groupPadding) - buttonGroupY;
 	m_groupButtons.SetWindowPos(nullptr, rightX, buttonGroupY, rightWidth, buttonGroupHeight, SWP_NOZORDER);
@@ -571,16 +577,16 @@ void MotorUI::OnSize(UINT nType, int cx, int cy)
 	int bh = controlButtonHeight;
 
 	// 위 (0) 버튼 위치
-	m_controlButton[0].SetWindowPos(nullptr, centerX - bw / 2, centerY - bh - rowGap, bw, bh, SWP_NOZORDER);
+	m_controlBtn[0].SetWindowPos(nullptr, centerX - bw / 2, centerY - bh - rowGap, bw, bh, SWP_NOZORDER);
 
 	// 아래 (1) 버튼 위치
-	m_controlButton[1].SetWindowPos(nullptr, centerX - bw / 2, centerY + bh + rowGap, bw, bh, SWP_NOZORDER);
+	m_controlBtn[1].SetWindowPos(nullptr, centerX - bw / 2, centerY + bh + rowGap, bw, bh, SWP_NOZORDER);
 
 	// 왼 (2) 버튼 위치
-	m_controlButton[2].SetWindowPos(nullptr, centerX - bw * 2 + colGap + 50, centerY, bw, bh, SWP_NOZORDER);
+	m_controlBtn[2].SetWindowPos(nullptr, centerX - bw * 2 + colGap + 50, centerY, bw, bh, SWP_NOZORDER);
 
 	// 오 (3) 버튼 위치
-	m_controlButton[3].SetWindowPos(nullptr, centerX + bw / 2 + colGap, centerY, bw, bh, SWP_NOZORDER);
+	m_controlBtn[3].SetWindowPos(nullptr, centerX + bw / 2 + colGap, centerY, bw, bh, SWP_NOZORDER);
 
 	// 그룹 전체의 크기 설정
 	m_groupControl.SetWindowPos(nullptr, rightX, controlTop, rightWidth, controlHeight, SWP_NOZORDER);

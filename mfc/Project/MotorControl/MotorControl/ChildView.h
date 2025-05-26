@@ -34,16 +34,14 @@ public:
 public:
 	CPoint LogicalToScreen(CPoint logical)
 	{
-		// MotorTransform 방식 사용
 		Matrix3x3 transform = m_motorTransform.makeTransform(
-			-m_logicalBounds.left,   // x: 원점 보정
-			-m_logicalBounds.top,    // y: 원점 보정
-			0.0,                     // theta: 회전 없음
-			m_zoomFactor,            // sx: 확대/축소
-			m_zoomFactor             // sy: 확대/축소
+			-m_logicalBounds.left, // x
+			-m_logicalBounds.top,  // y
+			0.0,				   // 회전 각도(theta)
+			m_zoomFactor,		   // x 스케일(sx)
+			m_zoomFactor		   // y 스케일(sy)
 		);
 
-		// 팬(pan) 이동을 따로 덧붙임
 		Matrix3x3 pan = m_motorTransform.translation(m_panOffset.x, m_panOffset.y);
 
 		// 전체 변환: 팬 * 줌스케일 * 원점이동
@@ -56,17 +54,13 @@ public:
 
 	CPoint ScreenToLogical(CPoint screen)
 	{
-		// 팬을 역이동
 		Matrix3x3 invPan = m_motorTransform.translation(-m_panOffset.x, -m_panOffset.y);
 
-		// 스케일을 역스케일
 		double invZoom = 1.0 / m_zoomFactor;
 		Matrix3x3 invScale = m_motorTransform.scaling(invZoom, invZoom);
 
-		// 원점 복원
 		Matrix3x3 invOrigin = m_motorTransform.translation(m_logicalBounds.left, m_logicalBounds.top);
 
-		// 전체 역변환 행렬: 원점 복원 → 스케일 복원 → 팬 복원
 		Matrix3x3 inverseTransform = invOrigin * invScale * invPan;
 
 		POINT logical = inverseTransform.transformPoint(screen.x, screen.y);
@@ -83,14 +77,15 @@ public:
 	void DrawGrid(CDC* pDC);
 	void DrawMotor(Motor* motor, CDC* pDC);
 	void DrawSubMotor(Motor* parentMotor, CDC* pDC);
+	void DrawRotatingMotor(Motor* motor, CDC* pDC);
 	void DrawAddSubmotorMode(CDC* pDC);
 	void DrawPreviewMotor(CDC* pDC);
-	void OnDestroy();
 	
 	// 생성된 메시지 맵 함수
 protected:
 	afx_msg void OnPaint();
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnDestroy();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
