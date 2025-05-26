@@ -90,7 +90,7 @@ void MotorUI::OnAddMotor()
 
 	m_motorManager.AddMotor(
 		m_previewMotor.parentMotor, // 부모 모터 (없으면 nullptr)
-		m_previewMotor.isX,
+		m_previewMotor.axis,
 		m_previewMotor.strPos,
 		m_previewMotor.endPos,
 		m_previewMotor.motorPos,
@@ -126,6 +126,7 @@ void MotorUI::OnAddSubMotor() {
 
 void MotorUI::OnAddRotatingMotor() {
 	m_motorManager.AddRotatingMotor(nullptr, { 500, 500 }, { 100, 100 }, 30);
+	m_motorListPanel.DisplayMotorTree(m_motorListCtrl, m_motorManager.rootMotors);
 }
 
 Motor* MotorUI::GetSelectedMotor(int selectedIndex)
@@ -267,7 +268,7 @@ void MotorUI::UpdatePreviewData()
 	m_height.GetWindowTextW(input.height);
 	m_speed.GetWindowTextW(input.speed);
 
-	input.isXAxis = m_radioXAxis.GetCheck() == BST_CHECKED;
+	input.axis = (m_radioXAxis.GetCheck() == BST_CHECKED) ? X : Y;
 
 	// 하위 모터 모드인 경우에만 parentMotor 설정
 	input.parentMotor = nullptr;

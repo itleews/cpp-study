@@ -76,16 +76,16 @@ void CChildView::OnPaint()
 	DrawGrid(&memDC); // 그리드 그리기
 
 	// 도형 그리기
-	for (auto axis : m_motorUI.m_motorManager.rootMotors)
+	for (auto motor : m_motorUI.m_motorManager.rootMotors)
 	{
-		if (axis->isRotating) {
-			DrawRotatingMotor(axis, &memDC);
+		if (motor->isRotating) {
+			DrawRotatingMotor(motor, &memDC);
 		}
 		else {
-			DrawMotor(axis, &memDC);
+			DrawMotor(motor, &memDC);
 		}
 		// 하위 모터 그리기 (재귀적으로)
-		DrawSubMotor(axis, &memDC);
+		DrawSubMotor(motor, &memDC);
 	}
 
 	if (m_motorUI.m_isAddSubmotorMode)
@@ -158,16 +158,6 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
 {
 	if (nIDEvent == 1)
 	{
-		for (auto motor : m_motorUI.m_motorManager.rootMotors)
-		{
-			if (motor->isRotating)
-			{
-				motor->rotationAngle += 2.0; // 적절한 회전 속도
-				if (motor->rotationAngle >= 360.0)
-					motor->rotationAngle -= 360.0;
-			}
-		}
-
 		// 다시 그리기
 		InvalidateRect(&m_drawArea, FALSE);
 
@@ -180,10 +170,17 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
 		m_isPaused = false; // 일시정지 해제
 		double deltaTime = 0.016; // 약 60fps = 16ms 주기
 
-		// 모든 모터 위치를 갱신
-		for (auto axis : m_motorUI.m_motorManager.rootMotors)
+		// 모든 모터 위치, 회전각 갱신
+		for (auto motor : m_motorUI.m_motorManager.rootMotors)
 		{
-			axis->MoveMotor(deltaTime);
+			motor->MoveMotor(deltaTime);
+
+			if (motor->isRotating)
+			{
+				motor->rotationAngle += 2.0; // 적절한 회전 속도
+				if (motor->rotationAngle >= 360.0)
+					motor->rotationAngle -= 360.0;
+			}
 		}
 	}
 
@@ -283,10 +280,10 @@ void CChildView::DrawPreviewMotor(CDC* pDC) {
 
 	// 변환된 좌표로 사각형 그리기
 	CRect previewRect;
-	if (m_motorUI.m_previewMotor.isX) {
+	if (m_motorUI.m_previewMotor.axis == X) {
 		previewRect.SetRect(screenStart.x, screenMotorStart.y - 10, screenEnd.x, screenMotorEnd.y + 10);
 	}
-	else {
+	else if (m_motorUI.m_previewMotor.axis == Y) {
 		previewRect.SetRect(screenMotorStart.x - 10, screenStart.y, screenMotorEnd.x + 10, screenEnd.y);
 	}
 	pDC->Rectangle(previewRect);

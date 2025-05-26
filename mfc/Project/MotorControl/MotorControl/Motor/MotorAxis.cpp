@@ -2,7 +2,7 @@
 #include "MotorAxis.h"
 
 Motor::Motor()
-    : m_id(0), isX(true), isRotating(false), strPos(0, 0), endPos(0, 0), motorPos(0, 0),
+    : m_id(0), axis(None), isRotating(false), strPos(0, 0), endPos(0, 0), motorPos(0, 0),
     motorSize(0, 0), motorSpeed(0) {}
 
 Motor::~Motor()
@@ -13,21 +13,21 @@ Motor::~Motor()
     children.clear();
 }
 
-Motor::Motor(int id, bool isXDirection, CPoint str, CPoint end, CPoint motor, CSize size, int speed)
-	: m_id(id), isX(isXDirection), isRotating(false),
+Motor::Motor(int id, AxisType axis, CPoint str, CPoint end, CPoint motor, CSize size, int speed)
+	: m_id(id), axis(axis), isRotating(false),
 	strPos(str), endPos(end), motorPos(motor),
 	motorSize(size), motorSpeed(speed) {}
 
 Motor::Motor(int id, CPoint motor, CSize size, double angle)
     : m_id(id), motorPos(motor), motorSize(size), rotationAngle(angle),
-    isX(false), isRotating(true), motorSpeed(0), strPos(motor), endPos(motor) {}
+    axis(T), isRotating(true), motorSpeed(0), strPos(motor), endPos(motor) {}
 
 void Motor::MoveMotor(double deltaTime)
 {
     CPoint prevMotorPos = motorPos;
 
     // 자기 자신만 이동
-    if (isX)
+    if (axis == 1)
     {
         if (motorPos.x + motorSize.cx > endPos.x || motorPos.x - motorSize.cx < strPos.x)
             motorSpeed = -motorSpeed;

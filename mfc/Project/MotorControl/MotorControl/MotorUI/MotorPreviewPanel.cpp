@@ -30,12 +30,12 @@ Motor MotorPreviewPanel::UpdatePreview(const MotorPreviewInputData& data)
         }
     }
 
-    int motorX = data.isXAxis ? (end.x - start.x) / 2 + start.x : end.x;
-    int motorY = data.isXAxis ? start.y : (end.y - start.y) / 2 + start.y;
+    int motorX = (data.axis == X) ? (end.x - start.x) / 2 + start.x : end.x;
+    int motorY = (data.axis == X) ? start.y : (end.y - start.y) / 2 + start.y;
 
     Motor previewMotor;
     previewMotor.parentMotor = parentMotor;
-	previewMotor.isX = data.isXAxis;
+	previewMotor.axis = data.axis;
     previewMotor.motorPos = CPoint(motorX, motorY);
     previewMotor.motorSize = CSize(motorSize.cx / 2, motorSize.cy / 2);
     previewMotor.motorSpeed = speed;

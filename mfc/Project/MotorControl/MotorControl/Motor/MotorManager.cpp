@@ -3,11 +3,11 @@
 #include "ChildView.h"
 
 // 모터 추가
-Motor* MotorManager::AddMotor(Motor* parentMotor, bool isXDirection, CPoint strPos, CPoint endPos, CPoint motorPos, CSize motorSize, int motorSpeed)
+Motor* MotorManager::AddMotor(Motor* parentMotor, AxisType axis, CPoint strPos, CPoint endPos, CPoint motorPos, CSize motorSize, int motorSpeed)
 {
     nextId = GetMaxId() + 1;
 
-    Motor* newMotor = new Motor(nextId, isXDirection, strPos, endPos, motorPos, motorSize, motorSpeed);
+    Motor* newMotor = new Motor(nextId, axis, strPos, endPos, motorPos, motorSize, motorSpeed);
 
     motorMap[newMotor->m_id] = newMotor;
 	newMotor->parentMotor = parentMotor; // ⭐ 부모 설정
@@ -148,14 +148,24 @@ void MotorManager::SaveMotorData() {
     }
 }
 
+std::string AxisTypeToString(AxisType axis) {
+    switch (axis) {
+        case AxisType::X: return "X";
+        case AxisType::Y: return "Y";
+        case AxisType::T: return "T";
+        default: return "Unknown";
+    }
+}
+
+
 void MotorManager::SaveMotorRecursive(std::ofstream& file, Motor* motor, CPoint parentOffset) {  
     CPoint relativeStr = motor->strPos - parentOffset;
     CPoint relativeEnd = motor->endPos - parentOffset;
     CPoint relativeMotor = motor->motorPos - parentOffset;
 
     std::ostringstream oss;
-    oss << motor->m_id << ","                         // ID
-        << (motor->isX ? "X" : "Y") << ","           // 축
+    oss << motor->m_id << "," // ID
+        << AxisTypeToString(motor->axis) << "," // 축
         << "\"" << relativeStr.x << ";" << relativeStr.y << "\","  // 시작 위치
         << "\"" << relativeEnd.x << ";" << relativeEnd.y << "\","  // 끝 위치
         << "\"" << relativeMotor.x << ";" << relativeMotor.y << "\","  // 모터 상대 위치
@@ -240,8 +250,18 @@ Motor* MotorManager::ParseMotor(const std::string& line, int& outParentId) {
     std::getline(iss, token, ',');  // ID
     int id = std::stoi(token);
 
-    std::getline(iss, token, ',');  // isX ("X" or "Y")
-    bool isX = (token == "X");
+    std::getline(iss, token, ',');
+    AxisType axis;
+    
+    if (token == "X")
+        axis = AxisType::X;
+    else if (token == "Y")
+        axis = AxisType::Y;
+    else if (token == "T")
+        axis = AxisType::T;
+    else
+        axis = AxisType::None; // 기본값 또는 에러 처리
+
 
     std::getline(iss, token, ',');  // 시작 위치 "(x;y)"
     token.erase(std::remove(token.begin(), token.end(), '\"'), token.end());
@@ -281,7 +301,7 @@ Motor* MotorManager::ParseMotor(const std::string& line, int& outParentId) {
 		}
     }
 
-    Motor* motor = new Motor(id, isX ? _T("X") : _T("Y"),
+    Motor* motor = new Motor(id, axis,
         strPos, endPos, relativeMotorPos, motorSize, motorSpeed);
     motor->motorPos = motorAbsPos;
 

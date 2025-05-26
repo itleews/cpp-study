@@ -2,6 +2,15 @@
 #include "MotorListPanel.h"
 #include "MotorUI.h"
 
+CString AxisTypeToString(AxisType axis) {
+	switch (axis) {
+	case AxisType::X: return _T("X");
+	case AxisType::Y: return _T("Y");
+	case AxisType::T: return _T("T");
+	default: return _T("Unknown");
+	}
+}
+
 void MotorListPanel::BuildDisplayRows(Motor* node, int depth, const CPoint& parentOrigin, std::vector<DisplayRow>& outRows)
 {
 	if (!node) return;
@@ -13,7 +22,7 @@ void MotorListPanel::BuildDisplayRows(Motor* node, int depth, const CPoint& pare
 	CString idStr;
 	idStr.Format(_T("%d"), node->m_id);
 
-	CString typeStr = node->isX ? _T("X") : _T("Y");
+	CString typeStr = AxisTypeToString(node->axis);
 
 	CPoint relStrPos = node->strPos - parentOrigin;
 	CPoint relEndPos = node->endPos - parentOrigin;

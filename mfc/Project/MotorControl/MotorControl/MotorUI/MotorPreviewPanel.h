@@ -9,7 +9,7 @@ struct MotorPreviewInputData {
     CString sx, sy, ex, ey;
     CString width, height, speed;
 
-    bool isXAxis;
+    AxisType axis;
 
     Motor* parentMotor;
 };
