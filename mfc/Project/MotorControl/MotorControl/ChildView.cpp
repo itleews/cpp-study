@@ -355,14 +355,27 @@ void CChildView::DrawAddSubmotorMode(CDC* pDC)
 BOOL CChildView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 {
 	const double zoomStep = 0.1;
+
+	// 1. 마우스 포인터 기준 논리 좌표 계산
+	CPoint logicalBefore = ScreenToLogical(pt);
+
+	// 2. 줌 인/아웃
 	if (zDelta > 0)
 		m_zoomFactor *= (1.0 + zoomStep);  // 확대
 	else
 		m_zoomFactor *= (1.0 - zoomStep);  // 축소
 
-	InvalidateRect(m_drawArea, FALSE); // 해당 영역만 갱신
+	// 3. 줌 후 다시 화면 좌표 변환
+	CPoint logicalAfter = ScreenToLogical(pt);
+
+	// 4. 팬 오프셋 보정
+	m_panOffset.x += (logicalAfter.x - logicalBefore.x) * m_zoomFactor;
+	m_panOffset.y += (logicalAfter.y - logicalBefore.y) * m_zoomFactor;
+
+	InvalidateRect(m_drawArea, FALSE); // 영역만 갱신
 	return TRUE;
 }
+
 
 void CChildView::OnMouseMove(UINT nFlags, CPoint point)
 {

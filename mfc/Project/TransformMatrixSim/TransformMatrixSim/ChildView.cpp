@@ -52,7 +52,11 @@ struct Matrix3x3 {
 };
 
 Matrix3x3 translation(double x, double y) {
-    return Matrix3x3{ { {1, 0, x}, {0, 1, y}, {0, 0, 1} } };
+    return Matrix3x3{ {
+        {1, 0, x},
+        {0, 1, y},
+        {0, 0, 1}
+    } };
 }
 
 Matrix3x3 rotation(double theta) {
@@ -63,8 +67,16 @@ Matrix3x3 rotation(double theta) {
     } };
 }
 
-Matrix3x3 makeTransform(double x, double y, double theta) {
-    return translation(x, y) * rotation(theta);
+Matrix3x3 scaling(double sx, double sy) {
+    return Matrix3x3{ {
+        {sx, 0, 0},
+        {0, sy, 0},
+        {0, 0, 1}
+    } };
+}
+
+Matrix3x3 makeTransform(double x, double y, double theta, double sx, double sy) {
+    return translation(x, y) * rotation(theta) * scaling(sx, sy);
 }
 
 // 타이머 메시지 처리기
@@ -102,14 +114,18 @@ void CChildView::OnPaint()
 
     double x = 300;  // 중심 원 위치 X
     double y = 300;  // 중심 원 위치 Y
+    double sx = 10; // X 방향 스케일링 (1.0 = 원래 크기)
+	double sy = 10; // Y 방향 스케일링 (1.0 = 원래 크기)
     double theta = m_theta; // 현재 회전 각도
 
-    Matrix3x3 transform = makeTransform(x, y, theta);
+    Matrix3x3 transform = makeTransform(x, y, theta, sx, sy);
 
     // 원 그리기
     POINT center = transform.transformPoint(0, 0);
-    int r = 30;
-    dc.Ellipse(center.x - r, center.y - r, center.x + r, center.y + r);
+    int rx = static_cast<int>(30 * sx);
+    int ry = static_cast<int>(30 * sy);
+    dc.Ellipse(center.x - rx, center.y - ry, center.x + rx, center.y + ry);
+
 
     // 사각형 크기와 거리
     int rectSize = 20;

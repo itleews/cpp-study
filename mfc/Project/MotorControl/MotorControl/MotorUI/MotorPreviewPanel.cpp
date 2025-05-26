@@ -14,7 +14,6 @@ Motor MotorPreviewPanel::UpdatePreview(const MotorPreviewInputData& data)
 
     if (data.isAddSubmotorMode) {
         if (!parentMotor) {
-            AfxMessageBox(_T("선택한 ID에 해당하는 모터가 존재하지 않습니다."));
             return {};
         }
 
@@ -36,6 +35,7 @@ Motor MotorPreviewPanel::UpdatePreview(const MotorPreviewInputData& data)
 
     Motor previewMotor;
     previewMotor.parentMotor = parentMotor;
+	previewMotor.isX = data.isXAxis;
     previewMotor.motorPos = CPoint(motorX, motorY);
     previewMotor.motorSize = CSize(motorSize.cx / 2, motorSize.cy / 2);
     previewMotor.motorSpeed = speed;

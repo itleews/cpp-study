@@ -6,6 +6,7 @@
 #pragma once
 #include "Motor/MotorManager.h"
 #include "MotorUI/MotorUI.h"
+#include "Motor/MotorTransform.h"
 
 // CChildView 창
 
@@ -18,6 +19,7 @@ public:
 // 특성입니다.
 public:
 	MotorUI m_motorUI;
+	MotorTransform m_motorTransform;
 	CRect m_drawArea; // 그리기 영역
 	double m_zoomFactor = 2.5;
 	CPoint m_mousePos;
@@ -32,18 +34,43 @@ public:
 public:
 	CPoint LogicalToScreen(CPoint logical)
 	{
-		// X와 Y의 위치를 논리 좌표계에서 화면 좌표계로 변환
-		int screenX = (int)((logical.x - m_logicalBounds.left) * m_zoomFactor + m_panOffset.x);
-		int screenY = (int)((logical.y - m_logicalBounds.top) * m_zoomFactor + m_panOffset.y);
-		return CPoint(screenX, screenY);
+		// MotorTransform 방식 사용
+		Matrix3x3 transform = m_motorTransform.makeTransform(
+			-m_logicalBounds.left,   // x: 원점 보정
+			-m_logicalBounds.top,    // y: 원점 보정
+			0.0,                     // theta: 회전 없음
+			m_zoomFactor,            // sx: 확대/축소
+			m_zoomFactor             // sy: 확대/축소
+		);
+
+		// 팬(pan) 이동을 따로 덧붙임
+		Matrix3x3 pan = m_motorTransform.translation(m_panOffset.x, m_panOffset.y);
+
+		// 전체 변환: 팬 * 줌스케일 * 원점이동
+		Matrix3x3 viewTransform = pan * transform;
+
+		// 좌표 변환
+		POINT screen = viewTransform.transformPoint(logical.x, logical.y);
+		return CPoint(screen.x, screen.y);
 	}
 
-	// 화면 좌표 → 논리 좌표 변환
 	CPoint ScreenToLogical(CPoint screen)
 	{
-		int logicalX = (int)((screen.x - m_panOffset.x) / m_zoomFactor + m_logicalBounds.left);
-		int logicalY = (int)((screen.y - m_panOffset.y) / m_zoomFactor + m_logicalBounds.top);
-		return CPoint(logicalX, logicalY);
+		// 팬을 역이동
+		Matrix3x3 invPan = m_motorTransform.translation(-m_panOffset.x, -m_panOffset.y);
+
+		// 스케일을 역스케일
+		double invZoom = 1.0 / m_zoomFactor;
+		Matrix3x3 invScale = m_motorTransform.scaling(invZoom, invZoom);
+
+		// 원점 복원
+		Matrix3x3 invOrigin = m_motorTransform.translation(m_logicalBounds.left, m_logicalBounds.top);
+
+		// 전체 역변환 행렬: 원점 복원 → 스케일 복원 → 팬 복원
+		Matrix3x3 inverseTransform = invOrigin * invScale * invPan;
+
+		POINT logical = inverseTransform.transformPoint(screen.x, screen.y);
+		return CPoint(logical.x, logical.y);
 	}
 
 // 재정의입니다.

@@ -196,6 +196,7 @@
     <ClInclude Include="MotorUI\MotorUI.h" />
     <ClInclude Include="Motor\MotorAxis.h" />
     <ClInclude Include="Motor\MotorManager.h" />
+    <ClInclude Include="Motor\MotorTransform.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
@@ -210,6 +211,7 @@
     <ClCompile Include="MotorUI\MotorUI.cpp" />
     <ClCompile Include="Motor\MotorAxis.cpp" />
     <ClCompile Include="Motor\MotorManager.cpp" />
+    <ClCompile Include="Motor\MotorTransform.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

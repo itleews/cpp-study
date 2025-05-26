@@ -70,6 +70,7 @@ void MotorUI::OnAddMotor()
 		m_isAddMotorMode = true;
 		m_addMotorButton.SetWindowText(_T("완료"));
 		m_removeMotorButton.SetWindowText(_T("취소"));
+		m_addSubMotorButton.EnableWindow(FALSE);
 		UpdatePreviewData();
 		return;
 	}
@@ -84,6 +85,7 @@ void MotorUI::OnAddMotor()
 	m_isAddSubmotorMode = false;
 	m_addMotorButton.SetWindowText(_T("추가"));
 	m_removeMotorButton.SetWindowText(_T("삭제"));
+	m_addSubMotorButton.EnableWindow(TRUE);
 
 	m_motorManager.AddMotor(
 		m_previewMotor.parentMotor, // 부모 모터 (없으면 nullptr)
@@ -151,7 +153,6 @@ void MotorUI::UpdateMotorListTexts() {
 	m_motorListCtrl.UpdateWindow();
 }
 
-
 // 재귀적으로 모터를 찾는 함수 (ID 비교)
 Motor* MotorUI::FindMotorByID(Motor* node, int selectedID)
 {
@@ -185,6 +186,7 @@ void MotorUI::OnRemoveMotor()
 		m_isAddMotorMode = false; // 모터 추가 모드 해제
 		m_addMotorButton.SetWindowText(_T("추가"));
 		m_removeMotorButton.SetWindowText(_T("삭제"));
+		m_addSubMotorButton.EnableWindow(TRUE);
 		return;
 	}
 
@@ -282,7 +284,6 @@ int MotorUI::GetSelectedMotorId() const
 	CString motorID = m_motorListCtrl.GetItemText(selectedIndex, 0);
 	return _ttoi(motorID);
 }
-
 
 // 모터 저장 기능
 void MotorUI::OnSaveMotor()

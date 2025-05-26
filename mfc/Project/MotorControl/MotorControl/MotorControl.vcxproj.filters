@@ -72,6 +72,9 @@
     <ClInclude Include="MotorUI\MotorMovePanel.h">
       <Filter>헤더 파일\MotorUI</Filter>
     </ClInclude>
+    <ClInclude Include="Motor\MotorTransform.h">
+      <Filter>헤더 파일\Motor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MotorControl.cpp">
@@ -103,6 +106,9 @@
     </ClCompile>
     <ClCompile Include="MotorUI\MotorMovePanel.cpp">
       <Filter>소스 파일\MotorUI</Filter>
+    </ClCompile>
+    <ClCompile Include="Motor\MotorTransform.cpp">
+      <Filter>소스 파일\Motor</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
