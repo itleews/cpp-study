@@ -16,6 +16,7 @@ public:
     
 	bool m_isAddMotorMode = false;
 	bool m_isAddSubmotorMode = false;
+	bool m_isAddRotatingMotorMode = false;
 	bool m_isSaveMotorMode = false;
     CRect m_selectedMotorRect;
 	Motor m_previewMotor; // 미리보기용 모터
@@ -48,7 +49,8 @@ private:
     void CreateStatic(CStatic& label, const CString& text);
     void CreateButton(CButton& button, int id, const CString& text);
     void UpdatePreviewData();
-    
+    void ResetMotorUI();
+
 protected:
     // UI 생성 함수
     CChildView* m_pParentView = nullptr;

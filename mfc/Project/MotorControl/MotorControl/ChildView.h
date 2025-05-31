@@ -80,6 +80,8 @@ public:
 	void DrawRotatingMotor(Motor* motor, CDC* pDC);
 	void DrawAddSubmotorMode(CDC* pDC);
 	void DrawPreviewMotor(CDC* pDC);
+	void DrawPreviewRotatingMotor(CDC* pDC);
+	void DrawRotatingMotorShape(const Motor& motor, CDC* pDC);
 	
 	// 생성된 메시지 맵 함수
 protected:

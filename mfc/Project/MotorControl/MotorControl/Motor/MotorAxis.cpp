@@ -18,8 +18,8 @@ Motor::Motor(int id, AxisType axis, CPoint str, CPoint end, CPoint motor, CSize 
 	strPos(str), endPos(end), motorPos(motor),
 	motorSize(size), motorSpeed(speed) {}
 
-Motor::Motor(int id, CPoint motor, CSize size, double angle)
-    : m_id(id), motorPos(motor), motorSize(size), rotationAngle(angle),
+Motor::Motor(int id, CPoint motor, CSize size, double speed)
+    : m_id(id), motorPos(motor), motorSize(size), rotationSpeed(speed), rotationAngle(0.0),
     axis(T), isRotating(true), motorSpeed(0), strPos(motor), endPos(motor) {}
 
 void Motor::MoveMotor(double deltaTime)

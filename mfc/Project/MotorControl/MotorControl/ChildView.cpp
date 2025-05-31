@@ -99,6 +99,11 @@ void CChildView::OnPaint()
 		DrawPreviewMotor(&memDC);
 	}
 
+	if (m_motorUI.m_isAddRotatingMotorMode)
+	{
+		DrawPreviewRotatingMotor(&memDC);
+	}
+
 	if (m_isPaused)
 	{
 		CPen redPen(PS_SOLID, 5, RGB(255, 0, 0));
@@ -154,6 +159,24 @@ void CChildView::OnSize(UINT nType, int cx, int cy)
 	}
 }
 
+void UpdateMotorRotation(Motor* motor, double deltaTime)
+{
+	motor->MoveMotor(deltaTime);
+
+	if (motor->isRotating)
+	{
+		motor->rotationAngle += motor->rotationSpeed * deltaTime;
+		if (motor->rotationAngle >= 360.0)
+			motor->rotationAngle -= 360.0;
+	}
+
+	// 자식 모터들도 재귀 처리
+	for (auto childMotor : motor->children)
+	{
+		UpdateMotorRotation(childMotor, deltaTime);
+	}
+}
+
 void CChildView::OnTimer(UINT_PTR nIDEvent)
 {
 	if (nIDEvent == 1)
@@ -168,19 +191,12 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
 		}
 
 		m_isPaused = false; // 일시정지 해제
-		double deltaTime = 0.016; // 약 60fps = 16ms 주기
+		double deltaTime = 0.032; // 약 60fps = 16ms 주기
 
 		// 모든 모터 위치, 회전각 갱신
 		for (auto motor : m_motorUI.m_motorManager.rootMotors)
 		{
-			motor->MoveMotor(deltaTime);
-
-			if (motor->isRotating)
-			{
-				motor->rotationAngle += 2.0; // 적절한 회전 속도
-				if (motor->rotationAngle >= 360.0)
-					motor->rotationAngle -= 360.0;
-			}
+			UpdateMotorRotation(motor, deltaTime);
 		}
 	}
 
@@ -252,7 +268,7 @@ void CChildView::DrawSubMotor(Motor* parentMotor, CDC* pDC)
 	// 하위 모터가 있는 경우 재귀적으로 그리기
 	for (Motor* child : parentMotor->children)
 	{
-		if (child->rotationAngle != 0.0) {
+		if (child->isRotating) {
 			DrawRotatingMotor(child, pDC);
 		}
 		else {
@@ -265,6 +281,11 @@ void CChildView::DrawSubMotor(Motor* parentMotor, CDC* pDC)
 
 void CChildView::DrawPreviewMotor(CDC* pDC) {
 	// 원래 로직 좌표 기준으로 사각형 생성
+	if (m_motorUI.m_isAddRotatingMotorMode) {
+		DrawPreviewRotatingMotor(pDC);
+		return;
+	}
+
 	Motor preMotor = m_motorUI.m_previewMotor;
 	CPoint screenStart = LogicalToScreen(preMotor.strPos);
 	CPoint screenEnd = LogicalToScreen(preMotor.endPos);
@@ -368,41 +389,62 @@ void CChildView::DrawAddSubmotorMode(CDC* pDC)
 	pDC->SelectObject(pOldFont);  // 폰트 복원도 잊지 마!
 }
 
-void CChildView::DrawRotatingMotor(Motor* motor, CDC* pDC)
-{
+void CChildView::DrawRotatingMotorShape(const Motor& motor, CDC* pDC) {
 	const double PI = 3.14159265358979323846;
 
-	CPoint screenMotorStart = LogicalToScreen(motor->motorPos - motor->motorSize);
-	CPoint screenMotorEnd = LogicalToScreen(motor->motorPos + motor->motorSize);
-	CPoint screenCenter = LogicalToScreen(motor->motorPos);
-
-	// 반지름 계산
-	CPoint screenEnd = LogicalToScreen(motor->motorPos + CSize(motor->motorSize.cx, 0));
+	CPoint screenCenter = LogicalToScreen(motor.motorPos);
+	CPoint screenEnd = LogicalToScreen(motor.motorPos + CSize(motor.motorSize.cx, 0));
 	int radius = (int)std::sqrt(std::pow(screenEnd.x - screenCenter.x, 2) +
 		std::pow(screenEnd.y - screenCenter.y, 2));
 
 	// 원 그리기
+	CPoint screenMotorStart = LogicalToScreen(motor.motorPos - motor.motorSize);
+	CPoint screenMotorEnd = LogicalToScreen(motor.motorPos + motor.motorSize);
 	CRect motorRect(screenMotorStart, screenMotorEnd);
 	CBrush brush(RGB(255, 255, 255));
 	CBrush* pOldBrush = pDC->SelectObject(&brush);
 	pDC->Ellipse(motorRect);
 	pDC->SelectObject(pOldBrush);
 
-	// 회전 방향선
-	double angleRad = motor->rotationAngle * PI / 180.0;
+	// 회전 방향선 그리기
+	double angleRad = motor.rotationAngle * PI / 180.0;
 	Matrix3x3 rotationMatrix = m_motorTransform.rotation(angleRad);
 	POINT rotatedVec = rotationMatrix.transformPoint(radius, 0);
 	CPoint end(screenCenter.x + rotatedVec.x, screenCenter.y + rotatedVec.y);
-
 	pDC->MoveTo(screenCenter);
 	pDC->LineTo(end);
 
 	// 회전각 텍스트
-	CString str;
 	pDC->SetBkMode(TRANSPARENT);
-	str.Format(_T("회전각: %.2f°"), motor->rotationAngle);
-	pDC->TextOutW(screenCenter.x, screenCenter.y - radius - 30, str);
+	CString str;
+	int lineHeight = 20;
+
+	// 위쪽 텍스트 시작 Y 좌표
+	int topTextStartY = screenCenter.y - radius - (lineHeight * 2);
+
+	// 회전각
+	str.Format(_T("회전각: %.2f°"), motor.rotationAngle);
+	pDC->TextOutW(screenCenter.x, topTextStartY, str);
+
+	// 속도
+	str.Format(_T("속도: %.2f˚/s"), motor.rotationSpeed);
+	pDC->TextOutW(screenCenter.x, topTextStartY + lineHeight, str);
+
+	// ID
+	str.Format(_T("ID: %d"), motor.m_id);
+	pDC->TextOutW(screenCenter.x, screenCenter.y + radius + 10, str);
 }
+
+void CChildView::DrawRotatingMotor(Motor* motor, CDC* pDC) {
+	if (motor && pDC) {
+		DrawRotatingMotorShape(*motor, pDC);
+	}
+}
+
+void CChildView::DrawPreviewRotatingMotor(CDC* pDC) {
+	DrawRotatingMotorShape(m_motorUI.m_previewMotor, pDC);
+}
+
 
 BOOL CChildView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 {

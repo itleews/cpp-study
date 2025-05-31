@@ -17,7 +17,9 @@ public:
     bool isRotating = false;
 	CPoint strPos, endPos, motorPos;
     CSize motorSize;
-	double rotationAngle = 0.0; // 모터의 회전 각도
+	double rotationAngle = 0.0;
+	double rotationSpeed = 0.0; // 회전 속도 (도/초 단위)
+    bool isValid = false;
 
 	Motor* parentMotor = nullptr; // 부모 모터 포인터
     CPoint motorOffset;
@@ -26,7 +28,7 @@ public:
 	Motor(); // 기본 생성자
 	~Motor(); // 소멸자
     Motor(int id, AxisType axis, CPoint str, CPoint end, CPoint motor, CSize size, int speed);
-    Motor(int id, CPoint motor, CSize size, double angle);
+    Motor(int id, CPoint motor, CSize size, double speed);
     void MoveMotor(double deltaTime);
     void MoveByParentDelta(const CPoint& delta);
 };

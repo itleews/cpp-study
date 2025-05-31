@@ -2,13 +2,22 @@
 #include "MotorUI.h"
 #include "../ChildView.h"
 
+/*TODO:
+*	1. 회전 모터 편집 및 미리보기 기능 추가
+*		- 속성 변경, 방향선 표시, 미리보기 반영
+*	2. 회전 모터 내부 사각형 그리기
+*		- 회전 행렬로 사각형 회전 적용
+*	3. 회전 모터를 하위 모터로 추가 가능하도록 구현
+*		- 계층 구조 반영, 저장/불러오기 처리 포함
+*/
+
 BEGIN_MESSAGE_MAP(MotorUI, CWnd)
 	ON_WM_CREATE()
 	ON_WM_SIZE()
 	ON_WM_TIMER()
 	ON_WM_DESTROY()
-	ON_BN_CLICKED(1001, &MotorUI::OnAddMotor) // 축 추가 버튼 클릭ㄴ
-	ON_BN_CLICKED(1002, &MotorUI::OnRemoveMotor) // 축 삭제 버튼 클릭
+	ON_BN_CLICKED(1001, &MotorUI::OnAddMotor) // 추가 버튼 클릭
+	ON_BN_CLICKED(1002, &MotorUI::OnRemoveMotor) // 삭제 버튼 클릭
 	ON_BN_CLICKED(1003, &MotorUI::OnSaveMotor) // 모터 저장 버튼 클릭
 	ON_BN_CLICKED(1004, &MotorUI::OnLoadMotor) // 모터 불러오기 버튼 클릭
 	ON_BN_CLICKED(1005, &MotorUI::OnAddRotatingMotor) // 회전 모터 추가 버튼 클릭
@@ -67,7 +76,7 @@ void MotorUI::OnDestroy()
 
 void MotorUI::OnAddMotor()
 {
-	if (!m_isAddMotorMode && !m_isAddSubmotorMode) {
+	if (!m_isAddMotorMode && !m_isAddSubmotorMode && !m_isAddRotatingMotorMode) {
 		m_isAddMotorMode = true;
 		m_addMotorBtn.SetWindowText(_T("완료"));
 		m_removeMotorBtn.SetWindowText(_T("취소"));
@@ -82,22 +91,26 @@ void MotorUI::OnAddMotor()
 		return;
 	}
 
-	m_isAddMotorMode = false;
-	m_isAddSubmotorMode = false;
-	m_addMotorBtn.SetWindowText(_T("추가"));
-	m_removeMotorBtn.SetWindowText(_T("삭제"));
-	m_addSubMotorBtn.EnableWindow(TRUE);
+	m_isAddMotorMode = false; // 모터 추가 모드 해제
+	m_isAddSubmotorMode = false; // 하위 모터 추가 모드 해제
 
-	m_motorManager.AddMotor(
-		m_previewMotor.parentMotor, // 부모 모터 (없으면 nullptr)
-		m_previewMotor.axis,
-		m_previewMotor.strPos,
-		m_previewMotor.endPos,
-		m_previewMotor.motorPos,
-		m_previewMotor.motorSize,
-		m_previewMotor.motorSpeed // 속도
-	);
+	if (m_isAddRotatingMotorMode) {
+		m_isAddRotatingMotorMode = false;
+		m_motorManager.AddRotatingMotor(m_previewMotor.parentMotor, m_previewMotor.motorPos, m_previewMotor.motorSize, m_previewMotor.rotationSpeed);
+	}
+	else {
+		m_motorManager.AddMotor(
+			m_previewMotor.parentMotor, // 부모 모터 (없으면 nullptr)
+			m_previewMotor.axis,
+			m_previewMotor.strPos,
+			m_previewMotor.endPos,
+			m_previewMotor.motorPos,
+			m_previewMotor.motorSize,
+			m_previewMotor.motorSpeed // 속도
+		);
+	}
 
+	ResetMotorUI(); // UI 초기화
 	// 리스트 컨트롤에 모터 트리 표시
 	m_motorListPanel.DisplayMotorTree(m_motorListCtrl, m_motorManager.rootMotors);
 }
@@ -119,14 +132,37 @@ void MotorUI::OnAddSubMotor() {
 	m_previewMotor.motorSize = CSize(0, 0);
 	m_previewMotor.motorSpeed = 0; // 속도 설정
 	m_groupInput.SetWindowText(_T("하위 모터 추가"));
+	CString startX;
+	m_startXEdit.GetWindowTextW(startX);
+	m_endXEdit.SetWindowTextW(startX);
+	CString startY;
+	m_startYEdit.GetWindowTextW(startY);
+	m_endYEdit.SetWindowTextW(startY);
+	m_width.SetWindowTextW(_T("10"));
+	m_height.SetWindowTextW(_T("10"));
 	m_addMotorBtn.SetWindowText(_T("완료"));
 	m_removeMotorBtn.SetWindowText(_T("취소"));
 	m_addSubMotorBtn.EnableWindow(FALSE);
 }
 
 void MotorUI::OnAddRotatingMotor() {
-	m_motorManager.AddRotatingMotor(nullptr, { 500, 500 }, { 100, 100 }, 30);
-	m_motorListPanel.DisplayMotorTree(m_motorListCtrl, m_motorManager.rootMotors);
+	m_isAddRotatingMotorMode = true;
+	m_groupInput.SetWindowText(_T("회전 모터 추가"));
+	m_addMotorBtn.SetWindowText(_T("완료"));
+	m_removeMotorBtn.SetWindowText(_T("취소"));
+	m_addRotMotorBtn.EnableWindow(FALSE);
+	m_addSubMotorBtn.EnableWindow(FALSE);
+	m_endXEdit.SetWindowTextW(_T("10"));
+	m_endYEdit.EnableWindow(FALSE);
+	m_endYEdit.SetWindowTextW(_T(""));
+	m_labelSize.SetWindowTextW(_T("반지름(r)"));
+	m_height.EnableWindow(FALSE);
+	m_height.SetWindowTextW(_T(""));
+	m_radioYAxis.EnableWindow(FALSE);
+	m_labelStart.SetWindowTextW(_T("모터 위치(x, y)"));
+	m_labelEnd.SetWindowTextW(_T("회전속도(˚/s)"));
+	m_radioXAxis.SetWindowTextW(_T("T축"));
+	UpdatePreviewData();
 }
 
 Motor* MotorUI::GetSelectedMotor(int selectedIndex)
@@ -179,20 +215,11 @@ Motor* MotorUI::FindMotorByID(Motor* node, int selectedID)
 
 void MotorUI::OnRemoveMotor()
 {
-	if (m_isAddSubmotorMode) {
-		m_isAddSubmotorMode = false; // 하위 모터 추가 모드 해제
-		m_groupInput.SetWindowText(_T("모터 관리"));
-		m_addMotorBtn.SetWindowText(_T("추가"));
-		m_removeMotorBtn.SetWindowText(_T("삭제"));
-		m_addSubMotorBtn.EnableWindow(TRUE);
-		return;
-	}
-
-	if (m_isAddMotorMode) {
+	if (m_isAddMotorMode || m_isAddSubmotorMode || m_isAddRotatingMotorMode) {
 		m_isAddMotorMode = false; // 모터 추가 모드 해제
-		m_addMotorBtn.SetWindowText(_T("추가"));
-		m_removeMotorBtn.SetWindowText(_T("삭제"));
-		m_addSubMotorBtn.EnableWindow(TRUE);
+		m_isAddSubmotorMode = false; // 하위 모터 추가 모드 해제
+		m_isAddRotatingMotorMode = false; // 회전 모터 추가 모드 해제
+		ResetMotorUI(); // UI 초기화
 		return;
 	}
 
@@ -254,11 +281,12 @@ void MotorUI::OnEditChanged()
 
 void MotorUI::UpdatePreviewData()
 {
-	if (!m_isAddMotorMode && !m_isAddSubmotorMode) return;
+	if (!m_isAddMotorMode && !m_isAddSubmotorMode && !m_isAddRotatingMotorMode) return;
 
 	MotorPreviewInputData input;
 	input.isAddMotorMode = m_isAddMotorMode;
 	input.isAddSubmotorMode = m_isAddSubmotorMode;
+	input.isAddRotatingMotorMode = m_isAddRotatingMotorMode;
 
 	m_startXEdit.GetWindowTextW(input.sx);
 	m_startYEdit.GetWindowTextW(input.sy);
@@ -280,6 +308,13 @@ void MotorUI::UpdatePreviewData()
 	}
 
 	m_previewMotor = m_motorPreviewPanel.UpdatePreview(input);
+
+	if (!m_previewMotor.isValid) {
+		m_addMotorBtn.EnableWindow(false);
+	}
+	else {
+		m_addMotorBtn.EnableWindow(true);
+	}
 }
 
 int MotorUI::GetSelectedMotorId() const
@@ -322,6 +357,37 @@ void MotorUI::MoveSelectedAxis(int dx, int dy)
 	}
 }
 
+void MotorUI::ResetMotorUI()
+{
+	m_groupInput.SetWindowText(_T("모터 관리"));
+	m_addMotorBtn.SetWindowText(_T("추가"));
+	m_removeMotorBtn.SetWindowText(_T("삭제"));
+	m_addMotorBtn.EnableWindow(TRUE);
+	m_addRotMotorBtn.EnableWindow(TRUE);
+	m_addSubMotorBtn.EnableWindow(TRUE);
+	m_endYEdit.EnableWindow(FALSE);
+	m_height.EnableWindow(TRUE);
+	// 라벨 텍스트 초기화
+	m_labelStart.SetWindowTextW(_T("시작 위치(x, y)"));
+	m_labelEnd.SetWindowTextW(_T("끝 위치(x, y)"));
+	m_labelSize.SetWindowTextW(_T("크기(W, H)"));
+	m_labelAxis.SetWindowTextW(_T("기준 축"));
+	m_labelSpeed.SetWindowTextW(_T("모터 속도"));
+	// 입력 필드 초기화
+	m_startXEdit.SetWindowTextW(_T("0"));
+	m_startYEdit.SetWindowTextW(_T("100"));
+	m_endXEdit.SetWindowTextW(_T("1000"));
+	m_endYEdit.SetWindowTextW(_T("100"));
+	m_width.SetWindowTextW(_T("100"));
+	m_height.SetWindowTextW(_T("100"));
+	m_speed.SetWindowTextW(_T("100"));
+	// 라디오 버튼 초기화
+	m_radioXAxis.SetWindowTextW(_T("X축"));
+	m_radioXAxis.SetCheck(TRUE);
+	m_radioYAxis.SetCheck(FALSE);
+	m_radioYAxis.EnableWindow(TRUE);
+}
+
 void MotorUI::OnBnClickedControlUpButton()
 {
 	MoveSelectedAxis(0, -MOVE_DELTA);
@@ -362,6 +428,11 @@ void MotorUI::OnBnClickedRadioYAxis()
 
 void MotorUI::OnChangeStartX()
 {
+	OnEditChanged();  // 시작 위치 변경 시 미리보기 업데이트
+
+	if (m_isAddRotatingMotorMode)
+		return;
+
 	if (m_radioYAxis.GetSafeHwnd() && m_radioYAxis.GetCheck() == BST_CHECKED)  // Y축 라디오 버튼 선택되었을 때
 	{
 		CString startX;
@@ -372,6 +443,11 @@ void MotorUI::OnChangeStartX()
 
 void MotorUI::OnChangeStartY()
 {
+	OnEditChanged();
+
+	if (m_isAddRotatingMotorMode)
+		return;
+
 	if (m_radioXAxis.GetSafeHwnd() && m_radioXAxis.GetCheck() == BST_CHECKED)  // X축 라디오 버튼 선택되었을 때
 	{
 		CString startY;
@@ -393,6 +469,10 @@ void MotorUI::OnNMClickMotorList(NMHDR* pNMHDR, LRESULT* pResult)
 			CPoint bottomRight = selectedMotor->motorPos + selectedMotor->motorSize;
 			m_selectedMotorRect.SetRect(topLeft, bottomRight);
 		}
+	}
+
+	if (m_isAddSubmotorMode) {
+		UpdatePreviewData();
 	}
 
 	*pResult = 0;

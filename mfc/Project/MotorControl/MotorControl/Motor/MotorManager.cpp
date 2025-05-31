@@ -1,6 +1,6 @@
 ﻿#include "pch.h"
 #include "MotorManager.h"
-#include "ChildView.h"
+#include "../ChildView.h"
 
 // 모터 추가
 Motor* MotorManager::AddMotor(Motor* parentMotor, AxisType axis, CPoint strPos, CPoint endPos, CPoint motorPos, CSize motorSize, int motorSpeed)
@@ -25,11 +25,11 @@ Motor* MotorManager::AddMotor(Motor* parentMotor, AxisType axis, CPoint strPos, 
 }
 
 // 회전 모터 추가
-Motor* MotorManager::AddRotatingMotor(Motor* parentMotor, CPoint motorPos, CSize motorSize, double rotationAngle)
+Motor* MotorManager::AddRotatingMotor(Motor* parentMotor, CPoint motorPos, CSize motorSize, double rotationSpeed)
 {
 	nextId = GetMaxId() + 1;
 
-	Motor* newRMotor = new Motor(nextId, motorPos, motorSize, rotationAngle);
+	Motor* newRMotor = new Motor(nextId, motorPos, motorSize, rotationSpeed);
     motorMap[newRMotor->m_id] = newRMotor;
     newRMotor->parentMotor = parentMotor; // ⭐ 부모 설정
 
