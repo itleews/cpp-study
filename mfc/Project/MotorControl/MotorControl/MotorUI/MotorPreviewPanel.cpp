@@ -15,6 +15,11 @@ Motor MotorPreviewPanel::UpdatePreview(const MotorPreviewInputData& data)
     m_motorSize = CSize(_ttoi(data.width), _ttoi(data.height));
     int speed = _ttoi(data.speed);
 
+    if (m_motorSize.cx == 0 || m_motorSize.cy == 0) {
+        AfxMessageBox(_T("유효하지 않은 값입니다. 모터 사이즈는 0보다 커야 합니다."));
+        return {};
+    }
+
     Motor* parentMotor = data.parentMotor;
 
     if (data.isAddSubmotorMode) {
@@ -61,8 +66,13 @@ Motor MotorPreviewPanel::PreviewRotatingmotor(const MotorPreviewInputData& data)
 	CPoint motorSize(_ttoi(data.width), _ttoi(data.width));
 	double angularSpeed = _ttof(data.ex);
     
-    if (angularSpeed <= 0 || angularSpeed > 360) {
-        AfxMessageBox(_T("회전 속도는 0°/s보다 크고 360°/s 이하이어야 합니다."));
+    if (angularSpeed <= 0 || angularSpeed > 3600) {
+        AfxMessageBox(_T("회전 속도는 최소 0°/s ~ 최대 3600°/s 범위 내여야 합니다."));
+        return {};
+    }
+
+    if (motorSize.x == 0) {
+        AfxMessageBox(_T("유효하지 않은 값입니다. 모터 사이즈는 0보다 커야 합니다."));
         return {};
     }
 

@@ -447,6 +447,21 @@ void CChildView::DrawRotatingMotorShape(const Motor& motor, CDC* pDC) {
 	// ID
 	str.Format(_T("ID: %d"), motor.m_id);
 	pDC->TextOutW(screenCenter.x, screenCenter.y + radius + 10, str);
+
+	if (m_motorUI.m_isAddRotatingMotorMode) {
+		// 점선 펜 생성
+		CPen pen(PS_DASH, 1, RGB(255, 0, 0));
+		CPen* pOldPen = pDC->SelectObject(&pen);
+
+		// 브러시는 NULL로 설정
+		CBrush* pOldBrush = (CBrush*)pDC->SelectStockObject(NULL_BRUSH);
+
+		pDC->Rectangle(motorRect);
+
+		// 펜과 브러시 복원
+		pDC->SelectObject(pOldPen);
+		pDC->SelectObject(pOldBrush);
+	}
 }
 
 void CChildView::DrawRotatingMotor(Motor* motor, CDC* pDC) {
@@ -485,11 +500,19 @@ BOOL CChildView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 	m_panOffset.x += (logicalAfter.x - logicalBefore.x) * m_zoomFactor;
 	m_panOffset.y += (logicalAfter.y - logicalBefore.y) * m_zoomFactor;
 
+	// 6. 줌 배율을 상태 표시줄에 표시
+	CString str;
+	str.Format(_T("🔍 x%.1f"), m_zoomFactor);
+
+	CMainFrame* pMainFrame = (CMainFrame*)AfxGetMainWnd();
+	if (pMainFrame)
+	{
+		pMainFrame->m_wndStatusBar.SetPaneText(2, str);
+	}
+
 	InvalidateRect(m_drawArea, FALSE); // 영역만 갱신
 	return TRUE;
 }
-
-
 
 void CChildView::OnMouseMove(UINT nFlags, CPoint point)
 {
@@ -498,13 +521,12 @@ void CChildView::OnMouseMove(UINT nFlags, CPoint point)
 
 	// 마우스 위치를 상태 표시줄에 표시할 텍스트로 변환
 	CString str;
-	str.Format(_T("Position: X = %d, Y = %d"), logicalPoint.x, logicalPoint.y);
+	str.Format(_T("➕ %d, %dpx"), logicalPoint.x, logicalPoint.y);
 
 	// CMainFrame 포인터 얻기 (정확하게 CMainFrame으로 캐스팅)
 	CMainFrame* pMainFrame = (CMainFrame*)AfxGetMainWnd();
 	if (pMainFrame)
 	{
-		// 상태 표시줄의 4번째 패널에 마우스 위치 텍스트 설정
 		pMainFrame->m_wndStatusBar.SetPaneText(1, str);
 	}
 

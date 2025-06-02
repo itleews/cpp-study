@@ -28,6 +28,7 @@ static UINT indicators[] =
 	//ID_INDICATOR_NUM,
 	//ID_INDICATOR_SCRL,
 	ID_INDICATOR_MOUSEPOS,   // 마우스 위치 표시용 항목
+	ID_INDICATOR_ZOOM,
 };
 
 // CMainFrame 생성/소멸
@@ -68,7 +69,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_wndStatusBar.SetIndicators(indicators, sizeof(indicators)/sizeof(UINT));
 
 	// 각 패널 크기 조정
-    int paneWidths[] = { 150, 500 }; // 각 패널의 너비 설정
+    int paneWidths[] = { 50, 120, 70 }; // 각 패널의 너비 설정
     for (int i = 0; i < sizeof(paneWidths) / sizeof(paneWidths[0]); ++i) {
        m_wndStatusBar.SetPaneInfo(i, m_wndStatusBar.GetItemID(i), SBPS_NORMAL, paneWidths[i]);
     }

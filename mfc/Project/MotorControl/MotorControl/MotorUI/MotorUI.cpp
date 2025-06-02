@@ -162,6 +162,10 @@ void MotorUI::OnAddRotatingMotor() {
 	m_labelStart.SetWindowTextW(_T("모터 위치(x, y)"));
 	m_labelEnd.SetWindowTextW(_T("회전속도(˚/s)"));
 	m_radioXAxis.SetWindowTextW(_T("T축"));
+	m_radioXAxis.ShowWindow(SW_HIDE);
+	m_speed.SetWindowTextW(_T(""));
+	m_speed.EnableWindow(FALSE);
+	m_labelSpeed.SetWindowTextW(_T(""));
 	UpdatePreviewData();
 }
 
@@ -367,6 +371,7 @@ void MotorUI::ResetMotorUI()
 	m_addSubMotorBtn.EnableWindow(TRUE);
 	m_endYEdit.EnableWindow(FALSE);
 	m_height.EnableWindow(TRUE);
+	m_speed.EnableWindow(TRUE);
 	// 라벨 텍스트 초기화
 	m_labelStart.SetWindowTextW(_T("시작 위치(x, y)"));
 	m_labelEnd.SetWindowTextW(_T("끝 위치(x, y)"));
@@ -382,6 +387,7 @@ void MotorUI::ResetMotorUI()
 	m_height.SetWindowTextW(_T("100"));
 	m_speed.SetWindowTextW(_T("100"));
 	// 라디오 버튼 초기화
+	m_radioXAxis.ShowWindow(SW_SHOW);
 	m_radioXAxis.SetWindowTextW(_T("X축"));
 	m_radioXAxis.SetCheck(TRUE);
 	m_radioYAxis.SetCheck(FALSE);
