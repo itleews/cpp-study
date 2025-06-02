@@ -406,13 +406,27 @@ void CChildView::DrawRotatingMotorShape(const Motor& motor, CDC* pDC) {
 	pDC->Ellipse(motorRect);
 	pDC->SelectObject(pOldBrush);
 
-	// 회전 방향선 그리기
 	double angleRad = motor.rotationAngle * PI / 180.0;
 	Matrix3x3 rotationMatrix = m_motorTransform.rotation(angleRad);
 	POINT rotatedVec = rotationMatrix.transformPoint(radius, 0);
 	CPoint end(screenCenter.x + rotatedVec.x, screenCenter.y + rotatedVec.y);
-	pDC->MoveTo(screenCenter);
-	pDC->LineTo(end);
+
+	// 사각형 크기
+	CPoint rotatingPoint(end.x, end.y);
+	int boxSize = motor.motorSize.cx / 2;
+	int halfSize = boxSize / 2;
+
+	// 사각형 그리기 (회전된 점 주변)
+	CPoint topLeft(rotatingPoint.x - halfSize, rotatingPoint.y - halfSize);
+	CPoint topRight(rotatingPoint.x + halfSize, rotatingPoint.y - halfSize);
+	CPoint bottomRight(rotatingPoint.x + halfSize, rotatingPoint.y + halfSize);
+	CPoint bottomLeft(rotatingPoint.x - halfSize, rotatingPoint.y + halfSize);
+
+	pDC->MoveTo(topLeft);
+	pDC->LineTo(topRight);
+	pDC->LineTo(bottomRight);
+	pDC->LineTo(bottomLeft);
+	pDC->LineTo(topLeft);
 
 	// 회전각 텍스트
 	pDC->SetBkMode(TRANSPARENT);
@@ -449,6 +463,8 @@ void CChildView::DrawPreviewRotatingMotor(CDC* pDC) {
 BOOL CChildView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 {
 	const double zoomStep = 0.1;
+	const double minZoom = 1.0;  // 최소 배율
+	const double maxZoom = 15.0;  // 최대 배율
 
 	// 1. 마우스 포인터 기준 논리 좌표 계산
 	CPoint logicalBefore = ScreenToLogical(pt);
@@ -459,16 +475,20 @@ BOOL CChildView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 	else
 		m_zoomFactor *= (1.0 - zoomStep);  // 축소
 
-	// 3. 줌 후 다시 화면 좌표 변환
+	// 3. 줌 배율 제한
+	m_zoomFactor = min(max(m_zoomFactor, minZoom), maxZoom);
+
+	// 4. 줌 후 다시 화면 좌표 변환
 	CPoint logicalAfter = ScreenToLogical(pt);
 
-	// 4. 팬 오프셋 보정
+	// 5. 팬 오프셋 보정
 	m_panOffset.x += (logicalAfter.x - logicalBefore.x) * m_zoomFactor;
 	m_panOffset.y += (logicalAfter.y - logicalBefore.y) * m_zoomFactor;
 
 	InvalidateRect(m_drawArea, FALSE); // 영역만 갱신
 	return TRUE;
 }
+
 
 
 void CChildView::OnMouseMove(UINT nFlags, CPoint point)

@@ -1,9 +1,4 @@
-﻿
-// ChildView.h: CChildView 클래스의 인터페이스
-//
-
-
-#pragma once
+﻿#pragma once
 #include "Motor/MotorManager.h"
 #include "MotorUI/MotorUI.h"
 #include "Motor/MotorTransform.h"
@@ -83,7 +78,7 @@ public:
 	void DrawPreviewRotatingMotor(CDC* pDC);
 	void DrawRotatingMotorShape(const Motor& motor, CDC* pDC);
 	
-	// 생성된 메시지 맵 함수
+// 생성된 메시지 맵 함수
 protected:
 	afx_msg void OnPaint();
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
