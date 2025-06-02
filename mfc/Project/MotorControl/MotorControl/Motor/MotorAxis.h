@@ -27,7 +27,7 @@ public:
 
 	Motor(); // 기본 생성자
 	~Motor(); // 소멸자
-    Motor(int id, AxisType axis, CPoint str, CPoint end, CPoint motor, CSize size, int speed);
+    Motor(int id, AxisType axis, CPoint str, CPoint end, CPoint motor, CSize size, int speed, bool rotating = false, double rotAngle = 0.0, double rotSpeed = 0.0);
     Motor(int id, CPoint motor, CSize size, double speed);
     void MoveMotor(double deltaTime);
     void MoveByParentDelta(const CPoint& delta);

@@ -21,8 +21,16 @@ struct Matrix3x3 {
 
 class MotorTransform {
 public:
+    double m_zoomFactor = 2.5;
+    CRect m_logicalBounds = CRect(0, 0, 1000, 1000);
+    CPoint m_panOffset{ 0, 0 };
+
     Matrix3x3 translation(double x, double y);
     Matrix3x3 rotation(double theta);
     Matrix3x3 scaling(double sx, double sy);
     Matrix3x3 makeTransform(double x, double y, double theta, double sx, double sy);
+    void GetRotatedRectScreenPoints(CPoint centerLogical, CSize sizeLogical, CPoint rotationCenter, double rotationAngleDeg, CPoint outPts[4]);
+    CPoint LogicalToScreen(CPoint logical, CPoint rotationCenter = CPoint(0, 0), double rotationAngle = 0.0);
+    CPoint ScreenToLogical(CPoint screen);
+    CPoint SubToLogical(CPoint subMotorPos, CPoint mainMotorPos);
 };

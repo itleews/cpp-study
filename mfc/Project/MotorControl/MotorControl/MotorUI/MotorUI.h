@@ -18,7 +18,7 @@ public:
 	bool m_isAddSubmotorMode = false;
 	bool m_isAddRotatingMotorMode = false;
 	bool m_isSaveMotorMode = false;
-    CRect m_selectedMotorRect;
+    Motor* m_selectedMotor;
 	Motor m_previewMotor; // 미리보기용 모터
     
     int GetSelectedMotorId() const;

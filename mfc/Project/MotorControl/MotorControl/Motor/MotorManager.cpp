@@ -3,11 +3,11 @@
 #include "../ChildView.h"
 
 // 모터 추가
-Motor* MotorManager::AddMotor(Motor* parentMotor, AxisType axis, CPoint strPos, CPoint endPos, CPoint motorPos, CSize motorSize, int motorSpeed)
+Motor* MotorManager::AddMotor(Motor* parentMotor, AxisType axis, CPoint strPos, CPoint endPos, CPoint motorPos, CSize motorSize, int motorSpeed, bool isRotating, double rotAngle, double rotSpeed)
 {
     nextId = GetMaxId() + 1;
 
-    Motor* newMotor = new Motor(nextId, axis, strPos, endPos, motorPos, motorSize, motorSpeed);
+    Motor* newMotor = new Motor(nextId, axis, strPos, endPos, motorPos, motorSize, motorSpeed, isRotating, rotAngle, rotSpeed);
 
     motorMap[newMotor->m_id] = newMotor;
 	newMotor->parentMotor = parentMotor; // ⭐ 부모 설정

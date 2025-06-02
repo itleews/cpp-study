@@ -14,7 +14,7 @@ public:
 	std::map<int, Motor*> motorMap;
 	std::vector<std::pair<Motor*, int>> motorsWithParents;  // Motor*, parentId Ω÷ ¿˙¿Â
 	
-	Motor* AddMotor(Motor* parentMotor, AxisType axis, CPoint strPos, CPoint endPos, CPoint motorPos, CSize motorSize, int motorSpeed);
+	Motor* AddMotor(Motor* parentMotor, AxisType axis, CPoint strPos, CPoint endPos, CPoint motorPos, CSize motorSize, int motorSpeed, bool isRotating = false, double rotAngle = 0.0, double rotSpeed = 0.0);
 	Motor* AddRotatingMotor(Motor* parentMotor, CPoint motorPos, CSize motorSize, double rotationSpeed);
 
 	void SaveMotorData();

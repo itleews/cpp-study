@@ -49,8 +49,8 @@ bool MotorPreviewPanel::PreviewSubmotor(const MotorPreviewInputData& data, CPoin
     CPoint motorStart = data.parentMotor->motorPos - data.parentMotor->motorSize;
     CPoint motorEnd = data.parentMotor->motorPos + data.parentMotor->motorSize;
 
-    start = SubToLogical(start, motorStart);
-    end = SubToLogical(end, motorStart);
+    start = m_motorTransform.SubToLogical(start, motorStart);
+    end = m_motorTransform.SubToLogical(end, motorStart);
 
     if (start.x < motorStart.x || start.y < motorStart.y ||
         end.x > motorEnd.x || end.y > motorEnd.y) {

@@ -78,7 +78,7 @@ void CChildView::OnPaint()
 	// 도형 그리기
 	for (auto motor : m_motorUI.m_motorManager.rootMotors)
 	{
-		if (motor->isRotating) {
+		if (motor->axis == T && motor->isRotating) {
 			DrawRotatingMotor(motor, &memDC);
 		}
 		else {
@@ -215,21 +215,21 @@ void CChildView::DrawGrid(CDC* pDC)
 	CPen* pOldPen = pDC->SelectObject(&pen); // 기존 펜을 교체
 
 	// 그리드 선을 논리 좌표계 기준으로 그림
-	for (int x = m_logicalBounds.left; x <= m_logicalBounds.right; x += 10)
+	for (int x = m_motorTransform.m_logicalBounds.left; x <= m_motorTransform.m_logicalBounds.right; x += 10)
 	{
 		// 논리 좌표 → 화면 좌표
-		CPoint screenStart = LogicalToScreen(CPoint(x, m_logicalBounds.top));
-		CPoint screenEnd = LogicalToScreen(CPoint(x, m_logicalBounds.bottom));
+		CPoint screenStart = m_motorTransform.LogicalToScreen(CPoint(x, m_motorTransform.m_logicalBounds.top));
+		CPoint screenEnd = m_motorTransform.LogicalToScreen(CPoint(x, m_motorTransform.m_logicalBounds.bottom));
 
 		pDC->MoveTo(screenStart);
 		pDC->LineTo(screenEnd);
 	}
 
-	for (int y = m_logicalBounds.top; y <= m_logicalBounds.bottom; y += 10)
+	for (int y = m_motorTransform.m_logicalBounds.top; y <= m_motorTransform.m_logicalBounds.bottom; y += 10)
 	{
 		// 논리 좌표 → 화면 좌표
-		CPoint screenStart = LogicalToScreen(CPoint(m_logicalBounds.left, y));
-		CPoint screenEnd = LogicalToScreen(CPoint(m_logicalBounds.right, y));
+		CPoint screenStart = m_motorTransform.LogicalToScreen(CPoint(m_motorTransform.m_logicalBounds.left, y));
+		CPoint screenEnd = m_motorTransform.LogicalToScreen(CPoint(m_motorTransform.m_logicalBounds.right, y));
 
 		pDC->MoveTo(screenStart);
 		pDC->LineTo(screenEnd);
@@ -241,17 +241,20 @@ void CChildView::DrawGrid(CDC* pDC)
 
 void CChildView::DrawMotor(Motor* motor, CDC* pDC) {
 	// 화면 좌표로 변환
-	CPoint screenStart = LogicalToScreen(motor->strPos);
-	CPoint screenEnd = LogicalToScreen(motor->endPos);
-	CPoint screenMotorStart = LogicalToScreen(motor->motorPos - motor->motorSize);
-	CPoint screenMotorEnd = LogicalToScreen(motor->motorPos + motor->motorSize);
+	CPoint screenStart = m_motorTransform.LogicalToScreen(motor->strPos);
+	CPoint screenEnd = m_motorTransform.LogicalToScreen(motor->endPos);
+
+	if (motor->parentMotor) {
+		screenStart = m_motorTransform.LogicalToScreen(motor->strPos, motor->parentMotor->motorPos, motor->rotationAngle);
+		screenEnd = m_motorTransform.LogicalToScreen(motor->endPos, motor->parentMotor->motorPos, motor->rotationAngle);
+	}
 
 	pDC->MoveTo(screenStart.x, screenStart.y);
 	pDC->LineTo(screenEnd.x, screenEnd.y);
 
-	CRect motorRect(screenMotorStart.x, screenMotorStart.y, screenMotorEnd.x, screenMotorEnd.y);
-	pDC->FillSolidRect(motorRect, RGB(255, 255, 255));
-	pDC->FrameRect(motorRect, &CBrush(RGB(0, 0, 0)));
+	DrawRotatedRectLogical(pDC, motor->motorPos, motor->motorSize,
+		motor->parentMotor ? motor->parentMotor->motorPos : CPoint(0, 0),
+		motor->parentMotor ? motor->rotationAngle : 0.0);
 
 	pDC->SetBkMode(TRANSPARENT);
 	pDC->SetTextColor(RGB(0, 0, 0));
@@ -262,13 +265,34 @@ void CChildView::DrawMotor(Motor* motor, CDC* pDC) {
 	pDC->TextOutW(screenStart.x, screenStart.y - 30, str);
 }
 
+// Logical 좌표 기준 회전된 사각형 그리기
+void CChildView::DrawRotatedRectLogical(CDC* pDC, CPoint centerLogical, CSize sizeLogical, CPoint rotationCenter, double rotationAngleDeg)
+{
+	CPoint ptsScreen[4];
+	m_motorTransform.GetRotatedRectScreenPoints(centerLogical, sizeLogical, rotationCenter, rotationAngleDeg, ptsScreen);
+
+	// 내부 채우기
+	CBrush brushWhite(RGB(255, 255, 255));
+	CBrush* pOldBrush = pDC->SelectObject(&brushWhite);
+	pDC->Polygon(ptsScreen, 4);
+	pDC->SelectObject(pOldBrush);
+
+	// 테두리
+	CPen penBlack(PS_SOLID, 1, RGB(0, 0, 0));
+	CPen* pOldPen = pDC->SelectObject(&penBlack);
+	pDC->MoveTo(ptsScreen[0]);
+	for (int i = 1; i < 4; ++i) pDC->LineTo(ptsScreen[i]);
+	pDC->LineTo(ptsScreen[0]);
+	pDC->SelectObject(pOldPen);
+}
+
 // 하위 모터를 재귀적으로 그리기 위한 함수
 void CChildView::DrawSubMotor(Motor* parentMotor, CDC* pDC)
 {
 	// 하위 모터가 있는 경우 재귀적으로 그리기
 	for (Motor* child : parentMotor->children)
 	{
-		if (child->isRotating) {
+		if (child->axis == T && child->isRotating) {
 			DrawRotatingMotor(child, pDC);
 		}
 		else {
@@ -287,10 +311,10 @@ void CChildView::DrawPreviewMotor(CDC* pDC) {
 	}
 
 	Motor preMotor = m_motorUI.m_previewMotor;
-	CPoint screenStart = LogicalToScreen(preMotor.strPos);
-	CPoint screenEnd = LogicalToScreen(preMotor.endPos);
-	CPoint screenMotorStart = LogicalToScreen(preMotor.motorPos - preMotor.motorSize);
-	CPoint screenMotorEnd = LogicalToScreen(preMotor.motorPos + preMotor.motorSize);
+	CPoint screenStart = m_motorTransform.LogicalToScreen(preMotor.strPos);
+	CPoint screenEnd = m_motorTransform.LogicalToScreen(preMotor.endPos);
+	CPoint screenMotorStart = m_motorTransform.LogicalToScreen(preMotor.motorPos - preMotor.motorSize);
+	CPoint screenMotorEnd = m_motorTransform.LogicalToScreen(preMotor.motorPos + preMotor.motorSize);
 
 	// 점선 펜 생성
 	CPen pen(PS_DASH, 1, RGB(255, 0, 0));
@@ -320,25 +344,35 @@ void CChildView::DrawPreviewMotor(CDC* pDC) {
 void CChildView::DrawAddSubmotorMode(CDC* pDC)
 {
 	CRect rect = m_drawArea; // 그리드 영역 사용
-	CRect selectedRect = m_motorUI.m_selectedMotorRect;
 
-	if (!selectedRect.IsRectEmpty())
+	if (m_motorUI.m_selectedMotor)
 	{
-		CPoint motorSize = selectedRect.BottomRight() - selectedRect.TopLeft();
-		CPoint LogicalStart = LogicalToScreen(selectedRect.TopLeft());
-		CPoint LogicalEnd = LogicalToScreen(selectedRect.BottomRight());
-		selectedRect = CRect(LogicalStart, LogicalEnd);
-		pDC->ExcludeClipRect(selectedRect);
+		Motor* selectedMotor = m_motorUI.m_selectedMotor;
 
-		// 좌상단 좌표 텍스트 출력
-		CString topLeftText;
-		topLeftText.Format(_T("(0, 0)"));
-		pDC->TextOutW(selectedRect.left, selectedRect.top - 20, topLeftText); // 위쪽에 약간 띄워서 출력
+		// 회전 포함 화면 좌표 얻기
+		CPoint pts[4];
+		m_motorTransform.GetRotatedRectScreenPoints(
+			selectedMotor->motorPos,
+			selectedMotor->motorSize,
+			selectedMotor->parentMotor ? selectedMotor->parentMotor->motorPos : CPoint(0, 0),
+			selectedMotor->parentMotor ? selectedMotor->rotationAngle : 0.0,
+			pts
+		);
 
-		// 우하단 좌표 텍스트 출력
+		// 클리핑 영역 제외 (회전된 모터 부분 제외)
+		CRgn motorRgn;
+		motorRgn.CreatePolygonRgn(pts, 4, WINDING);
+		pDC->SelectClipRgn(&motorRgn, RGN_DIFF);
+
+		// 텍스트 출력
+		CString topLeftText = _T("(0, 0)");
 		CString bottomRightText;
-		bottomRightText.Format(_T("(%d, %d)"), motorSize.x, motorSize.y);
-		pDC->TextOutW(selectedRect.right, selectedRect.bottom + 20, bottomRightText); // 아래쪽에 약간 띄워서 출력
+		int width = selectedMotor->motorSize.cx * 2;
+		int height = selectedMotor->motorSize.cy * 2;
+		bottomRightText.Format(_T("(%d, %d)"), width, height);
+
+		pDC->TextOutW(pts[0].x, pts[0].y - 20, topLeftText);     // 좌상단 위
+		pDC->TextOutW(pts[2].x, pts[2].y + 20, bottomRightText); // 우하단 아래
 	}
 
 	// 그림자 배경 준비
@@ -392,14 +426,14 @@ void CChildView::DrawAddSubmotorMode(CDC* pDC)
 void CChildView::DrawRotatingMotorShape(const Motor& motor, CDC* pDC) {
 	const double PI = 3.14159265358979323846;
 
-	CPoint screenCenter = LogicalToScreen(motor.motorPos);
-	CPoint screenEnd = LogicalToScreen(motor.motorPos + CSize(motor.motorSize.cx, 0));
+	CPoint screenCenter = m_motorTransform.LogicalToScreen(motor.motorPos);
+	CPoint screenEnd = m_motorTransform.LogicalToScreen(motor.motorPos + CSize(motor.motorSize.cx, 0));
 	int radius = (int)std::sqrt(std::pow(screenEnd.x - screenCenter.x, 2) +
 		std::pow(screenEnd.y - screenCenter.y, 2));
 
 	// 원 그리기
-	CPoint screenMotorStart = LogicalToScreen(motor.motorPos - motor.motorSize);
-	CPoint screenMotorEnd = LogicalToScreen(motor.motorPos + motor.motorSize);
+	CPoint screenMotorStart = m_motorTransform.LogicalToScreen(motor.motorPos - motor.motorSize);
+	CPoint screenMotorEnd = m_motorTransform.LogicalToScreen(motor.motorPos + motor.motorSize);
 	CRect motorRect(screenMotorStart, screenMotorEnd);
 	CBrush brush(RGB(255, 255, 255));
 	CBrush* pOldBrush = pDC->SelectObject(&brush);
@@ -482,27 +516,27 @@ BOOL CChildView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 	const double maxZoom = 15.0;  // 최대 배율
 
 	// 1. 마우스 포인터 기준 논리 좌표 계산
-	CPoint logicalBefore = ScreenToLogical(pt);
+	CPoint logicalBefore = m_motorTransform.ScreenToLogical(pt);
 
 	// 2. 줌 인/아웃
 	if (zDelta > 0)
-		m_zoomFactor *= (1.0 + zoomStep);  // 확대
+		m_motorTransform.m_zoomFactor *= (1.0 + zoomStep);  // 확대
 	else
-		m_zoomFactor *= (1.0 - zoomStep);  // 축소
+		m_motorTransform.m_zoomFactor *= (1.0 - zoomStep);  // 축소
 
 	// 3. 줌 배율 제한
-	m_zoomFactor = min(max(m_zoomFactor, minZoom), maxZoom);
+	m_motorTransform.m_zoomFactor = min(max(m_motorTransform.m_zoomFactor, minZoom), maxZoom);
 
 	// 4. 줌 후 다시 화면 좌표 변환
-	CPoint logicalAfter = ScreenToLogical(pt);
+	CPoint logicalAfter = m_motorTransform.ScreenToLogical(pt);
 
 	// 5. 팬 오프셋 보정
-	m_panOffset.x += (logicalAfter.x - logicalBefore.x) * m_zoomFactor;
-	m_panOffset.y += (logicalAfter.y - logicalBefore.y) * m_zoomFactor;
+	m_motorTransform.m_panOffset.x += (logicalAfter.x - logicalBefore.x) * m_motorTransform.m_zoomFactor;
+	m_motorTransform.m_panOffset.y += (logicalAfter.y - logicalBefore.y) * m_motorTransform.m_zoomFactor;
 
 	// 6. 줌 배율을 상태 표시줄에 표시
 	CString str;
-	str.Format(_T("🔍 x%.1f"), m_zoomFactor);
+	str.Format(_T("🔍 x%.1f"), m_motorTransform.m_zoomFactor);
 
 	CMainFrame* pMainFrame = (CMainFrame*)AfxGetMainWnd();
 	if (pMainFrame)
@@ -517,7 +551,7 @@ BOOL CChildView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 void CChildView::OnMouseMove(UINT nFlags, CPoint point)
 {
 	// 마우스 위치 (point.x, point.y)를 비율 좌표로 변환
-	CPoint logicalPoint = ScreenToLogical(point);
+	CPoint logicalPoint = m_motorTransform.ScreenToLogical(point);
 
 	// 마우스 위치를 상태 표시줄에 표시할 텍스트로 변환
 	CString str;
@@ -532,7 +566,7 @@ void CChildView::OnMouseMove(UINT nFlags, CPoint point)
 
 	if (m_isPanning) {
 		CPoint delta = point - m_lastMousePos;
-		m_panOffset += delta;
+		m_motorTransform.m_panOffset += delta;
 		m_lastMousePos = point;
 
 		InvalidateRect(m_drawArea, FALSE); // 해당 영역만 갱신

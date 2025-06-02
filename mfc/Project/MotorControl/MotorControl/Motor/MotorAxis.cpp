@@ -13,8 +13,8 @@ Motor::~Motor()
     children.clear();
 }
 
-Motor::Motor(int id, AxisType axis, CPoint str, CPoint end, CPoint motor, CSize size, int speed)
-	: m_id(id), axis(axis), isRotating(false),
+Motor::Motor(int id, AxisType axis, CPoint str, CPoint end, CPoint motor, CSize size, int speed, bool rotating, double rotAngle, double rotSpeed)
+	: m_id(id), axis(axis), isRotating(rotating), rotationAngle(rotAngle), rotationSpeed(rotSpeed),
 	strPos(str), endPos(end), motorPos(motor),
 	motorSize(size), motorSpeed(speed) {}
 

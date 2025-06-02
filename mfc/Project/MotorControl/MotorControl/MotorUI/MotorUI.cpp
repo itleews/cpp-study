@@ -98,6 +98,34 @@ void MotorUI::OnAddMotor()
 		m_isAddRotatingMotorMode = false;
 		m_motorManager.AddRotatingMotor(m_previewMotor.parentMotor, m_previewMotor.motorPos, m_previewMotor.motorSize, m_previewMotor.rotationSpeed);
 	}
+	else if (m_previewMotor.parentMotor && m_previewMotor.parentMotor->axis == T) {
+		m_motorManager.AddMotor(
+			m_previewMotor.parentMotor, // 부모 모터 (없으면 nullptr)
+			m_previewMotor.axis,
+			m_previewMotor.strPos,
+			m_previewMotor.endPos,
+			m_previewMotor.motorPos,
+			m_previewMotor.motorSize,
+			m_previewMotor.motorSpeed,
+			true,
+			0.0,
+			m_previewMotor.parentMotor->rotationSpeed
+		);
+	}
+	else if (m_previewMotor.parentMotor && m_previewMotor.parentMotor->axis != T && m_previewMotor.parentMotor->isRotating) {
+		m_motorManager.AddMotor(
+			m_previewMotor.parentMotor, // 부모 모터 (없으면 nullptr)
+			m_previewMotor.axis,
+			m_previewMotor.strPos,
+			m_previewMotor.endPos,
+			m_previewMotor.motorPos,
+			m_previewMotor.motorSize,
+			m_previewMotor.motorSpeed,
+			true,
+			m_previewMotor.parentMotor->rotationAngle,
+			m_previewMotor.parentMotor->rotationSpeed
+		);
+	}
 	else {
 		m_motorManager.AddMotor(
 			m_previewMotor.parentMotor, // 부모 모터 (없으면 nullptr)
@@ -123,7 +151,7 @@ void MotorUI::OnAddSubMotor() {
 		return;
 	}
 	m_isAddSubmotorMode = true;
-	m_selectedMotorRect.SetRect(0, 0, 0, 0);
+	m_selectedMotor = nullptr;
 	UpdatePreviewData();
 	m_previewMotor.parentMotor = nullptr;
 	m_previewMotor.strPos = CPoint(0, 0);
@@ -471,9 +499,7 @@ void MotorUI::OnNMClickMotorList(NMHDR* pNMHDR, LRESULT* pResult)
 		Motor* selectedMotor = GetSelectedMotor(motorIdInt);
 
 		if (selectedMotor) {
-			CPoint topLeft = selectedMotor->motorPos - selectedMotor->motorSize;
-			CPoint bottomRight = selectedMotor->motorPos + selectedMotor->motorSize;
-			m_selectedMotorRect.SetRect(topLeft, bottomRight);
+			m_selectedMotor = selectedMotor;
 		}
 	}
 
