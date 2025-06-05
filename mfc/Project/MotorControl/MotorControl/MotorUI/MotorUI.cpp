@@ -2,15 +2,6 @@
 #include "MotorUI.h"
 #include "../ChildView.h"
 
-/*TODO:
-*	1. 회전 모터 편집 및 미리보기 기능 추가
-*		- 속성 변경, 방향선 표시, 미리보기 반영
-*	2. 회전 모터 내부 사각형 그리기
-*		- 회전 행렬로 사각형 회전 적용
-*	3. 회전 모터를 하위 모터로 추가 가능하도록 구현
-*		- 계층 구조 반영, 저장/불러오기 처리 포함
-*/
-
 BEGIN_MESSAGE_MAP(MotorUI, CWnd)
 	ON_WM_CREATE()
 	ON_WM_SIZE()
@@ -122,7 +113,7 @@ void MotorUI::OnAddMotor()
 			m_previewMotor.motorSize,
 			m_previewMotor.motorSpeed,
 			true,
-			m_previewMotor.parentMotor->rotationAngle,
+			0.0,
 			m_previewMotor.parentMotor->rotationSpeed
 		);
 	}
@@ -306,8 +297,62 @@ void MotorUI::DeleteMotorRecursive(Motor* motor)
 	delete motor;
 }
 
+CString MotorUI::FilterNumericInput(const CString& input)
+{
+	CString result;
+	bool dotUsed = false;
+	int decimalCount = 0;
+
+	for (int i = 0; i < input.GetLength(); ++i) {
+		TCHAR ch = input[i];
+		if (_istdigit(ch)) {
+			if (dotUsed) {
+				if (decimalCount < 2) {
+					result += ch;
+					decimalCount++;
+				}
+			}
+			else {
+				result += ch;
+			}
+		}
+		else if (ch == '-' && i == 0) {
+			result += ch;
+		}
+		else if (ch == '.' && !dotUsed) {
+			result += ch;
+			dotUsed = true;
+		}
+		// 그 외 문자 무시
+	}
+
+	// double로 변환해서 비교
+	double val = _ttof(result);
+	if (val > 1000.0) {
+		result = _T("1000");
+	}
+	else if (val < -1000.0) {
+		result = _T("-1000");
+	}
+
+	return result;
+}
+
+
 void MotorUI::OnEditChanged()
 {
+	for (auto edit : m_numericEdits) {
+		if (!::IsWindow(edit->GetSafeHwnd()))  // 윈도우가 유효한지 체크
+			return;  // 생성 안 됐으면 함수 종료
+
+		CString text;
+		edit->GetWindowText(text);
+		CString filtered = FilterNumericInput(text);
+		if (text != filtered) {
+			edit->SetWindowText(filtered);
+			edit->SetSel(filtered.GetLength(), filtered.GetLength());
+		}
+	}
 	UpdatePreviewData();
 }
 
@@ -533,6 +578,7 @@ void MotorUI::CreateGroupBoxes()
 
 void MotorUI::CreateInputFields()
 {
+	m_numericEdits = {&m_startXEdit, &m_startYEdit, &m_endXEdit, &m_endYEdit, &m_width, &m_height, &m_speed};
 	CreateEdit(m_startXEdit, 2001, _T("0"));
 	CreateEdit(m_startYEdit, 2002, _T("100"));
 	CreateEdit(m_endXEdit, 2003, _T("1000"));
@@ -583,8 +629,11 @@ void MotorUI::CreateControlButtons()
 
 void MotorUI::CreateEdit(CEdit& edit, int id, const CString& defaultText)
 {
-	edit.Create(WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, CRect(0, 0, 0, 0), this, id);
+	edit.Create(WS_CHILD | WS_VISIBLE | WS_BORDER, CRect(0, 0, 0, 0), this, id);
 	edit.SetWindowTextW(defaultText);
+
+	// 숫자 필터 대상이면 vector에 추가
+	m_numericEdits.push_back(&edit);
 }
 
 void MotorUI::CreateStatic(CStatic& label, const CString& text)

@@ -1,6 +1,7 @@
 #pragma once
 #include <afxwin.h>
 #include "../Motor/MotorManager.h"
+#include "../Motor/MotorTransform.h"
 #include "MotorListPanel.h"
 #include "MotorPreviewPanel.h"
 #include "MotorMovePanel.h"
@@ -13,12 +14,13 @@ public:
 	MotorListPanel m_motorListPanel;
 	MotorPreviewPanel m_motorPreviewPanel;
 	MotorMovePanel m_motorMovePanel;
+	MotorTransform m_motorTransform;
     
 	bool m_isAddMotorMode = false;
 	bool m_isAddSubmotorMode = false;
 	bool m_isAddRotatingMotorMode = false;
 	bool m_isSaveMotorMode = false;
-    Motor* m_selectedMotor;
+    Motor* m_selectedMotor = nullptr;
 	Motor m_previewMotor; // 미리보기용 모터
     
     int GetSelectedMotorId() const;
@@ -33,6 +35,7 @@ private:
     CMFCListCtrl m_motorListCtrl;
     CButton m_addMotorBtn, m_removeMotorBtn, m_saveMotorBtn, m_loadMotorBtn, m_addSubMotorBtn, m_addRotMotorBtn;
     CButton m_groupInput, m_groupButtons, m_groupControl;
+    std::vector<CEdit*> m_numericEdits;
     CEdit m_startXEdit, m_startYEdit, m_endXEdit, m_endYEdit, m_width, m_height, m_speed;
     CButton m_radioXAxis, m_radioYAxis;
     CButton m_controlBtn[4]; // 조작부 버튼들
@@ -50,6 +53,7 @@ private:
     void CreateButton(CButton& button, int id, const CString& text);
     void UpdatePreviewData();
     void ResetMotorUI();
+    CString FilterNumericInput(const CString& input);
 
 protected:
     // UI 생성 함수

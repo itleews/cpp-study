@@ -20,15 +20,33 @@ Motor MotorPreviewPanel::UpdatePreview(const MotorPreviewInputData& data)
         return {};
     }
 
-    Motor* parentMotor = data.parentMotor;
+    CRect curRect(m_start.x, m_start.y, m_end.x, m_end.y);
+    curRect.NormalizeRect();  // 좌상단-우하단 정렬
 
-    if (data.isAddSubmotorMode) {
-        if(!PreviewSubmotor(data, m_start, m_end))
-            return {};
+    if (curRect.Width() > m_motorTransform.m_logicalBounds.Width() || curRect.Height() > m_motorTransform.m_logicalBounds.Height()) {
+        CRect newRect(0, 0, max(curRect.Width() + 10, m_motorTransform.m_logicalBounds.Width() + 10), max(curRect.Height() + 10, m_motorTransform.m_logicalBounds.Height() + 10));
+        m_motorTransform.SetLogicalBounds(newRect);
     }
 
-    int motorX = (data.axis == X) ? (m_end.x - m_start.x) / 2 + m_start.x : m_end.x;
-    int motorY = (data.axis == X) ? m_start.y : (m_end.y - m_start.y) / 2 + m_start.y;
+    Motor* parentMotor = data.parentMotor;
+
+    if (data.isAddSubmotorMode && !PreviewSubmotor(data, m_start, m_end)) {
+        return {};
+    }
+
+    int motorX = 0, motorY = 0;
+    switch (data.axis) {
+    case (X):
+        motorX = (m_end.x - m_start.x) / 2 + m_start.x;
+        motorY = m_start.y;
+        break;
+    case (Y):
+        motorX = m_end.x;
+        motorY = (m_end.y - m_start.y) / 2 + m_start.y;
+        break;
+    default:
+        break;
+    }
 
     previewMotor.parentMotor = parentMotor;
 	previewMotor.axis = data.axis;
@@ -49,14 +67,14 @@ bool MotorPreviewPanel::PreviewSubmotor(const MotorPreviewInputData& data, CPoin
     CPoint motorStart = data.parentMotor->motorPos - data.parentMotor->motorSize;
     CPoint motorEnd = data.parentMotor->motorPos + data.parentMotor->motorSize;
 
-    start = m_motorTransform.SubToLogical(start, motorStart);
-    end = m_motorTransform.SubToLogical(end, motorStart);
+    start = m_motorTransform.SubToLogical(start, motorStart, data.parentMotor->motorPos, 180.0);
+    end = m_motorTransform.SubToLogical(end, motorStart, data.parentMotor->motorPos, 180.0);
 
-    if (start.x < motorStart.x || start.y < motorStart.y ||
+   /* if (start.x < motorStart.x || start.y < motorStart.y ||
         end.x > motorEnd.x || end.y > motorEnd.y) {
         AfxMessageBox(_T("하위 모터는 상위 모터의 영역 내에 있어야 합니다."));
         return false;
-    }
+    }*/
 	return true;
 }
 
