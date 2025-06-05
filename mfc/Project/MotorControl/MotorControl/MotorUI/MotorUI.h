@@ -54,7 +54,7 @@ private:
     void UpdatePreviewData();
     void ResetMotorUI();
     CString FilterNumericInput(const CString& input);
-
+    
 protected:
     // UI 생성 함수
     CChildView* m_pParentView = nullptr;

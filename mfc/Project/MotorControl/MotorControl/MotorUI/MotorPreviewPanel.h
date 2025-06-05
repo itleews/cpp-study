@@ -22,6 +22,7 @@ class MotorPreviewPanel {
 public:
 	MotorTransform m_motorTransform;
     Motor UpdatePreview(const MotorPreviewInputData& data);
+    CPoint GetRotationCenter(Motor* motor);
 private:
     CPoint m_start, m_end;
     CSize m_motorSize;

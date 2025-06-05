@@ -555,7 +555,6 @@ void MotorUI::OnNMClickMotorList(NMHDR* pNMHDR, LRESULT* pResult)
 	*pResult = 0;
 }
 
-
 void MotorUI::CreateListControl()
 {
 	m_motorListCtrl.Create(WS_CHILD | WS_VISIBLE | LVS_REPORT, CRect(0, 0, 0, 0), this, 1);

@@ -241,26 +241,12 @@ void CChildView::DrawGrid(CDC* pDC)
 	pDC->SelectObject(pOldPen);
 }
 
-CPoint GetRotationCenter(Motor* motor) {
-	// T축이면 그 위치가 회전 중심
-	if (motor->axis == T) {
-		return motor->motorPos;
-	}
-
-	// 회전 중이면, 부모의 부모를 타고 다시 탐색
-	if (motor->axis != T && motor->isRotating) {
-		return GetRotationCenter(motor->parentMotor);
-	}
-
-	return CPoint(0, 0); // 기본값
-}
-
 void CChildView::DrawMotor(Motor* motor, CDC* pDC) {
 	// 화면 좌표로 변환
 	CPoint screenStart = m_motorTransform.LogicalToScreen(motor->strPos);
 	CPoint screenEnd = m_motorTransform.LogicalToScreen(motor->endPos);
 
-	CPoint rotationCenter = GetRotationCenter(motor);
+	CPoint rotationCenter = m_motorUI.m_motorPreviewPanel.GetRotationCenter(motor);
 
 	if (motor->parentMotor) {
 		screenStart = m_motorTransform.LogicalToScreen(motor->strPos, rotationCenter, motor->rotationAngle);

@@ -67,8 +67,10 @@ bool MotorPreviewPanel::PreviewSubmotor(const MotorPreviewInputData& data, CPoin
     CPoint motorStart = data.parentMotor->motorPos - data.parentMotor->motorSize;
     CPoint motorEnd = data.parentMotor->motorPos + data.parentMotor->motorSize;
 
-    start = m_motorTransform.SubToLogical(start, motorStart, data.parentMotor->motorPos, 180.0);
-    end = m_motorTransform.SubToLogical(end, motorStart, data.parentMotor->motorPos, 180.0);
+	CPoint rotationCenter = GetRotationCenter(data.parentMotor);
+
+    start = m_motorTransform.SubToLogical(start, motorStart, rotationCenter, (data.parentMotor->axis != T && data.parentMotor->isRotating) ? data.parentMotor->rotationAngle : 0.0);
+    end = m_motorTransform.SubToLogical(end, motorStart, rotationCenter, (data.parentMotor->axis != T && data.parentMotor->isRotating) ? data.parentMotor->rotationAngle : 0.0);
 
    /* if (start.x < motorStart.x || start.y < motorStart.y ||
         end.x > motorEnd.x || end.y > motorEnd.y) {
@@ -102,4 +104,18 @@ Motor MotorPreviewPanel::PreviewRotatingmotor(const MotorPreviewInputData& data)
     rotatingMotor.isValid = true;
 
     return rotatingMotor;
+}
+
+CPoint MotorPreviewPanel::GetRotationCenter(Motor* motor) {
+    // T축이면 그 위치가 회전 중심
+    if (motor->axis == T) {
+        return motor->motorPos;
+    }
+
+    // 회전 중이면, 부모의 부모를 타고 다시 탐색
+    if (motor->axis != T && motor->isRotating) {
+        return GetRotationCenter(motor->parentMotor);
+    }
+
+    return CPoint(0, 0); // 기본값
 }
