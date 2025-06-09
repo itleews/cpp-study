@@ -100,20 +100,8 @@ CPoint MotorTransform::ScreenToLogical(CPoint screen)
 
 CPoint MotorTransform::SubToLogical(CPoint subMotorPos, CPoint mainMotorPos, CPoint rotationCenter, double rotationAngle)
 {
-    double rotationAngleRad = rotationAngle * PI / 180.0;
-
-    // 1. translation: 메인 모터 위치만큼 이동
     Matrix3x3 translationMatrix = translation(mainMotorPos.x, mainMotorPos.y);
     POINT translatedPoint = translationMatrix.transformPoint(subMotorPos.x, subMotorPos.y);
-
-    //// 2. 회전 중심 기준으로 회전 행렬 구성
-    //Matrix3x3 toCenter = translation(-rotationCenter.x, -rotationCenter.y);
-    //Matrix3x3 rotate = rotation(rotationAngleRad);
-    //Matrix3x3 back = translation(rotationCenter.x, rotationCenter.y);
-    //Matrix3x3 rotationTransform = back * rotate * toCenter;
-
-    //// 3. 회전 행렬을 번역된 포인트에 적용
-    //POINT finalPoint = rotationTransform.transformPoint(translatedPoint.x, translatedPoint.y);
 
     return CPoint(translatedPoint.x, translatedPoint.y);
 }
