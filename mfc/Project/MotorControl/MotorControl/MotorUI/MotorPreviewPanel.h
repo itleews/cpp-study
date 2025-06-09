@@ -14,6 +14,7 @@ struct MotorPreviewInputData {
 
     Motor* parentMotor;
 
+    bool isRotating;
     bool isValid;
 };
 

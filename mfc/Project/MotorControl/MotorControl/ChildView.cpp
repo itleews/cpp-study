@@ -319,6 +319,7 @@ void CChildView::DrawPreviewMotor(CDC* pDC) {
 	CPoint screenEnd = m_motorTransform.LogicalToScreen(preMotor.endPos);
 	CPoint screenMotorStart = m_motorTransform.LogicalToScreen(preMotor.motorPos - preMotor.motorSize);
 	CPoint screenMotorEnd = m_motorTransform.LogicalToScreen(preMotor.motorPos + preMotor.motorSize);
+    CPoint rotationCenter = m_motorUI.m_motorPreviewPanel.GetRotationCenter(&preMotor);
 
 	// 점선 펜 생성
 	CPen pen(PS_DASH, 1, RGB(255, 0, 0));
@@ -327,15 +328,28 @@ void CChildView::DrawPreviewMotor(CDC* pDC) {
 	// 브러시는 NULL로 설정
 	CBrush* pOldBrush = (CBrush*)pDC->SelectStockObject(NULL_BRUSH);
 
-	// 변환된 좌표로 사각형 그리기
-	CRect previewRect;
-	if (m_motorUI.m_previewMotor.axis == X) {
-		previewRect.SetRect(screenStart.x, screenMotorStart.y - 10, screenEnd.x, screenMotorEnd.y + 10);
-	}
-	else if (m_motorUI.m_previewMotor.axis == Y) {
-		previewRect.SetRect(screenMotorStart.x - 10, screenStart.y, screenMotorEnd.x + 10, screenEnd.y);
-	}
-	pDC->Rectangle(previewRect);
+	int width = (preMotor.axis == X)
+		? (preMotor.endPos.x - preMotor.strPos.x) / 2
+		: preMotor.motorSize.cx + 10;
+
+	int height = (preMotor.axis == Y)
+		? (preMotor.endPos.y - preMotor.strPos.y) / 2
+		: preMotor.motorSize.cy + 10;
+
+	CSize rotatedSize(width, height);
+
+	// 회전 포함 화면 좌표 얻기
+	CPoint points[4];
+	m_motorTransform.GetRotatedRectScreenPoints(
+		preMotor.motorPos,
+		rotatedSize,
+		rotationCenter,
+		preMotor.rotationAngle,
+		points
+	);
+
+	// 회전된 사각형 그리기
+	pDC->Polygon(points, 4);
 
 	// 펜과 브러시 복원
 	pDC->SelectObject(pOldPen);
@@ -353,13 +367,15 @@ void CChildView::DrawAddSubmotorMode(CDC* pDC)
 	{
 		Motor* selectedMotor = m_motorUI.m_selectedMotor;
 
+		CPoint rotationCenter = m_motorUI.m_motorPreviewPanel.GetRotationCenter(selectedMotor);
+
 		// 회전 포함 화면 좌표 얻기
 		CPoint pts[4];
 		m_motorTransform.GetRotatedRectScreenPoints(
 			selectedMotor->motorPos,
 			selectedMotor->motorSize,
-			(selectedMotor->parentMotor && selectedMotor->parentMotor->axis == T) ? selectedMotor->parentMotor->motorPos : CPoint(0, 0),
-			(selectedMotor->parentMotor && selectedMotor->parentMotor->axis == T) ? selectedMotor->rotationAngle : 0.0,
+			rotationCenter,
+			(selectedMotor->parentMotor && selectedMotor->axis != T) ? selectedMotor->rotationAngle : 0.0,
 			pts
 		);
 
@@ -417,14 +433,14 @@ void CChildView::DrawAddSubmotorMode(CDC* pDC)
 		_T("맑은 고딕")
 	);
 	CFont* pOldFont = pDC->SelectObject(&bigFont);
-	pDC->SetTextColor(RGB(255, 0, 0));  // ⬅️ 여기에 있어야 함
-	pDC->SetBkMode(TRANSPARENT);       // 배경 투명 설정도 같이 해주면 좋아!
+	pDC->SetTextColor(RGB(255, 0, 0));
+	pDC->SetBkMode(TRANSPARENT);
 
 	CString msg = _T("모터 목록에서 하위 모터를 추가할 상위 모터를 선택하세요");
 	CSize textSize = pDC->GetTextExtent(msg);
 	pDC->TextOutW((rect.left + rect.right) / 2, rect.top + 50, msg);
 
-	pDC->SelectObject(pOldFont);  // 폰트 복원도 잊지 마!
+	pDC->SelectObject(pOldFont);
 }
 
 void CChildView::DrawRotatingMotorShape(const Motor& motor, CDC* pDC) {

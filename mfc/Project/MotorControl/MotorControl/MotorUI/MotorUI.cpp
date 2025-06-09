@@ -7,6 +7,7 @@ BEGIN_MESSAGE_MAP(MotorUI, CWnd)
 	ON_WM_SIZE()
 	ON_WM_TIMER()
 	ON_WM_DESTROY()
+	ON_WM_CTLCOLOR()
 	ON_BN_CLICKED(1001, &MotorUI::OnAddMotor) // 추가 버튼 클릭
 	ON_BN_CLICKED(1002, &MotorUI::OnRemoveMotor) // 삭제 버튼 클릭
 	ON_BN_CLICKED(1003, &MotorUI::OnSaveMotor) // 모터 저장 버튼 클릭
@@ -69,6 +70,7 @@ void MotorUI::OnAddMotor()
 {
 	if (!m_isAddMotorMode && !m_isAddSubmotorMode && !m_isAddRotatingMotorMode) {
 		m_isAddMotorMode = true;
+		m_groupInput.SetWindowTextW(_T("신규 모터 추가"));
 		m_addMotorBtn.SetWindowText(_T("완료"));
 		m_removeMotorBtn.SetWindowText(_T("취소"));
 		m_addSubMotorBtn.EnableWindow(FALSE);
@@ -78,7 +80,6 @@ void MotorUI::OnAddMotor()
 
 	// 하위 모터 조건 검사
 	if (m_isAddSubmotorMode && m_previewMotor.parentMotor == nullptr) {
-		AfxMessageBox(_T("하위 모터를 추가할 상위 모터를 선택하세요!"));
 		return;
 	}
 
@@ -113,7 +114,7 @@ void MotorUI::OnAddMotor()
 			m_previewMotor.motorSize,
 			m_previewMotor.motorSpeed,
 			true,
-			0.0,
+			m_previewMotor.rotationAngle,
 			m_previewMotor.parentMotor->rotationSpeed
 		);
 	}
@@ -138,7 +139,7 @@ void MotorUI::OnAddMotor()
 void MotorUI::OnAddSubMotor() {
 	// 하위 모터 추가 모드
 	if (m_motorManager.rootMotors.empty()) {
-		AfxMessageBox(_T("하위 모터를 추가할 상위 모터가 없습니다."));
+		m_labelWarning.SetWindowTextW(_T("상위 모터 없음!"));
 		return;
 	}
 	m_isAddSubmotorMode = true;
@@ -257,7 +258,7 @@ void MotorUI::OnRemoveMotor()
 
 	if (selectedMotorIds.empty())
 	{
-		AfxMessageBox(_T("삭제할 모터를 선택하세요!"));
+		m_labelWarning.SetWindowTextW(_T("삭제할 모터 선택!"));
 		return;
 	}
 
@@ -265,6 +266,7 @@ void MotorUI::OnRemoveMotor()
 
 	// 삭제 후 UI 갱신
 	m_motorListPanel.DisplayMotorTree(m_motorListCtrl, m_motorManager.rootMotors);
+	ResetMotorUI();
 }
 
 void MotorUI::DeleteMotorRecursive(Motor* motor)
@@ -388,9 +390,11 @@ void MotorUI::UpdatePreviewData()
 
 	if (!m_previewMotor.isValid) {
 		m_addMotorBtn.EnableWindow(false);
+		m_labelWarning.SetWindowTextW(_T("올바르지 않은 입력"));
 	}
 	else {
 		m_addMotorBtn.EnableWindow(true);
+		m_labelWarning.SetWindowTextW(_T(""));
 	}
 }
 
@@ -451,6 +455,7 @@ void MotorUI::ResetMotorUI()
 	m_labelSize.SetWindowTextW(_T("크기(W, H)"));
 	m_labelAxis.SetWindowTextW(_T("기준 축"));
 	m_labelSpeed.SetWindowTextW(_T("모터 속도"));
+	m_labelWarning.SetWindowTextW(_T("\"추가\"로 시작"));
 	// 입력 필드 초기화
 	m_startXEdit.SetWindowTextW(_T("0"));
 	m_startYEdit.SetWindowTextW(_T("100"));
@@ -603,6 +608,19 @@ void MotorUI::CreateLabels()
 	CreateStatic(m_labelSize, _T("크기(W, H)"));
 	CreateStatic(m_labelAxis, _T("기준 축"));
 	CreateStatic(m_labelSpeed, _T("모터 속도"));
+	m_labelWarning.Create(_T("\"추가\"로 시작"), WS_CHILD | WS_VISIBLE | SS_CENTER, CRect(0, 0, 0, 0), this);
+}
+
+HBRUSH MotorUI::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+{
+	if (pWnd->GetSafeHwnd() == m_labelWarning.GetSafeHwnd())
+	{
+		pDC->SetTextColor(RGB(255, 0, 0));
+		pDC->SetBkMode(OPAQUE); // 투명 대신 불투명으로 바꿔서 배경 채우기
+		static CBrush brushBackground(RGB(255, 255, 255)); // 배경색(흰색 등)으로 채우기
+		return (HBRUSH)brushBackground.GetSafeHandle();
+	}
+	return CWnd::OnCtlColor(pDC, pWnd, nCtlColor);
 }
 
 void MotorUI::CreateMotorButtons()
@@ -698,6 +716,7 @@ void MotorUI::OnSize(UINT nType, int cx, int cy)
 	m_labelSize.SetWindowPos(nullptr, inputStartX + groupPadding, row3Y, labelWidth, fieldHeight, SWP_NOZORDER);
 	m_width.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap, row3Y, fieldWidth, fieldHeight, SWP_NOZORDER);
 	m_height.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap + fieldWidth + colGap, row3Y, fieldWidth, fieldHeight, SWP_NOZORDER);
+	m_labelWarning.SetWindowPos(nullptr, inputStartX + groupPadding + labelWidth + colGap + labelWidth + colGap, row3Y, labelWidth, btnHeight, SWP_NOZORDER);
 
 	int row4Y = row3Y + fieldHeight + rowGap;
 	m_labelAxis.SetWindowPos(nullptr, inputStartX + groupPadding, row4Y, labelWidth, fieldHeight, SWP_NOZORDER);

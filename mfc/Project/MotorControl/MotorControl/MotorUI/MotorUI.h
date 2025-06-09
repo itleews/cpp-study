@@ -39,7 +39,7 @@ private:
     CEdit m_startXEdit, m_startYEdit, m_endXEdit, m_endYEdit, m_width, m_height, m_speed;
     CButton m_radioXAxis, m_radioYAxis;
     CButton m_controlBtn[4]; // 조작부 버튼들
-    CStatic m_labelStart, m_labelEnd, m_labelSize, m_labelAxis, m_labelSpeed;
+    CStatic m_labelStart, m_labelEnd, m_labelSize, m_labelAxis, m_labelSpeed, m_labelWarning;
 
     void CreateListControl();
     void CreateInputFields();
@@ -78,5 +78,6 @@ protected:
 	afx_msg void OnBnClickedControlDownButton();
 	afx_msg void OnBnClickedControlLeftButton();
 	afx_msg void OnBnClickedControlRightButton();
+    afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
     DECLARE_MESSAGE_MAP()
 };

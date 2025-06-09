@@ -55,11 +55,16 @@ Motor MotorPreviewPanel::UpdatePreview(const MotorPreviewInputData& data)
     previewMotor.motorSpeed = speed;
     previewMotor.strPos = m_start;
     previewMotor.endPos = m_end;
-	previewMotor.isValid = true;
+    previewMotor.isValid = true;
+    if (parentMotor) {
+        previewMotor.isRotating = parentMotor->isRotating;
+        previewMotor.rotationAngle = (parentMotor->axis == T) ? 0.0 : parentMotor->rotationAngle;
+    }
 
     return previewMotor;
 }
 
+// TODO: 회전 모터의 하위 모터에 하위 모터를 추가할 때, 회전되지 않는 문제 해결 필요
 bool MotorPreviewPanel::PreviewSubmotor(const MotorPreviewInputData& data, CPoint& start, CPoint& end)
 {
     if (!data.parentMotor) return false;
@@ -69,14 +74,13 @@ bool MotorPreviewPanel::PreviewSubmotor(const MotorPreviewInputData& data, CPoin
 
 	CPoint rotationCenter = GetRotationCenter(data.parentMotor);
 
-    start = m_motorTransform.SubToLogical(start, motorStart, rotationCenter, (data.parentMotor->axis != T && data.parentMotor->isRotating) ? data.parentMotor->rotationAngle : 0.0);
-    end = m_motorTransform.SubToLogical(end, motorStart, rotationCenter, (data.parentMotor->axis != T && data.parentMotor->isRotating) ? data.parentMotor->rotationAngle : 0.0);
+    start = m_motorTransform.SubToLogical(start, motorStart);
+    end = m_motorTransform.SubToLogical(end, motorStart);
 
-   /* if (start.x < motorStart.x || start.y < motorStart.y ||
+    if (start.x < motorStart.x || start.y < motorStart.y ||
         end.x > motorEnd.x || end.y > motorEnd.y) {
-        AfxMessageBox(_T("하위 모터는 상위 모터의 영역 내에 있어야 합니다."));
         return false;
-    }*/
+    }
 	return true;
 }
 
@@ -92,7 +96,6 @@ Motor MotorPreviewPanel::PreviewRotatingmotor(const MotorPreviewInputData& data)
     }
 
     if (motorSize.x == 0) {
-        AfxMessageBox(_T("유효하지 않은 값입니다. 모터 사이즈는 0보다 커야 합니다."));
         return {};
     }
 
