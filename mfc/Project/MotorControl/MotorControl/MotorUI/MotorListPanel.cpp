@@ -44,6 +44,9 @@ void MotorListPanel::BuildDisplayRows(Motor* node, int depth, const CPoint& pare
 	};
 	outRows.push_back(row);
 
+	if (!node)
+		return;
+	
 	for (Motor* child : node->children)
 	{
 		CPoint newOrigin = node->motorPos - node->motorSize;

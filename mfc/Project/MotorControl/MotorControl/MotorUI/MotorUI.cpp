@@ -417,11 +417,16 @@ void MotorUI::OnSaveMotor()
 
 void MotorUI::OnLoadMotor()
 {
-	m_motorManager.LoadMotorData();
-	// 리스트 컨트롤 초기화
-	m_motorListCtrl.DeleteAllItems();
+	std::vector<int> allMotorIds;
 
-	// 모터 리스트에 있는 모든 모터를 리스트 컨트롤에 추가
+	for (auto root : m_motorManager.rootMotors) {
+		allMotorIds.push_back(root->m_id);
+	}
+	m_motorManager.RemoveMotors(allMotorIds);
+
+	m_motorManager.rootMotors.clear();
+	m_motorManager.LoadMotorData();
+
 	m_motorListPanel.DisplayMotorTree(m_motorListCtrl, m_motorManager.rootMotors);
 
 	if (m_pParentView)
@@ -446,6 +451,7 @@ void MotorUI::ResetMotorUI()
 	m_addMotorBtn.EnableWindow(TRUE);
 	m_addRotMotorBtn.EnableWindow(TRUE);
 	m_addSubMotorBtn.EnableWindow(TRUE);
+	m_endXEdit.EnableWindow(TRUE);
 	m_endYEdit.EnableWindow(FALSE);
 	m_height.EnableWindow(TRUE);
 	m_speed.EnableWindow(TRUE);

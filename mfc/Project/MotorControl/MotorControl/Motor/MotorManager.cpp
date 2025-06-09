@@ -137,7 +137,7 @@ void MotorManager::SaveMotorData() {
         }
 
         // 헤더 작성
-        file << "ID,축,시작 위치,끝 위치,모터 현재 위치,모터 절대 위치,모터 크기,모터 속도,상위 모터\n";
+        file << "ID,축,시작 위치,끝 위치,모터 현재 위치,모터 절대 위치,모터 크기,모터 속도,상위 모터,회전 여부,회전각,회전속도\n";
 
         // 모터 리스트 저장 (재귀적으로 모든 모터 저장)
         for (auto motor : rootMotors) {
@@ -171,8 +171,11 @@ void MotorManager::SaveMotorRecursive(std::ofstream& file, Motor* motor, CPoint 
         << "\"" << relativeMotor.x << ";" << relativeMotor.y << "\","  // 모터 상대 위치
         << "\"" << motor->motorPos.x << ";" << motor->motorPos.y << "\","  // 모터 절대 위치
         << "\"" << motor->motorSize.cx << ";" << motor->motorSize.cy << "\","  // 모터 사이즈
-        << motor->motorSpeed << ","                   // 속도
-        << (motor->parentMotor ? std::to_string(motor->parentMotor->m_id) : "");  // 부모 ID
+        << motor->motorSpeed << "," // 모터 이동 속도
+        << (motor->parentMotor ? std::to_string(motor->parentMotor->m_id) : "") << "," // 부모 ID
+        << motor->isRotating << "," // 모터 회전 여부
+        << motor->rotationAngle << "," // 회전각
+        << motor->rotationSpeed; // 회전 속도
 
     file << oss.str() << "\n";  
 
@@ -181,12 +184,13 @@ void MotorManager::SaveMotorRecursive(std::ofstream& file, Motor* motor, CPoint 
     }  
 }
 
-
 // 불러오기 기능 (CSV 형식으로 불러오기)
 void MotorManager::LoadMotorData() {
     CFileDialog fileDialog(TRUE, _T("csv"), NULL, OFN_FILEMUSTEXIST, _T("CSV Files (*.csv)|*.csv|All Files (*.*)|*.*||"));
 
     if (fileDialog.DoModal() == IDOK) {
+        motorMap.clear();
+        motorsWithParents.clear();
         rootMotors.clear();
 
         CString filePath = fileDialog.GetPathName();
@@ -289,6 +293,15 @@ Motor* MotorManager::ParseMotor(const std::string& line, int& outParentId) {
     std::getline(iss, token, ',');  // 부모 ID
     outParentId = token.empty() ? -1 : std::stoi(token);
 
+	std::getline(iss, token, ','); // 모터 회전 여부
+	bool isRotating = (token == "1" || token == "true" || token == "TRUE");
+
+	std::getline(iss, token, ','); // 회전각
+	double rotationAngle = std::stod(token);
+
+	std::getline(iss, token, ','); // 회전 속도
+	double rotationSpeed = std::stod(token);
+
     // 부모 ID가 있으면 모터 좌표 수정
     if (outParentId != -1) {
         auto it = motorMap.find(outParentId);
@@ -301,9 +314,15 @@ Motor* MotorManager::ParseMotor(const std::string& line, int& outParentId) {
 		}
     }
 
-    Motor* motor = new Motor(id, axis,
-        strPos, endPos, relativeMotorPos, motorSize, motorSpeed);
-    motor->motorPos = motorAbsPos;
+	Motor* motor = nullptr;
+    if (axis == T) {
+        motor = new Motor(id, relativeMotorPos, motorSize, rotationSpeed);
+	}
+    else {
+        motor = new Motor(id, axis,
+            strPos, endPos, relativeMotorPos, motorSize, motorSpeed, isRotating, rotationAngle, rotationSpeed);
+        motor->motorPos = motorAbsPos;
+    }
 
     return motor;
 }

@@ -21,7 +21,7 @@ public:
 	void LoadMotorData();
 	Motor* GetMotorById(int id);
 	void RemoveMotors(const std::vector<int>& ids);
-	
+
 private:
 	int GetMaxId();
 	void DeleteMotorRecursive(Motor* motor);

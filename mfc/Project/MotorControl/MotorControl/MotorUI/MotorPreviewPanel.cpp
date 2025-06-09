@@ -102,12 +102,13 @@ Motor MotorPreviewPanel::PreviewRotatingmotor(const MotorPreviewInputData& data)
 }
 
 CPoint MotorPreviewPanel::GetRotationCenter(Motor* motor) {
-    // T축이면 그 위치가 회전 중심
+    if (!motor)
+        return CPoint(0, 0);
+
     if (motor->axis == T) {
         return motor->motorPos;
     }
 
-    // 회전 중이면, 부모의 부모를 타고 다시 탐색
     if (motor->axis != T && motor->isRotating) {
         return GetRotationCenter(motor->parentMotor);
     }
