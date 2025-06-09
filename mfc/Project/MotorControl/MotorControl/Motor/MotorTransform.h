@@ -33,10 +33,4 @@ public:
     CPoint LogicalToScreen(CPoint logical, CPoint rotationCenter = CPoint(0, 0), double rotationAngle = 0.0);
     CPoint ScreenToLogical(CPoint screen);
     CPoint SubToLogical(CPoint subMotorPos, CPoint mainMotorPos, CPoint rotationCenter = CPoint(0, 0), double rotationAngle = 0.0);
-    CRect GetLogicalBounds() const {
-        return m_logicalBounds;
-	}
-    void SetLogicalBounds(CRect bounds) {
-        m_logicalBounds = bounds;
-    }
 };

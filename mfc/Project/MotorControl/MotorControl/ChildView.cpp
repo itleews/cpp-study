@@ -214,7 +214,7 @@ void CChildView::DrawGrid(CDC* pDC)
 	CPen pen(PS_SOLID, 1, RGB(200, 200, 200));
 	CPen* pOldPen = pDC->SelectObject(&pen); // 기존 펜을 교체
 	
-	CRect logicalBounds = m_motorTransform.GetLogicalBounds();
+	CRect logicalBounds = m_motorTransform.m_logicalBounds;
 
 	// 그리드 선을 논리 좌표계 기준으로 그림
 	for (int x = logicalBounds.left; x <= logicalBounds.right; x += 10)

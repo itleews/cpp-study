@@ -20,14 +20,6 @@ Motor MotorPreviewPanel::UpdatePreview(const MotorPreviewInputData& data)
         return {};
     }
 
-    CRect curRect(m_start.x, m_start.y, m_end.x, m_end.y);
-    curRect.NormalizeRect();  // 좌상단-우하단 정렬
-
-    if (curRect.Width() > m_motorTransform.m_logicalBounds.Width() || curRect.Height() > m_motorTransform.m_logicalBounds.Height()) {
-        CRect newRect(0, 0, max(curRect.Width() + 10, m_motorTransform.m_logicalBounds.Width() + 10), max(curRect.Height() + 10, m_motorTransform.m_logicalBounds.Height() + 10));
-        m_motorTransform.SetLogicalBounds(newRect);
-    }
-
     Motor* parentMotor = data.parentMotor;
 
     if (data.isAddSubmotorMode && !PreviewSubmotor(data, m_start, m_end)) {
